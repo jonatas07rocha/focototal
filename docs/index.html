@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1F2937"/>
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <link rel="manifest" href="manifest.json">
+    
     <title>Foco Total Core</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -10,8 +16,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <!-- Favicon SVG Personalizado (Tomate) -->
-    <link id="favicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22><circle cx=%2212%22 cy=%2213%22 r=%229%22 fill=%22%23FF6347%22/><path d=%22M16 8c-2 2-4 2-6 0%22 stroke=%22%23228B22%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/><path d=%22M12 8V2l2 2%22 stroke=%22%23228B22%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/></svg>">
+    <!-- Favicon SVG Personalizado -->
+    <link id="favicon" rel="icon" href="icon-192x192.png" type="image/png">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -281,6 +287,19 @@
     <audio id="silent-audio" src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="></audio>
 
     <script>
+        // --- INÍCIO DO REGISTRO DO SERVICE WORKER ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado com sucesso:', registration.scope);
+                    }).catch(error => {
+                        console.log('Falha ao registrar o Service Worker:', error);
+                    });
+            });
+        }
+        // --- FIM DO REGISTRO DO SERVICE WORKER ---
+
         document.addEventListener('DOMContentLoaded', () => {
             // --- ELEMENTOS DO DOM ---
             const timerDisplay = document.getElementById('timer-display');
@@ -355,7 +374,7 @@
             const showNotification = (title, body) => {
                 if ('Notification' in window && Notification.permission === 'granted') {
                     const task = tasks.find(t => t.id === selectedTaskId);
-                    const options = { body: body + (task ? `\nTarefa: ${task.name}` : ''), icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22><circle cx=%2212%22 cy=%2213%22 r=%229%22 fill=%22%23FF6347%22/><path d=%22M16 8c-2 2-4 2-6 0%22 stroke=%22%23228B22%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/><path d=%22M12 8V2l2 2%22 stroke=%22%23228B22%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/></svg>' };
+                    const options = { body: body + (task ? `\nTarefa: ${task.name}` : ''), icon: 'icon-192x192.png' };
                     new Notification(title, options);
                 }
             };
@@ -510,7 +529,6 @@
                 } else { // Adaptativo
                     if (isRunning) {
                         startPauseBtn.classList.add('bg-red-600', 'hover:bg-red-700');
-                        // ALTERAÇÃO: Ícone 'stop-circle' trocado por 'square' para clareza.
                         btnIcon = 'square'; 
                     } else {
                         startPauseBtn.classList.add(`bg-${modeColor}-600`, `hover:bg-${modeColor}-700`);
