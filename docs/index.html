@@ -510,7 +510,8 @@
                 } else { // Adaptativo
                     if (isRunning) {
                         startPauseBtn.classList.add('bg-red-600', 'hover:bg-red-700');
-                        btnIcon = 'stop-circle';
+                        // ALTERAÇÃO: Ícone 'stop-circle' trocado por 'square' para clareza.
+                        btnIcon = 'square'; 
                     } else {
                         startPauseBtn.classList.add(`bg-${modeColor}-600`, `hover:bg-${modeColor}-700`);
                         btnIcon = 'play';
