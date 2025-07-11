@@ -58,12 +58,6 @@
             border-color: #3B82F6;
             box-shadow: 0 0 12px rgba(59, 130, 246, 0.7);
         }
-        .task-item.completed {
-            opacity: 0.6;
-        }
-        .task-item.completed .task-name {
-            text-decoration: line-through;
-        }
         
         #timer-display {
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
@@ -164,7 +158,7 @@
             <!-- CONTROLES PRINCIPAIS -->
             <div id="player-controls" class="flex items-center justify-center space-x-4">
                 <button id="internal-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Interna">
-                    <i data-lucide="volume-x" class="w-6 h-6"></i>
+                    <i data-lucide="zap-off" class="w-6 h-6"></i>
                 </button>
                 <button id="start-pause-btn" class="w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center">
                 </button>
@@ -230,10 +224,6 @@
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-white">Relatório do Dia</h2>
-                <button id="stats-reset-btn" class="text-gray-400 hover:text-white text-xs flex items-center gap-1" title="Zerar dados das tarefas">
-                    <i data-lucide="refresh-cw" class="w-3 h-3"></i>
-                    Zerar Dados
-                </button>
             </div>
             <div id="stats-content" class="bg-gray-800 p-4 rounded-lg max-h-80 overflow-y-auto"></div>
             <button id="stats-modal-close-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors">Fechar</button>
@@ -257,11 +247,10 @@
             <button id="help-modal-close-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors">Entendi!</button>
         </div>
     </div>
-    <!-- MODAL DE CONFIRMAÇÃO DE RESET (NOVO) -->
     <div id="reset-confirm-modal-overlay" class="modal-overlay">
         <div class="modal-content text-center">
             <h2 class="text-xl font-bold text-white mb-2">Zerar o Dia?</h2>
-            <p id="alert-modal-message" class="mb-6 text-gray-300">Todas as tarefas e o progresso serão apagados. As configurações serão mantidas. Deseja continuar?</p>
+            <p id="alert-modal-message-reset" class="mb-6 text-gray-300">Todas as tarefas e o progresso serão apagados. As configurações serão mantidas. Deseja continuar?</p>
             <div class="flex justify-center space-x-4">
                 <button id="reset-cancel-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Cancelar</button>
                 <button id="reset-confirm-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Sim, Zerar</button>
@@ -294,7 +283,6 @@
             const statsModalOverlay = document.getElementById('stats-modal-overlay');
             const statsModalCloseBtn = document.getElementById('stats-modal-close-btn');
             const statsContentEl = document.getElementById('stats-content');
-            const statsResetBtn = document.getElementById('stats-reset-btn');
             const alertModalOverlay = document.getElementById('alert-modal-overlay');
             const alertModalCloseBtn = document.getElementById('alert-modal-close-btn');
             const settingsModalOverlay = document.getElementById('settings-modal-overlay');
@@ -319,14 +307,15 @@
             const showNotification = (title, body) => {
                 if ('Notification' in window && Notification.permission === 'granted') {
                     const task = tasks.find(t => t.id === selectedTaskId);
-                    const options = { body: body + (task ? `\nTarefa: ${task.name}` : ''), icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22%23FF6347%22><circle cx=%2212%22 cy=%2213%22 r=%229%22/><path d=%22M16 8c-2 2-4 2-6 0%22 stroke=%22%23228B22%22 stroke-width=%221.5%22/><path d=%22M12 8V2l2 2%22 stroke=%22%23228B22%22 stroke-width=%221.5%22/></svg>' };
+                    const options = { body: body + (task ? `\nTarefa: ${task.name}` : ''), icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22><circle cx=%2212%22 cy=%2213%22 r=%229%22/><path d=%22M16 8c-2 2-4 2-6 0%22 stroke=%22%23228B22%22 stroke-width=%221.5%22/><path d=%22M12 8V2l2 2%22 stroke=%22%23228B22%22 stroke-width=%221.5%22/></svg>' };
                     new Notification(title, options);
                 }
             };
 
             const showModal = (modalOverlay, message) => {
                 if (message) {
-                    document.getElementById('alert-modal-message').textContent = message;
+                    const messageEl = modalOverlay.querySelector('p');
+                    if(messageEl) messageEl.textContent = message;
                 }
                 modalOverlay.classList.add('visible');
             };
@@ -416,7 +405,6 @@
                 updateUI();
             };
 
-            // NOVA FUNÇÃO PARA ZERAR O DIA
             const resetDay = () => {
                 pauseTimer();
                 tasks = [];
@@ -433,8 +421,12 @@
                 
                 let modeColor = mode === 'focus' ? 'blue' : 'green';
             
-                progressRing.className = `text-${modeColor}-500`;
-                startPauseBtn.className = `w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center bg-${modeColor}-600 hover:bg-${modeColor}-700`;
+                // CORREÇÃO: Usando classList para garantir a troca de cor
+                progressRing.classList.remove('text-blue-500', 'text-green-500');
+                progressRing.classList.add(`text-${modeColor}-500`);
+
+                startPauseBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-green-600', 'hover:bg-green-700');
+                startPauseBtn.classList.add(`bg-${modeColor}-600`, `hover:bg-${modeColor}-700`);
             
                 startPauseBtn.innerHTML = isRunning 
                     ? `<i data-lucide="pause" class="w-8 h-8"></i>`
@@ -458,9 +450,12 @@
                     return;
                 }
                 let statsHTML = '<div class="space-y-3">';
-                tasks.forEach(task => {
+                // Ordena para mostrar as não concluídas primeiro, depois as concluídas
+                const sortedTasks = [...tasks].sort((a, b) => a.completed - b.completed);
+
+                sortedTasks.forEach(task => {
                     statsHTML += `
-                        <div class="bg-gray-900 p-3 rounded-lg">
+                        <div class="bg-gray-900 p-3 rounded-lg ${task.completed ? 'opacity-60' : ''}">
                             <p class="font-bold text-white truncate ${task.completed ? 'line-through' : ''}">${task.name}</p>
                             <div class="grid grid-cols-4 gap-2 mt-2 text-center text-sm">
                                 <div>
@@ -486,33 +481,31 @@
                 statsHTML += '</div>';
                 statsContentEl.innerHTML = statsHTML;
             };
-
-            const resetStatsData = () => {
-                tasks.forEach(task => {
-                    task.focusTime = 0;
-                    task.pomodorosCompleted = 0;
-                    task.internalInterruptions = 0;
-                    task.externalInterruptions = 0;
-                });
-                renderTasks();
-            };
             
+            // --- FUNÇÕES DE GESTÃO DE TAREFAS ---
             const renderTasks = () => {
-                tasks.sort((a, b) => a.completed - b.completed);
-                taskListEl.innerHTML = tasks.length === 0 ? '<p class="text-gray-500 text-center text-sm">Adicione a sua primeira tarefa!</p>' : '';
+                const visibleTasks = tasks.filter(task => !task.completed);
                 
-                tasks.forEach(task => {
+                taskListEl.innerHTML = visibleTasks.length === 0 ? '<p class="text-gray-500 text-center text-sm">Adicione a sua primeira tarefa!</p>' : '';
+                
+                visibleTasks.forEach(task => {
                     const taskEl = document.createElement('div');
-                    taskEl.className = `task-item bg-gray-900 p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''} ${task.completed ? 'completed' : ''}`;
+                    taskEl.className = `task-item bg-gray-900 p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''}`;
                     taskEl.dataset.id = task.id;
                     
+                    const isEditing = task.isEditing;
+
                     taskEl.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div class="flex items-center min-w-0">
-                                <button data-complete-id="${task.id}" class="complete-btn text-gray-400 hover:text-green-500 mr-3 flex-shrink-0"><i data-lucide="${task.completed ? 'check-square' : 'square'}" class="w-5 h-5"></i></button>
-                                <span class="task-name truncate text-sm">${task.name}</span>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center min-w-0 flex-grow">
+                                <button data-complete-id="${task.id}" class="complete-btn text-gray-400 hover:text-green-500 mr-3 flex-shrink-0"><i data-lucide="square" class="w-5 h-5"></i></button>
+                                ${isEditing 
+                                    ? `<input type="text" value="${task.name}" class="task-edit-input bg-gray-800 text-white rounded px-2 py-1 text-sm flex-grow mx-2 border-2 border-blue-500 focus:outline-none" data-edit-input-id="${task.id}">`
+                                    : `<span class="task-name truncate text-sm">${task.name}</span>`
+                                }
                             </div>
-                            <div class="flex items-center space-x-2 flex-shrink-0">
+                            <div class="flex items-center space-x-1 flex-shrink-0">
+                                <button data-edit-id="${task.id}" class="edit-btn text-gray-500 hover:text-blue-500 transition-colors p-1 rounded-md"><i data-lucide="${isEditing ? 'save' : 'pencil'}" class="w-4 h-4"></i></button>
                                 <button data-delete-id="${task.id}" class="delete-btn text-gray-500 hover:text-red-500 transition-colors p-1 rounded-md"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
@@ -526,7 +519,7 @@
                                 ${formatTime(task.focusTime)}
                             </span>
                             <span class="text-gray-400 font-bold flex items-center justify-center" title="Interrupções Internas">
-                                <i data-lucide="volume-x" class="w-4 h-4 mr-1 text-gray-400"></i>
+                                <i data-lucide="zap-off" class="w-4 h-4 mr-1 text-gray-400"></i>
                                 ${task.internalInterruptions}
                             </span>
                             <span class="text-gray-400 font-bold flex items-center justify-center" title="Interrupções Externas">
@@ -556,7 +549,8 @@
                         internalInterruptions: 0, 
                         externalInterruptions: 0, 
                         focusTime: 0, 
-                        completed: false 
+                        completed: false,
+                        isEditing: false
                     };
                     tasks.push(newTask);
                     newTaskInput.value = '';
@@ -581,7 +575,7 @@
             const toggleTaskCompleted = (id) => {
                 const task = tasks.find(t => t.id === id);
                 if (task) {
-                    task.completed = !task.completed;
+                    task.completed = true; // Alterado para apenas completar
                     if (task.completed && selectedTaskId === id) {
                         if(isRunning && mode === 'focus') pauseTimer();
                         const firstIncompleteTask = tasks.find(t => !t.completed);
@@ -590,10 +584,35 @@
                     renderTasks();
                 }
             };
+            
+            const toggleEditState = (id) => {
+                tasks.forEach(task => {
+                    task.isEditing = task.id === id ? !task.isEditing : false;
+                });
+                renderTasks();
+                const input = document.querySelector(`[data-edit-input-id="${id}"]`);
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            };
+
+            const updateTaskName = (id, newName) => {
+                const task = tasks.find(t => t.id === id);
+                if (task) {
+                    if (newName) {
+                        task.name = newName;
+                    }
+                    task.isEditing = false;
+                    renderTasks();
+                }
+            };
 
             const selectTask = (id) => {
                 const task = tasks.find(t => t.id === id);
-                if (id === null || (task && !task.completed)) {
+                const isAnyTaskEditing = tasks.some(t => t.isEditing);
+
+                if (task && !isAnyTaskEditing) {
                     selectedTaskId = id;
                     if (!isRunning && mode !== 'focus') {
                         resetTimer('focus');
@@ -645,13 +664,14 @@
                     pomodoroSessionCount = state.pomodoroSessionCount || 0;
                 }
                 
-                if (tasks.length > 0 && tasks[0].internalInterruptions === undefined) {
-                    tasks.forEach(t => {
+                tasks.forEach(t => {
+                    if (t.isEditing === undefined) t.isEditing = false;
+                    if (t.internalInterruptions === undefined) {
                         t.internalInterruptions = 0;
                         t.externalInterruptions = t.interruptions || 0;
                         delete t.interruptions;
-                    });
-                }
+                    }
+                });
 
                 focusDurationInput.value = settings.focusDuration;
                 shortBreakDurationInput.value = settings.shortBreakDuration;
@@ -678,7 +698,6 @@
             settingsBtn.addEventListener('click', () => showModal(settingsModalOverlay));
             statsBtn.addEventListener('click', () => showModal(statsModalOverlay));
             helpBtn.addEventListener('click', () => showModal(helpModalOverlay));
-            statsResetBtn.addEventListener('click', resetStatsData);
             statsModalCloseBtn.addEventListener('click', () => hideModal(statsModalOverlay));
             helpModalCloseBtn.addEventListener('click', () => hideModal(helpModalOverlay));
             settingsSaveBtn.addEventListener('click', () => {
@@ -696,14 +715,51 @@
             [alertModalOverlay, settingsModalOverlay, statsModalOverlay, helpModalOverlay, resetConfirmModalOverlay].forEach(overlay => {
                 overlay.addEventListener('click', (e) => { if (e.target === overlay) hideModal(overlay); });
             });
+            
             taskListEl.addEventListener('click', (e) => {
                 const deleteBtn = e.target.closest('.delete-btn');
                 const completeBtn = e.target.closest('.complete-btn');
+                const editBtn = e.target.closest('.edit-btn');
                 const taskItem = e.target.closest('.task-item');
 
                 if (deleteBtn) { deleteTask(parseInt(deleteBtn.dataset.deleteId)); return; }
                 if (completeBtn) { toggleTaskCompleted(parseInt(completeBtn.dataset.completeId)); return; }
+                if (editBtn) {
+                    const id = parseInt(editBtn.dataset.editId);
+                    const task = tasks.find(t => t.id === id);
+                    if (task && task.isEditing) {
+                        const input = taskListEl.querySelector(`[data-edit-input-id="${id}"]`);
+                        if (input) updateTaskName(id, input.value.trim());
+                    } else {
+                        toggleEditState(id);
+                    }
+                    return;
+                }
+
                 if (taskItem) { selectTask(parseInt(taskItem.dataset.id)); }
+            });
+
+            taskListEl.addEventListener('keyup', (e) => {
+                if (e.target.matches('.task-edit-input')) {
+                    const id = parseInt(e.target.dataset.editInputId);
+                    if (e.key === 'Enter') {
+                        updateTaskName(id, e.target.value.trim());
+                    } else if (e.key === 'Escape') {
+                        toggleEditState(null); // Sai do modo de edição
+                    }
+                }
+            });
+
+            taskListEl.addEventListener('focusout', (e) => {
+                if (e.target.matches('.task-edit-input')) {
+                    const id = parseInt(e.target.dataset.editInputId);
+                    setTimeout(() => {
+                        const task = tasks.find(t => t.id === id);
+                        if (task && task.isEditing) {
+                           updateTaskName(id, e.target.value.trim());
+                        }
+                    }, 150);
+                }
             });
 
             // --- INICIALIZAÇÃO DA APLICAÇÃO ---
