@@ -22,7 +22,7 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 1rem;
             box-sizing: border-box;
         }
         
@@ -36,13 +36,14 @@
             color: #D1D5DB;
             width: 100%;
             max-width: 420px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
 
         .timer-panel {
             background-color: #111827; 
             border-radius: 1.25rem;
             padding: 1rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5); 
         }
 
@@ -112,8 +113,12 @@
     <div id="device-shell" class="device-shell">
         <!-- CABEÇALHO -->
         <header class="flex justify-between items-center mb-4">
-            <h1 class="text-2xl font-bold text-white">Foco Total <span class="text-blue-400 font-semibold">Core</span></h1>
-            <button id="help-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="O que é a Técnica Pomodoro?">
+            <h1 class="text-xl font-bold text-white">Foco Total <span class="text-blue-400 font-semibold">Core</span></h1>
+            <div id="focus-method-toggle" class="flex bg-gray-900 rounded-lg p-1 text-xs font-semibold">
+                <button data-method="pomodoro" class="method-btn px-3 py-1 rounded-md transition-colors">Pomodoro</button>
+                <button data-method="adaptativo" class="method-btn px-3 py-1 rounded-md transition-colors">Adaptativo</button>
+            </div>
+            <button id="help-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Ajuda">
                 <i data-lucide="help-circle" class="w-6 h-6"></i>
             </button>
         </header>
@@ -188,6 +193,13 @@
             <button id="alert-modal-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">OK</button>
         </div>
     </div>
+    <div id="session-end-modal-overlay" class="modal-overlay">
+        <div class="modal-content text-center">
+            <h2 class="text-xl font-bold text-white mb-2">Sessão de Foco Finalizada!</h2>
+            <p id="session-end-message" class="mb-6 text-gray-300"></p>
+            <button id="session-end-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Ótimo!</button>
+        </div>
+    </div>
     <div id="settings-modal-overlay" class="modal-overlay">
         <div class="modal-content">
             <h2 class="text-xl font-bold text-white mb-4 text-center">Configurações</h2>
@@ -231,18 +243,26 @@
     </div>
     <div id="help-modal-overlay" class="modal-overlay">
         <div class="modal-content text-sm">
-            <h2 class="text-xl font-bold text-white mb-4 text-center">O que é a Técnica Pomodoro?</h2>
-            <div class="space-y-4 text-gray-300">
-                <p>A Técnica Pomodoro é um método de gestão de tempo que usa um cronômetro para dividir o trabalho em períodos de foco intenso, tradicionalmente de 25 minutos, separados por pausas curtas.</p>
-                <p class="font-bold text-white">Os 5 passos básicos:</p>
+            <h2 class="text-xl font-bold text-white mb-4 text-center">Ajuda</h2>
+            <div id="help-content-pomodoro" class="space-y-4 text-gray-300">
+                <h3 class="text-lg font-semibold text-blue-400">O que é a Técnica Pomodoro?</h3>
+                <p>É um método que usa um cronômetro para dividir o trabalho em períodos de foco intenso (geralmente 25 min), separados por pausas curtas.</p>
                 <ol class="list-decimal list-inside space-y-2 bg-gray-800 p-4 rounded-lg">
-                    <li><span class="font-semibold">Escolha uma tarefa</span> a ser executada.</li>
-                    <li><span class="font-semibold">Ajuste o Pomodoro</span> (o timer) para 25 minutos.</li>
-                    <li><span class="font-semibold">Trabalhe na tarefa</span> sem interrupções até o alarme tocar.</li>
-                    <li><span class="font-semibold">Faça uma pausa curta</span> (3-5 minutos).</li>
-                    <li>Após quatro "Pomodoros", faça uma <span class="font-semibold">pausa mais longa</span> (15-30 minutos).</li>
+                    <li>Escolha uma tarefa e inicie o timer.</li>
+                    <li>Trabalhe na tarefa sem interrupções.</li>
+                    <li>Ao final, faça uma pausa curta.</li>
+                    <li>Após 4 ciclos, faça uma pausa longa.</li>
                 </ol>
-                <p>O objetivo é reduzir o impacto de interrupções, aumentar o foco e a concentração, e permitir que você tenha uma noção mais clara de quanto tempo suas tarefas realmente levam.</p>
+            </div>
+            <div id="help-content-adaptativo" class="space-y-4 text-gray-300 hidden">
+                <h3 class="text-lg font-semibold text-blue-400">O que é o Método Adaptativo?</h3>
+                <p>É um método flexível onde você trabalha pelo tempo que conseguir se manter focado, sem um alarme para te interromper. É ideal para trabalho criativo e profundo.</p>
+                <ol class="list-decimal list-inside space-y-2 bg-gray-800 p-4 rounded-lg">
+                    <li>Escolha uma tarefa e inicie o cronômetro (ele contará para cima).</li>
+                    <li>Mergulhe na tarefa, mantendo o foco.</li>
+                    <li>Quando sentir que sua concentração está diminuindo, pare o cronômetro.</li>
+                    <li>Faça uma pausa e analise por quanto tempo conseguiu focar.</li>
+                </ol>
             </div>
             <button id="help-modal-close-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors">Entendi!</button>
         </div>
@@ -250,7 +270,7 @@
     <div id="reset-confirm-modal-overlay" class="modal-overlay">
         <div class="modal-content text-center">
             <h2 class="text-xl font-bold text-white mb-2">Zerar o Dia?</h2>
-            <p id="alert-modal-message-reset" class="mb-6 text-gray-300">Todas as tarefas e o progresso serão apagados. As configurações serão mantidas. Deseja continuar?</p>
+            <p id="alert-modal-message-reset" class="mb-6 text-gray-300">Todas as tarefas e o progresso serão apagados. As configurações e o modo de foco serão mantidos. Deseja continuar?</p>
             <div class="flex justify-center space-x-4">
                 <button id="reset-cancel-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Cancelar</button>
                 <button id="reset-confirm-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Sim, Zerar</button>
@@ -279,16 +299,21 @@
             const currentTaskDisplay = document.getElementById('current-task-display');
             const pomodoroCyclesEl = document.getElementById('pomodoro-cycles');
             const silentAudio = document.getElementById('silent-audio');
+            const focusMethodToggle = document.getElementById('focus-method-toggle');
             // Modais
             const statsModalOverlay = document.getElementById('stats-modal-overlay');
             const statsModalCloseBtn = document.getElementById('stats-modal-close-btn');
             const statsContentEl = document.getElementById('stats-content');
             const alertModalOverlay = document.getElementById('alert-modal-overlay');
             const alertModalCloseBtn = document.getElementById('alert-modal-close-btn');
+            const sessionEndModalOverlay = document.getElementById('session-end-modal-overlay');
+            const sessionEndCloseBtn = document.getElementById('session-end-close-btn');
             const settingsModalOverlay = document.getElementById('settings-modal-overlay');
             const settingsSaveBtn = document.getElementById('settings-save-btn');
             const helpModalOverlay = document.getElementById('help-modal-overlay');
             const helpModalCloseBtn = document.getElementById('help-modal-close-btn');
+            const helpContentPomodoro = document.getElementById('help-content-pomodoro');
+            const helpContentAdaptativo = document.getElementById('help-content-adaptativo');
             const resetConfirmModalOverlay = document.getElementById('reset-confirm-modal-overlay');
             const resetConfirmBtn = document.getElementById('reset-confirm-btn');
             const resetCancelBtn = document.getElementById('reset-cancel-btn');
@@ -302,21 +327,42 @@
             let timer, isRunning = false, mode = 'focus', timeRemaining, totalTime;
             let tasks = [], selectedTaskId = null, pomodoroSessionCount = 0;
             let settings = { focusDuration: 25, shortBreakDuration: 5, longBreakDuration: 15, longBreakInterval: 4 };
+            let focusMethod = 'pomodoro'; // 'pomodoro' ou 'adaptativo'
 
-            // --- FUNÇÕES DO POMODORO ---
+            // --- FUNÇÕES DE GESTÃO DE MODO ---
+            const updateMethodToggleUI = () => {
+                const buttons = focusMethodToggle.querySelectorAll('.method-btn');
+                buttons.forEach(btn => {
+                    if (btn.dataset.method === focusMethod) {
+                        btn.classList.add('bg-blue-600', 'text-white');
+                        btn.classList.remove('text-gray-400');
+                    } else {
+                        btn.classList.remove('bg-blue-600', 'text-white');
+                        btn.classList.add('text-gray-400');
+                    }
+                });
+                pomodoroCyclesEl.style.display = focusMethod === 'pomodoro' ? 'flex' : 'none';
+                document.getElementById('new-task-estimate').labels[0].textContent = focusMethod === 'pomodoro' ? '#' : 'min';
+                helpContentPomodoro.style.display = focusMethod === 'pomodoro' ? 'block' : 'none';
+                helpContentAdaptativo.style.display = focusMethod === 'adaptativo' ? 'block' : 'none';
+                
+                if (!isRunning) {
+                    resetTimer('focus');
+                }
+            };
+
+            // --- FUNÇÕES DO TIMER ---
             const showNotification = (title, body) => {
                 if ('Notification' in window && Notification.permission === 'granted') {
                     const task = tasks.find(t => t.id === selectedTaskId);
-                    const options = { body: body + (task ? `\nTarefa: ${task.name}` : ''), icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22><circle cx=%2212%22 cy=%2213%22 r=%229%22/><path d=%22M16 8c-2 2-4 2-6 0%22 stroke=%22%23228B22%22 stroke-width=%221.5%22/><path d=%22M12 8V2l2 2%22 stroke=%22%23228B22%22 stroke-width=%221.5%22/></svg>' };
+                    const options = { body: body + (task ? `\nTarefa: ${task.name}` : ''), icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22><circle cx=%2212%22 cy=%2213%22 r=%229%22 fill=%22%23FF6347%22/><path d=%22M16 8c-2 2-4 2-6 0%22 stroke=%22%23228B22%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/><path d=%22M12 8V2l2 2%22 stroke=%22%23228B22%22 stroke-width=%221.5%22 stroke-linecap=%22round%22/></svg>' };
                     new Notification(title, options);
                 }
             };
 
             const showModal = (modalOverlay, message) => {
-                if (message) {
-                    const messageEl = modalOverlay.querySelector('p');
-                    if(messageEl) messageEl.textContent = message;
-                }
+                const messageEl = modalOverlay.querySelector('p');
+                if(messageEl && message) messageEl.textContent = message;
                 modalOverlay.classList.add('visible');
             };
 
@@ -333,6 +379,13 @@
                 if ('Notification' in window && Notification.permission === 'default') {
                     Notification.requestPermission();
                 }
+
+                if (focusMethod === 'adaptativo' && mode === 'focus' && timeRemaining <= 0) {
+                    timeRemaining = 0;
+                    const task = tasks.find(t => t.id === selectedTaskId);
+                    totalTime = (task ? task.pomodoroEstimate * 60 : settings.focusDuration * 60) || 1;
+                }
+
                 isRunning = true;
                 updateUI();
                 timer = setInterval(updateTimer, 1000);
@@ -353,22 +406,37 @@
                 document.title = `${display} - Foco Total`;
             
                 const circumference = 2 * Math.PI * 45;
-                const offset = circumference - (timeRemaining / totalTime) * circumference;
+                let offset;
+                if (focusMethod === 'pomodoro' || mode !== 'focus') {
+                    offset = circumference - (timeRemaining / totalTime) * circumference;
+                } else { // Adaptativo
+                    offset = (timeRemaining / totalTime) * circumference;
+                    if (offset > circumference) offset = circumference;
+                }
                 progressRing.style.strokeDasharray = circumference;
                 progressRing.style.strokeDashoffset = isNaN(offset) ? circumference : offset;
             };
 
             const updateTimer = () => {
-                if (timeRemaining > 0) {
-                    timeRemaining--;
+                if (focusMethod === 'pomodoro' || mode !== 'focus') {
+                    if (timeRemaining > 0) {
+                        timeRemaining--;
+                        if (isRunning && mode === 'focus') {
+                            const task = tasks.find(t => t.id === selectedTaskId);
+                            if (task) task.focusTime++;
+                        }
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timer);
+                        switchMode();
+                    }
+                } else { // Adaptativo
+                    timeRemaining++;
                     if (isRunning && mode === 'focus') {
                         const task = tasks.find(t => t.id === selectedTaskId);
                         if (task) task.focusTime++;
                     }
                     updateTimerDisplay();
-                } else {
-                    clearInterval(timer);
-                    switchMode();
                 }
             };
 
@@ -378,12 +446,14 @@
                 if (mode === 'focus') {
                     silentAudio.play().catch(e => console.log("Interação do usuário necessária para tocar áudio."));
                     
-                    pomodoroSessionCount++;
-                    const task = tasks.find(t => t.id === selectedTaskId);
-                    if(task) task.pomodorosCompleted++;
+                    if (focusMethod === 'pomodoro') {
+                        pomodoroSessionCount++;
+                        const task = tasks.find(t => t.id === selectedTaskId);
+                        if(task) task.pomodorosCompleted++;
+                    }
                     
                     renderTasks();
-                    mode = (pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
+                    mode = (focusMethod === 'pomodoro' && pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
                     notificationTitle = 'Foco Concluído!';
                     notificationBody = mode === 'longBreak' ? 'Hora de uma pausa longa.' : 'Faça uma pausa curta.';
                 } else {
@@ -400,8 +470,15 @@
                 clearInterval(timer);
                 isRunning = false;
                 mode = forceMode || mode;
-                timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
-                totalTime = timeRemaining;
+
+                if (focusMethod === 'pomodoro' || mode !== 'focus') {
+                    timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
+                    totalTime = timeRemaining;
+                } else { // Adaptativo
+                    timeRemaining = 0;
+                    const task = tasks.find(t => t.id === selectedTaskId);
+                    totalTime = (task ? task.pomodoroEstimate * 60 : settings.focusDuration * 60) || 1;
+                }
                 updateUI();
             };
 
@@ -421,22 +498,32 @@
                 
                 let modeColor = mode === 'focus' ? 'blue' : 'green';
             
-                // CORREÇÃO: Usando classList para garantir a troca de cor
                 progressRing.classList.remove('text-blue-500', 'text-green-500');
                 progressRing.classList.add(`text-${modeColor}-500`);
 
-                startPauseBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-green-600', 'hover:bg-green-700');
-                startPauseBtn.classList.add(`bg-${modeColor}-600`, `hover:bg-${modeColor}-700`);
+                startPauseBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-green-600', 'hover:bg-green-700', 'bg-red-600', 'hover:bg-red-700');
+                
+                let btnIcon = '';
+                if (focusMethod === 'pomodoro' || mode !== 'focus') {
+                    startPauseBtn.classList.add(`bg-${modeColor}-600`, `hover:bg-${modeColor}-700`);
+                    btnIcon = isRunning ? 'pause' : 'play';
+                } else { // Adaptativo
+                    if (isRunning) {
+                        startPauseBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                        btnIcon = 'stop-circle';
+                    } else {
+                        startPauseBtn.classList.add(`bg-${modeColor}-600`, `hover:bg-${modeColor}-700`);
+                        btnIcon = 'play';
+                    }
+                }
             
-                startPauseBtn.innerHTML = isRunning 
-                    ? `<i data-lucide="pause" class="w-8 h-8"></i>`
-                    : `<i data-lucide="play" class="w-8 h-8 pl-1"></i>`;
+                startPauseBtn.innerHTML = `<i data-lucide="${btnIcon}" class="w-8 h-8 ${btnIcon === 'play' ? 'pl-1' : ''}"></i>`;
             
                 lucide.createIcons();
             };
 
             const formatTime = (totalSeconds) => {
-                if (!totalSeconds || totalSeconds < 60) return `~0m`;
+                if (!totalSeconds || totalSeconds < 1) return `0m`;
                 const minutes = Math.floor(totalSeconds / 60);
                 const hours = Math.floor(minutes / 60);
                 const remainingMinutes = minutes % 60;
@@ -450,7 +537,6 @@
                     return;
                 }
                 let statsHTML = '<div class="space-y-3">';
-                // Ordena para mostrar as não concluídas primeiro, depois as concluídas
                 const sortedTasks = [...tasks].sort((a, b) => a.completed - b.completed);
 
                 sortedTasks.forEach(task => {
@@ -463,7 +549,7 @@
                                     <p class="font-semibold">${formatTime(task.focusTime)}</p>
                                 </div>
                                 <div>
-                                    <p class="text-xs text-gray-400">Pomodoros</p>
+                                    <p class="text-xs text-gray-400">Ciclos</p>
                                     <p class="font-semibold">${task.pomodorosCompleted}/${task.pomodoroEstimate}</p>
                                 </div>
                                 <div>
@@ -494,6 +580,9 @@
                     taskEl.dataset.id = task.id;
                     
                     const isEditing = task.isEditing;
+                    const estimateLabel = focusMethod === 'pomodoro' ? 'Pomodoros' : 'Estimativa';
+                    const iconEstimate = focusMethod === 'pomodoro' ? 'check-circle-2' : 'target';
+                    const colorEstimate = focusMethod === 'pomodoro' ? 'green' : 'yellow';
 
                     taskEl.innerHTML = `
                         <div class="flex justify-between items-center">
@@ -510,9 +599,9 @@
                             </div>
                         </div>
                         <div class="grid grid-cols-4 gap-1 items-center mt-2 pl-8 text-xs text-center">
-                            <span class="text-gray-400 font-bold flex items-center justify-center" title="Pomodoros Concluídos / Estimados">
-                                <i data-lucide="check-circle-2" class="w-4 h-4 mr-1 text-green-500"></i>
-                                ${task.pomodorosCompleted}/${task.pomodoroEstimate}
+                            <span class="text-gray-400 font-bold flex items-center justify-center" title="${estimateLabel}">
+                                <i data-lucide="${iconEstimate}" class="w-4 h-4 mr-1 text-${colorEstimate}-500"></i>
+                                ${focusMethod === 'pomodoro' ? `${task.pomodorosCompleted}/` : ''}${task.pomodoroEstimate}${focusMethod === 'adaptativo' ? 'm' : ''}
                             </span>
                             <span class="text-gray-400 font-bold flex items-center justify-center" title="Tempo de Foco Total">
                                 <i data-lucide="clock" class="w-4 h-4 mr-1 text-blue-400"></i>
@@ -539,7 +628,7 @@
 
             const addTask = () => {
                 const taskName = newTaskInput.value.trim();
-                const estimate = parseInt(newTaskEstimateInput.value) || 1;
+                const estimate = parseInt(newTaskEstimateInput.value) || (focusMethod === 'pomodoro' ? 1 : 25);
                 if (taskName) {
                     const newTask = { 
                         id: Date.now(), 
@@ -554,7 +643,7 @@
                     };
                     tasks.push(newTask);
                     newTaskInput.value = '';
-                    newTaskEstimateInput.value = '1';
+                    newTaskEstimateInput.value = (focusMethod === 'pomodoro' ? '1' : '25');
                     renderTasks();
                     if (!selectedTaskId || tasks.find(t => t.id === selectedTaskId)?.completed) {
                         selectTask(newTask.id);
@@ -575,7 +664,7 @@
             const toggleTaskCompleted = (id) => {
                 const task = tasks.find(t => t.id === id);
                 if (task) {
-                    task.completed = true; // Alterado para apenas completar
+                    task.completed = true;
                     if (task.completed && selectedTaskId === id) {
                         if(isRunning && mode === 'focus') pauseTimer();
                         const firstIncompleteTask = tasks.find(t => !t.completed);
@@ -614,7 +703,7 @@
 
                 if (task && !isAnyTaskEditing) {
                     selectedTaskId = id;
-                    if (!isRunning && mode !== 'focus') {
+                    if (!isRunning) {
                         resetTimer('focus');
                     } else {
                         renderTasks();
@@ -626,11 +715,8 @@
                 if (isRunning && mode === 'focus' && selectedTaskId) {
                     const task = tasks.find(t => t.id === selectedTaskId);
                     if (task) {
-                        if (type === 'internal') {
-                            task.internalInterruptions++;
-                        } else if (type === 'external') {
-                            task.externalInterruptions++;
-                        }
+                        if (type === 'internal') task.internalInterruptions++;
+                        else if (type === 'external') task.externalInterruptions++;
                         renderTasks();
                     }
                 } else {
@@ -642,7 +728,7 @@
                 const task = tasks.find(t => t.id === selectedTaskId);
                 currentTaskDisplay.textContent = task ? task.name : 'Nenhuma tarefa selecionada';
                 pomodoroCyclesEl.innerHTML = '';
-                if (!settings.longBreakInterval || settings.longBreakInterval <= 0) return;
+                if (focusMethod !== 'pomodoro' || !settings.longBreakInterval || settings.longBreakInterval <= 0) return;
                 const cyclesToShow = pomodoroSessionCount % settings.longBreakInterval;
                 for(let i = 0; i < settings.longBreakInterval; i++) {
                     const icon = i < cyclesToShow ? '<i data-lucide="check-circle-2" class="text-green-500"></i>' : '<i data-lucide="circle" class="text-gray-600"></i>';
@@ -652,7 +738,7 @@
             };
 
             const saveState = () => {
-                localStorage.setItem('pomodoroCoreState', JSON.stringify({ settings, tasks, selectedTaskId, pomodoroSessionCount }));
+                localStorage.setItem('pomodoroCoreState', JSON.stringify({ settings, tasks, selectedTaskId, pomodoroSessionCount, focusMethod }));
             };
 
             const loadState = () => {
@@ -662,6 +748,7 @@
                     tasks = state.tasks || [];
                     selectedTaskId = state.selectedTaskId;
                     pomodoroSessionCount = state.pomodoroSessionCount || 0;
+                    focusMethod = state.focusMethod || 'pomodoro';
                 }
                 
                 tasks.forEach(t => {
@@ -689,7 +776,19 @@
             };
             
             // --- EVENT LISTENERS ---
-            startPauseBtn.addEventListener('click', () => isRunning ? pauseTimer() : startTimer());
+            startPauseBtn.addEventListener('click', () => {
+                if (focusMethod === 'pomodoro' || mode !== 'focus') {
+                    isRunning ? pauseTimer() : startTimer();
+                } else { // Adaptativo
+                    if (isRunning) {
+                        pauseTimer();
+                        showModal(sessionEndModalOverlay, `Você se concentrou por ${formatTime(timeRemaining)}.`);
+                        resetTimer('focus');
+                    } else {
+                        startTimer();
+                    }
+                }
+            });
             resetBtn.addEventListener('click', () => showModal(resetConfirmModalOverlay));
             resetConfirmBtn.addEventListener('click', resetDay);
             resetCancelBtn.addEventListener('click', () => hideModal(resetConfirmModalOverlay));
@@ -700,6 +799,8 @@
             helpBtn.addEventListener('click', () => showModal(helpModalOverlay));
             statsModalCloseBtn.addEventListener('click', () => hideModal(statsModalOverlay));
             helpModalCloseBtn.addEventListener('click', () => hideModal(helpModalOverlay));
+            alertModalCloseBtn.addEventListener('click', () => hideModal(alertModalOverlay));
+            sessionEndCloseBtn.addEventListener('click', () => hideModal(sessionEndModalOverlay));
             settingsSaveBtn.addEventListener('click', () => {
                 settings.focusDuration = parseInt(focusDurationInput.value) || 25;
                 settings.shortBreakDuration = parseInt(shortBreakDurationInput.value) || 5;
@@ -711,8 +812,19 @@
             });
             addTaskBtn.addEventListener('click', addTask);
             newTaskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
-            alertModalCloseBtn.addEventListener('click', () => hideModal(alertModalOverlay));
-            [alertModalOverlay, settingsModalOverlay, statsModalOverlay, helpModalOverlay, resetConfirmModalOverlay].forEach(overlay => {
+            focusMethodToggle.addEventListener('click', (e) => {
+                const target = e.target.closest('.method-btn');
+                if (target && !isRunning) {
+                    focusMethod = target.dataset.method;
+                    updateMethodToggleUI();
+                    renderTasks();
+                    saveState();
+                } else if (isRunning) {
+                    showModal(alertModalOverlay, 'Não é possível trocar de modo enquanto o timer está rodando.');
+                }
+            });
+
+            [alertModalOverlay, settingsModalOverlay, statsModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay].forEach(overlay => {
                 overlay.addEventListener('click', (e) => { if (e.target === overlay) hideModal(overlay); });
             });
             
@@ -745,7 +857,7 @@
                     if (e.key === 'Enter') {
                         updateTaskName(id, e.target.value.trim());
                     } else if (e.key === 'Escape') {
-                        toggleEditState(null); // Sai do modo de edição
+                        toggleEditState(null);
                     }
                 }
             });
@@ -765,7 +877,7 @@
             // --- INICIALIZAÇÃO DA APLICAÇÃO ---
             loadState();
             renderTasks();
-            resetTimer('focus');
+            updateMethodToggleUI();
             lucide.createIcons();
             if ('Notification' in window && Notification.permission === 'default') {}
         });
