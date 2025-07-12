@@ -1,5 +1,5 @@
 // Define um nome e versão para o cache. Mudar a versão força a atualização do cache.
-const CACHE_NAME = 'foco-total-core-v1.1'; 
+const CACHE_NAME = 'foco-total-core-v1.2'; 
 
 // Lista de arquivos e recursos essenciais para o funcionamento offline do app.
 const urlsToCache = [
@@ -12,6 +12,8 @@ const urlsToCache = [
     'icon-192x192.png',
     'icon-512x512.png'
 ];
+
+let notificationTimeout;
 
 // Evento 'install': é disparado quando o Service Worker é instalado pela primeira vez.
 self.addEventListener('install', event => {
@@ -38,7 +40,26 @@ self.addEventListener('fetch', event => {
                     return response;
                 }
                 // Se não encontrar no cache, faz a requisição à rede.
-                return fetch(event.request);
+                // É uma boa prática clonar a requisição, pois ela é um Stream e só pode ser consumida uma vez.
+                const fetchRequest = event.request.clone();
+
+                return fetch(fetchRequest).then(
+                    networkResponse => {
+                        // Resposta válida? Então vamos armazená-la em cache para uso futuro.
+                        if(!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+                            return networkResponse;
+                        }
+
+                        const responseToCache = networkResponse.clone();
+
+                        caches.open(CACHE_NAME)
+                            .then(cache => {
+                                cache.put(event.request, responseToCache);
+                            });
+
+                        return networkResponse;
+                    }
+                );
             }
         )
     );
@@ -54,10 +75,38 @@ self.addEventListener('activate', event => {
                 cacheNames.map(cacheName => {
                     // Se o nome do cache não estiver na nossa lista de permissões, ele é deletado.
                     if (cacheWhitelist.indexOf(cacheName) === -1) {
+                        console.log('Deletando cache antigo:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
             );
         })
     );
+});
+
+
+// --- LÓGICA DE NOTIFICAÇÃO ROBUSTA ---
+// Ouve mensagens vindas da página principal (index.html)
+self.addEventListener('message', event => {
+    if (event.data.type === 'scheduleNotification') {
+        const { title, options, timestamp } = event.data.payload;
+        const delay = timestamp - Date.now();
+
+        // Limpa qualquer notificação agendada anteriormente
+        if (notificationTimeout) {
+            clearTimeout(notificationTimeout);
+        }
+
+        if (delay > 0) {
+            notificationTimeout = setTimeout(() => {
+                // Mostra a notificação. `self.registration` é uma referência ao registro do Service Worker.
+                self.registration.showNotification(title, options);
+            }, delay);
+        }
+    } else if (event.data.type === 'cancelNotification') {
+        // Cancela o agendamento se o usuário pausar
+        if (notificationTimeout) {
+            clearTimeout(notificationTimeout);
+        }
+    }
 });
