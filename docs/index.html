@@ -2,11 +2,10 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#1F2937"/>
-    <!-- CORREÇÃO: Adicionada tag específica para o ícone em dispositivos Apple -->
     <link rel="apple-touch-icon" href="icon-192x192.png">
     <link rel="manifest" href="manifest.json">
     
@@ -31,6 +30,7 @@
             margin: 0;
             padding: 1rem;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .device-shell {
@@ -44,6 +44,8 @@
             width: 100%;
             max-width: 420px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            height: calc(100vh - 2rem);
+            max-height: 850px;
         }
 
         .timer-panel {
@@ -113,6 +115,20 @@
         }
         .modal-overlay.visible .modal-content {
             transform: scale(1);
+        }
+        
+        #install-banner {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #2563EB;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            z-index: 2000;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
         }
     </style>
 </head>
@@ -202,7 +218,7 @@
     </div>
     <div id="session-end-modal-overlay" class="modal-overlay">
         <div class="modal-content text-center">
-            <h2 class="text-xl font-bold text-white mb-2">Sessão de Foco Finalizada!</h2>
+            <h2 class="text-xl font-bold text-white mb-2">Sessão Finalizada!</h2>
             <p id="session-end-message" class="mb-6 text-gray-300"></p>
             <button id="session-end-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Ótimo!</button>
         </div>
@@ -285,8 +301,16 @@
         </div>
     </div>
     
-    <audio id="silent-audio" src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="></audio>
-
+    <!-- BANNER DE INSTALAÇÃO DO PWA -->
+    <div id="install-banner">
+        <div class="max-w-md mx-auto">
+            <p class="font-semibold mb-2">Tenha a melhor experiência!</p>
+            <p class="text-sm mb-3">Adicione o Foco Total à sua tela de início para acesso rápido e notificações confiáveis.</p>
+            <button id="install-btn" class="bg-white text-blue-600 font-bold py-2 px-5 rounded-lg mr-2">Instalar</button>
+            <button id="install-dismiss-btn" class="bg-transparent border border-white text-white font-bold py-2 px-5 rounded-lg">Agora não</button>
+        </div>
+    </div>
+    
     <script>
         // --- INÍCIO DO REGISTRO DO SERVICE WORKER ---
         if ('serviceWorker' in navigator) {
@@ -318,7 +342,6 @@
             const taskListEl = document.getElementById('task-list');
             const currentTaskDisplay = document.getElementById('current-task-display');
             const pomodoroCyclesEl = document.getElementById('pomodoro-cycles');
-            const silentAudio = document.getElementById('silent-audio');
             const focusMethodToggle = document.getElementById('focus-method-toggle');
             // Modais
             const statsModalOverlay = document.getElementById('stats-modal-overlay');
@@ -342,24 +365,63 @@
             const shortBreakDurationInput = document.getElementById('short-break-duration');
             const longBreakDurationInput = document.getElementById('long-break-duration');
             const longBreakIntervalInput = document.getElementById('long-break-interval');
+            // Banner PWA
+            const installBanner = document.getElementById('install-banner');
+            const installBtn = document.getElementById('install-btn');
+            const installDismissBtn = document.getElementById('install-dismiss-btn');
 
             // --- ESTADO DA APLICAÇÃO ---
-            let timer, isRunning = false, mode = 'focus', timeRemaining, totalTime;
+            let timerInterval, isRunning = false, mode = 'focus', timeRemaining, totalTime, endTime;
             let tasks = [], selectedTaskId = null, pomodoroSessionCount = 0;
             let settings = { focusDuration: 25, shortBreakDuration: 5, longBreakDuration: 15, longBreakInterval: 4 };
             let focusMethod = 'pomodoro'; // 'pomodoro' ou 'adaptativo'
+            let deferredInstallPrompt = null;
+
+
+            // --- LÓGICA DE INSTALAÇÃO DO PWA ---
+            window.addEventListener('beforeinstallprompt', (event) => {
+                event.preventDefault();
+                deferredInstallPrompt = event;
+                if (!localStorage.getItem('installBannerDismissed')) {
+                    installBanner.style.display = 'block';
+                }
+            });
+
+            installBtn.addEventListener('click', () => {
+                if (deferredInstallPrompt) {
+                    deferredInstallPrompt.prompt();
+                    deferredInstallPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('Usuário aceitou a instalação');
+                        } else {
+                            console.log('Usuário recusou a instalação');
+                        }
+                        deferredInstallPrompt = null;
+                        installBanner.style.display = 'none';
+                    });
+                } else if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+                    showModal(alertModalOverlay, 'Para instalar no iOS, toque no ícone de Compartilhar no Safari e depois em "Adicionar à Tela de Início".');
+                }
+            });
+
+            installDismissBtn.addEventListener('click', () => {
+                localStorage.setItem('installBannerDismissed', 'true');
+                installBanner.style.display = 'none';
+            });
+            
+            // Oculta o banner se o app já estiver em modo standalone
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+                 installBanner.style.display = 'none';
+            }
+
 
             // --- FUNÇÕES DE GESTÃO DE MODO ---
             const updateMethodToggleUI = () => {
                 const buttons = focusMethodToggle.querySelectorAll('.method-btn');
                 buttons.forEach(btn => {
-                    if (btn.dataset.method === focusMethod) {
-                        btn.classList.add('bg-blue-600', 'text-white');
-                        btn.classList.remove('text-gray-400');
-                    } else {
-                        btn.classList.remove('bg-blue-600', 'text-white');
-                        btn.classList.add('text-gray-400');
-                    }
+                    btn.classList.toggle('bg-blue-600', btn.dataset.method === focusMethod);
+                    btn.classList.toggle('text-white', btn.dataset.method === focusMethod);
+                    btn.classList.toggle('text-gray-400', btn.dataset.method !== focusMethod);
                 });
                 pomodoroCyclesEl.style.display = focusMethod === 'pomodoro' ? 'flex' : 'none';
                 document.getElementById('new-task-estimate').labels[0].textContent = focusMethod === 'pomodoro' ? '#' : 'min';
@@ -372,13 +434,20 @@
             };
 
             // --- FUNÇÕES DO TIMER ---
-            const showNotification = (title, body) => {
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    const task = tasks.find(t => t.id === selectedTaskId);
-                    const options = { body: body + (task ? `\nTarefa: ${task.name}` : ''), icon: 'icon-192x192.png' };
-                    new Notification(title, options);
+            const scheduleNotification = (title, options, timestamp) => {
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        type: 'scheduleNotification',
+                        payload: { title, options, timestamp }
+                    });
                 }
             };
+
+            const cancelNotification = () => {
+                 if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({ type: 'cancelNotification' });
+                }
+            }
 
             const showModal = (modalOverlay, message) => {
                 const messageEl = modalOverlay.querySelector('p');
@@ -407,14 +476,36 @@
                 }
 
                 isRunning = true;
+                // **NOVA LÓGICA DE TIMESTAMP**
+                if (!endTime) { // Só define um novo endTime se não houver um em andamento (ex: vindo do localStorage)
+                    endTime = Date.now() + timeRemaining * 1000;
+                }
+                
+                // **NOVA LÓGICA DE NOTIFICAÇÃO**
+                if (focusMethod === 'pomodoro' || mode !== 'focus') {
+                    const task = tasks.find(t => t.id === selectedTaskId);
+                    const nextMode = (focusMethod === 'pomodoro' && (pomodoroSessionCount + 1) % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
+                    const notificationTitle = 'Foco Concluído!';
+                    const notificationBody = mode === 'focus' 
+                        ? (nextMode === 'longBreak' ? 'Hora de uma pausa longa.' : 'Faça uma pausa curta.')
+                        : 'Vamos voltar ao foco.';
+                    const options = { body: notificationBody + (task ? `\nTarefa: ${task.name}` : ''), icon: 'icon-192x192.png' };
+                    scheduleNotification(notificationTitle, options, endTime);
+                }
+
                 updateUI();
-                timer = setInterval(updateTimer, 1000);
+                timerInterval = setInterval(updateTimer, 1000);
             };
 
             const pauseTimer = () => {
                 if (!isRunning) return;
                 isRunning = false;
-                clearInterval(timer);
+                clearInterval(timerInterval);
+                // **NOVA LÓGICA DE NOTIFICAÇÃO**
+                cancelNotification(); 
+                // Mantém o endTime, mas limpa o timeRemaining para ser recalculado se reiniciar
+                timeRemaining = Math.round((endTime - Date.now()) / 1000);
+                saveState();
                 updateUI();
             };
             
@@ -434,61 +525,57 @@
                     if (offset > circumference) offset = circumference;
                 }
                 progressRing.style.strokeDasharray = circumference;
-                progressRing.style.strokeDashoffset = isNaN(offset) ? circumference : offset;
+                progressRing.style.strokeDashoffset = isNaN(offset) || offset < 0 ? circumference : offset;
             };
 
             const updateTimer = () => {
+                // **NOVA LÓGICA DE TIMESTAMP**
+                const remaining = Math.round((endTime - Date.now()) / 1000);
+                
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
-                    if (timeRemaining > 0) {
-                        timeRemaining--;
+                    if (remaining >= 0) {
+                        timeRemaining = remaining;
                         if (isRunning && mode === 'focus') {
-                            const task = tasks.find(t => t.id === selectedTaskId);
-                            if (task) task.focusTime++;
+                            // A contagem de tempo de foco pode ser mais precisa se calculada no final
                         }
                         updateTimerDisplay();
                     } else {
-                        clearInterval(timer);
+                        clearInterval(timerInterval);
                         switchMode();
                     }
                 } else { // Adaptativo
-                    timeRemaining++;
-                    if (isRunning && mode === 'focus') {
-                        const task = tasks.find(t => t.id === selectedTaskId);
-                        if (task) task.focusTime++;
-                    }
+                    timeRemaining = Math.floor((Date.now() - (endTime - totalTime * 1000)) / 1000);
                     updateTimerDisplay();
                 }
             };
 
             const switchMode = () => {
                 isRunning = false;
-                let notificationTitle = '', notificationBody = '';
+                endTime = null; // Limpa o horário de término
+                
                 if (mode === 'focus') {
-                    silentAudio.play().catch(e => console.log("Interação do usuário necessária para tocar áudio."));
-                    
                     if (focusMethod === 'pomodoro') {
                         pomodoroSessionCount++;
                         const task = tasks.find(t => t.id === selectedTaskId);
-                        if(task) task.pomodorosCompleted++;
+                        if(task) {
+                            task.pomodorosCompleted++;
+                            // Calcula o tempo de foco real
+                            task.focusTime += totalTime;
+                        }
                     }
-                    
                     renderTasks();
                     mode = (focusMethod === 'pomodoro' && pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
-                    notificationTitle = 'Foco Concluído!';
-                    notificationBody = mode === 'longBreak' ? 'Hora de uma pausa longa.' : 'Faça uma pausa curta.';
                 } else {
-                    silentAudio.pause();
                     mode = 'focus';
-                    notificationTitle = 'Pausa Finalizada!';
-                    notificationBody = 'Vamos voltar ao foco.';
                 }
-                showNotification(notificationTitle, notificationBody);
                 resetTimer();
             };
 
             const resetTimer = (forceMode = null) => {
-                clearInterval(timer);
+                clearInterval(timerInterval);
                 isRunning = false;
+                endTime = null;
+                cancelNotification();
                 mode = forceMode || mode;
 
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
@@ -499,6 +586,7 @@
                     const task = tasks.find(t => t.id === selectedTaskId);
                     totalTime = (task ? task.pomodoroEstimate * 60 : settings.focusDuration * 60) || 1;
                 }
+                saveState();
                 updateUI();
             };
 
@@ -507,12 +595,12 @@
                 tasks = [];
                 selectedTaskId = null;
                 pomodoroSessionCount = 0;
-                saveState();
+                resetTimer('focus'); // Isso já chama saveState()
                 renderTasks();
-                resetTimer('focus');
                 hideModal(resetConfirmModalOverlay);
             };
 
+            // ... (o resto das funções de UI, stats, etc. permanecem as mesmas) ...
             const updateUI = () => {
                 updateTimerDisplay(); 
                 
@@ -588,7 +676,6 @@
                 statsContentEl.innerHTML = statsHTML;
             };
             
-            // --- FUNÇÕES DE GESTÃO DE TAREFAS ---
             const renderTasks = () => {
                 const visibleTasks = tasks.filter(task => !task.completed);
                 
@@ -758,7 +845,20 @@
             };
 
             const saveState = () => {
-                localStorage.setItem('pomodoroCoreState', JSON.stringify({ settings, tasks, selectedTaskId, pomodoroSessionCount, focusMethod }));
+                const state = { 
+                    settings, 
+                    tasks, 
+                    selectedTaskId, 
+                    pomodoroSessionCount, 
+                    focusMethod,
+                    timerState: { // Salva o estado do timer
+                        isRunning,
+                        mode,
+                        endTime,
+                        totalTime
+                    }
+                };
+                localStorage.setItem('pomodoroCoreState', JSON.stringify(state));
             };
 
             const loadState = () => {
@@ -769,6 +869,22 @@
                     selectedTaskId = state.selectedTaskId;
                     pomodoroSessionCount = state.pomodoroSessionCount || 0;
                     focusMethod = state.focusMethod || 'pomodoro';
+
+                    // Restaura o estado do timer
+                    if (state.timerState) {
+                        const { isRunning: wasRunning, mode: savedMode, endTime: savedEndTime, totalTime: savedTotalTime } = state.timerState;
+                        mode = savedMode;
+                        totalTime = savedTotalTime;
+                        
+                        // Se o timer estava rodando, recalcula e continua
+                        if (wasRunning && savedEndTime && savedEndTime > Date.now()) {
+                            endTime = savedEndTime;
+                            timeRemaining = Math.round((endTime - Date.now()) / 1000);
+                            startTimer();
+                        } else {
+                            resetTimer(mode);
+                        }
+                    }
                 }
                 
                 tasks.forEach(t => {
@@ -802,6 +918,8 @@
                 } else { // Adaptativo
                     if (isRunning) {
                         pauseTimer();
+                        const task = tasks.find(t => t.id === selectedTaskId);
+                        if (task) task.focusTime += timeRemaining;
                         showModal(sessionEndModalOverlay, `Você se concentrou por ${formatTime(timeRemaining)}.`);
                         resetTimer('focus');
                     } else {
@@ -826,7 +944,6 @@
                 settings.shortBreakDuration = parseInt(shortBreakDurationInput.value) || 5;
                 settings.longBreakDuration = parseInt(longBreakDurationInput.value) || 15;
                 settings.longBreakInterval = parseInt(longBreakIntervalInput.value) || 4;
-                saveState();
                 hideModal(settingsModalOverlay);
                 if (!isRunning) resetTimer('focus');
             });
@@ -896,6 +1013,9 @@
 
             // --- INICIALIZAÇÃO DA APLICAÇÃO ---
             loadState();
+            if (!isRunning) { // Só reseta o timer na carga se ele não estiver rodando
+                 resetTimer(mode);
+            }
             renderTasks();
             updateMethodToggleUI();
             lucide.createIcons();
