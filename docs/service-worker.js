@@ -1,4 +1,5 @@
-const CACHE_NAME = 'foco-total-core-v1.3';
+const CACHE_NAME = 'foco-total-core-v1.4'; // Versão incrementada para forçar a atualização
+
 const urlsToCache = [
     '/',
     'index.html',
@@ -6,8 +7,9 @@ const urlsToCache = [
     'https://cdn.tailwindcss.com',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap',
     'https://unpkg.com/lucide@latest/dist/umd/lucide.js',
-    'icon-192x192.png',
-    'icon-512x512.png'
+    'icon-180x180.png', // Adicionado
+    'icon-192x192.png', // Corrigido para .png
+    'icon-512x512.png'  // Corrigido para .png
 ];
 
 self.addEventListener('install', event => {
