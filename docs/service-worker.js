@@ -6,8 +6,8 @@ const urlsToCache = [
     'https://cdn.tailwindcss.com',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap',
     'https://unpkg.com/lucide@latest/dist/umd/lucide.js',
-    'icon-192x192.PNG',
-    'icon-512x512.PNG'
+    'icon-192x192.png',
+    'icon-512x512.png'
 ];
 
 self.addEventListener('install', event => {
@@ -64,8 +64,8 @@ self.addEventListener('push', event => {
     const title = data.title || 'Foco Total';
     const options = {
         body: data.body || 'Sua sessão de foco terminou!',
-        icon: 'icon-192x192.PNG',
-        badge: 'icon-192x192.PNG',
+        icon: 'icon-192x192.png',
+        badge: 'icon-192x192.png',
         vibrate: [200, 100, 200]
     };
     event.waitUntil(
