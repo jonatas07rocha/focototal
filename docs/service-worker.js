@@ -1,21 +1,22 @@
-const CACHE_NAME = 'foco-total-core-v1.4'; // Versão incrementada para forçar a atualização
+const CACHE_NAME = 'foco-total-core-v1.5'; // Versão incrementada para forçar a atualização
 
 const urlsToCache = [
-    '/',
+    './', // CORRIGIDO: Garante que a raiz do app seja cacheada corretamente
     'index.html',
     'manifest.json',
     'https://cdn.tailwindcss.com',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap',
     'https://unpkg.com/lucide@latest/dist/umd/lucide.js',
-    'icon-180x180.png', // Adicionado
-    'icon-192x192.png', // Corrigido para .png
-    'icon-512x512.png'  // Corrigido para .png
+    'icon-180x180.png',
+    'icon-192x192.png',
+    'icon-512x512.png'
 ];
 
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
+                console.log('Service Worker: Cacheando App Shell');
                 return cache.addAll(urlsToCache);
             })
     );
@@ -29,6 +30,7 @@ self.addEventListener('activate', event => {
             return Promise.all(
                 cacheNames.map(cacheName => {
                     if (cacheWhitelist.indexOf(cacheName) === -1) {
+                        console.log('Service Worker: Limpando cache antigo:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
@@ -46,6 +48,7 @@ self.addEventListener('fetch', event => {
                 }
                 return fetch(event.request).then(
                     networkResponse => {
+                        // Apenas cacheia respostas válidas e de origens esperadas
                         if (!networkResponse || networkResponse.status !== 200 || (networkResponse.type !== 'basic' && networkResponse.type !== 'cors')) {
                             return networkResponse;
                         }
@@ -78,6 +81,6 @@ self.addEventListener('push', event => {
 self.addEventListener('notificationclick', event => {
     event.notification.close();
     event.waitUntil(
-        clients.openWindow('/')
+        clients.openWindow('./') // Abre a página raiz do app
     );
 });
