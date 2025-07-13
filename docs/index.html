@@ -6,7 +6,7 @@
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#1F2937"/>
-    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <link rel="apple-touch-icon" href="icon-192x192.PNG">
     <link rel="manifest" href="manifest.json">
     
     <title>Foco Total Core</title>
@@ -17,7 +17,7 @@
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <!-- Favicon -->
-    <link id="favicon" rel="icon" href="icon-192x192.png" type="image/png">
+    <link id="favicon" rel="icon" href="icon-192x192.PNG" type="image/png">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -49,11 +49,11 @@
         }
 
         .timer-panel {
-            background-color: #111827; 
+            background-color: #111827;  
             border-radius: 1.25rem;
             padding: 1rem;
             margin-bottom: 1rem;
-            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5); 
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5);  
         }
 
         #progress-ring {
@@ -167,7 +167,7 @@
         </div>
 
         <!-- LISTA DE TAREFAS -->
-        <div class="flex-grow flex flex-col min-h-[200px] mb-4">
+        <div class="flex-grow flex flex-col min-h-0 mb-4">
             <h2 class="text-base font-semibold text-white mb-2">Lista de Tarefas do Dia</h2>
             <div id="task-list" class="space-y-2 flex-grow overflow-y-auto pr-2"></div>
             <!-- FORMULÁRIO DE ADIÇÃO DE TAREFA -->
@@ -249,6 +249,14 @@
                     <label for="long-break-interval" class="block text-xs font-medium text-gray-300">Pomodoros para pausa longa</label>
                     <input type="number" id="long-break-interval" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="4">
                </div>
+            </div>
+            <!-- NOVA SEÇÃO DE NOTIFICAÇÕES -->
+            <div class="mb-4">
+                <h3 class="text-base font-semibold text-blue-400 mb-3">Notificações</h3>
+                <div id="notification-status" class="text-sm text-gray-400 mb-2 text-center"></div>
+                <button id="enable-notifications-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-lg transition-colors text-sm">
+                    Ativar Notificações
+                </button>
             </div>
             <button id="settings-save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl mt-6 transition-colors text-sm">
                 Salvar e Fechar
@@ -369,6 +377,10 @@
             const installBanner = document.getElementById('install-banner');
             const installBtn = document.getElementById('install-btn');
             const installDismissBtn = document.getElementById('install-dismiss-btn');
+            // Notificações
+            const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
+            const notificationStatus = document.getElementById('notification-status');
+
 
             // --- ESTADO DA APLICAÇÃO ---
             let timerInterval, isRunning = false, mode = 'focus', timeRemaining, totalTime, endTime;
@@ -376,6 +388,8 @@
             let settings = { focusDuration: 25, shortBreakDuration: 5, longBreakDuration: 15, longBreakInterval: 4 };
             let focusMethod = 'pomodoro'; // 'pomodoro' ou 'adaptativo'
             let deferredInstallPrompt = null;
+            // Chave VAPID pública - SUBSTITUA PELA SUA CHAVE GERADA
+            const VAPID_PUBLIC_KEY = 'SUA_CHAVE_VAPID_PUBLICA_AQUI';
 
 
             // --- LÓGICA DE INSTALAÇÃO DO PWA ---
@@ -409,11 +423,106 @@
                 installBanner.style.display = 'none';
             });
             
-            // Oculta o banner se o app já estiver em modo standalone
             if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
                  installBanner.style.display = 'none';
             }
 
+            // --- LÓGICA DE NOTIFICAÇÕES PUSH ---
+            const urlBase64ToUint8Array = (base64String) => {
+                const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+                const rawData = window.atob(base64);
+                const outputArray = new Uint8Array(rawData.length);
+                for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
+                }
+                return outputArray;
+            };
+            
+            const updateNotificationUI = () => {
+                if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+                    notificationStatus.textContent = 'Notificações não suportadas.';
+                    enableNotificationsBtn.disabled = true;
+                    return;
+                }
+
+                if (Notification.permission === 'denied') {
+                    notificationStatus.textContent = 'Permissão bloqueada.';
+                    enableNotificationsBtn.disabled = true;
+                    enableNotificationsBtn.textContent = 'Notificações Bloqueadas';
+                } else if (Notification.permission === 'granted') {
+                     navigator.serviceWorker.ready.then(reg => {
+                        reg.pushManager.getSubscription().then(sub => {
+                            if (sub) {
+                                notificationStatus.textContent = 'Notificações ativadas.';
+                                enableNotificationsBtn.disabled = true;
+                                enableNotificationsBtn.textContent = 'Notificações Ativadas';
+                            } else {
+                                notificationStatus.textContent = 'Clique para ativar.';
+                                enableNotificationsBtn.disabled = false;
+                                enableNotificationsBtn.textContent = 'Ativar Notificações';
+                            }
+                        });
+                    });
+                } else {
+                    notificationStatus.textContent = 'Notificações não ativadas.';
+                    enableNotificationsBtn.disabled = false;
+                    enableNotificationsBtn.textContent = 'Ativar Notificações';
+                }
+            };
+
+            const subscribeUserToPush = () => {
+                if (VAPID_PUBLIC_KEY === 'SUA_CHAVE_VAPID_PUBLICA_AQUI') {
+                    console.error('ERRO: Chave VAPID pública não foi definida.');
+                    showModal(alertModalOverlay, 'Erro de configuração: A chave de notificação não foi definida pelo desenvolvedor.');
+                    return;
+                }
+                navigator.serviceWorker.ready.then(registration => {
+                    const subscribeOptions = {
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    };
+                    return registration.pushManager.subscribe(subscribeOptions);
+                })
+                .then(pushSubscription => {
+                    console.log('Recebida a PushSubscription: ', JSON.stringify(pushSubscription));
+                    sendSubscriptionToServer(pushSubscription);
+                    updateNotificationUI();
+                    return pushSubscription;
+                })
+                .catch(err => {
+                    console.error('Falha ao inscrever o usuário: ', err);
+                    if (Notification.permission === 'denied') {
+                        showModal(alertModalOverlay, 'Você bloqueou as notificações. Para ativá-las, mude as permissões para este site nas configurações do seu navegador.');
+                    }
+                    updateNotificationUI();
+                });
+            };
+
+            const sendSubscriptionToServer = (subscription) => {
+                // TODO: Implementar a lógica para enviar o objeto 'subscription' para o seu backend.
+                // Exemplo:
+                // fetch('/api/subscribe', {
+                //   method: 'POST',
+                //   headers: { 'Content-Type': 'application/json' },
+                //   body: JSON.stringify({ subscription, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+                // });
+                console.log('TODO: Enviar inscrição para o servidor.');
+                showModal(alertModalOverlay, 'Notificações ativadas com sucesso!');
+            };
+
+            enableNotificationsBtn.addEventListener('click', () => {
+                if (Notification.permission === 'default') {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            subscribeUserToPush();
+                        }
+                        updateNotificationUI();
+                    });
+                } else if (Notification.permission === 'granted') {
+                    subscribeUserToPush();
+                }
+            });
 
             // --- FUNÇÕES DE GESTÃO DE MODO ---
             const updateMethodToggleUI = () => {
@@ -434,23 +543,9 @@
             };
 
             // --- FUNÇÕES DO TIMER ---
-            const scheduleNotification = (title, options, timestamp) => {
-                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                    navigator.serviceWorker.controller.postMessage({
-                        type: 'scheduleNotification',
-                        payload: { title, options, timestamp }
-                    });
-                }
-            };
-
-            const cancelNotification = () => {
-                 if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                    navigator.serviceWorker.controller.postMessage({ type: 'cancelNotification' });
-                }
-            }
-
             const showModal = (modalOverlay, message) => {
-                const messageEl = modalOverlay.querySelector('p');
+                const messageElId = modalOverlay.id.replace('-overlay', '-message');
+                const messageEl = document.getElementById(messageElId);
                 if(messageEl && message) messageEl.textContent = message;
                 modalOverlay.classList.add('visible');
             };
@@ -465,10 +560,7 @@
                     showModal(alertModalOverlay, 'Por favor, selecione uma tarefa para iniciar o foco.');
                     return;
                 }
-                if ('Notification' in window && Notification.permission === 'default') {
-                    Notification.requestPermission();
-                }
-
+                
                 if (focusMethod === 'adaptativo' && mode === 'focus' && timeRemaining <= 0) {
                     timeRemaining = 0;
                     const task = tasks.find(t => t.id === selectedTaskId);
@@ -476,23 +568,14 @@
                 }
 
                 isRunning = true;
-                // **NOVA LÓGICA DE TIMESTAMP**
-                if (!endTime) { // Só define um novo endTime se não houver um em andamento (ex: vindo do localStorage)
+                if (!endTime) {
                     endTime = Date.now() + timeRemaining * 1000;
                 }
                 
-                // **NOVA LÓGICA DE NOTIFICAÇÃO**
-                if (focusMethod === 'pomodoro' || mode !== 'focus') {
-                    const task = tasks.find(t => t.id === selectedTaskId);
-                    const nextMode = (focusMethod === 'pomodoro' && (pomodoroSessionCount + 1) % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
-                    const notificationTitle = 'Foco Concluído!';
-                    const notificationBody = mode === 'focus' 
-                        ? (nextMode === 'longBreak' ? 'Hora de uma pausa longa.' : 'Faça uma pausa curta.')
-                        : 'Vamos voltar ao foco.';
-                    const options = { body: notificationBody + (task ? `\nTarefa: ${task.name}` : ''), icon: 'icon-192x192.png' };
-                    scheduleNotification(notificationTitle, options, endTime);
-                }
-
+                // A lógica de notificação agora é responsabilidade do servidor.
+                // O cliente apenas informa o servidor quando uma sessão começa/termina.
+                // Ex: sendSessionStateToServer({ status: 'started', endTime });
+                
                 updateUI();
                 timerInterval = setInterval(updateTimer, 1000);
             };
@@ -501,17 +584,14 @@
                 if (!isRunning) return;
                 isRunning = false;
                 clearInterval(timerInterval);
-                // **NOVA LÓGICA DE NOTIFICAÇÃO**
-                cancelNotification(); 
-                // Mantém o endTime, mas limpa o timeRemaining para ser recalculado se reiniciar
                 timeRemaining = Math.round((endTime - Date.now()) / 1000);
                 saveState();
                 updateUI();
             };
             
             const updateTimerDisplay = () => {
-                const minutes = Math.floor(timeRemaining / 60);
-                const seconds = timeRemaining % 60;
+                const minutes = Math.floor(Math.abs(timeRemaining) / 60);
+                const seconds = Math.abs(timeRemaining) % 60;
                 const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
                 timerDisplay.textContent = display;
                 document.title = `${display} - Foco Total`;
@@ -529,15 +609,11 @@
             };
 
             const updateTimer = () => {
-                // **NOVA LÓGICA DE TIMESTAMP**
                 const remaining = Math.round((endTime - Date.now()) / 1000);
                 
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     if (remaining >= 0) {
                         timeRemaining = remaining;
-                        if (isRunning && mode === 'focus') {
-                            // A contagem de tempo de foco pode ser mais precisa se calculada no final
-                        }
                         updateTimerDisplay();
                     } else {
                         clearInterval(timerInterval);
@@ -551,7 +627,7 @@
 
             const switchMode = () => {
                 isRunning = false;
-                endTime = null; // Limpa o horário de término
+                endTime = null; 
                 
                 if (mode === 'focus') {
                     if (focusMethod === 'pomodoro') {
@@ -559,7 +635,6 @@
                         const task = tasks.find(t => t.id === selectedTaskId);
                         if(task) {
                             task.pomodorosCompleted++;
-                            // Calcula o tempo de foco real
                             task.focusTime += totalTime;
                         }
                     }
@@ -575,7 +650,6 @@
                 clearInterval(timerInterval);
                 isRunning = false;
                 endTime = null;
-                cancelNotification();
                 mode = forceMode || mode;
 
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
@@ -595,12 +669,11 @@
                 tasks = [];
                 selectedTaskId = null;
                 pomodoroSessionCount = 0;
-                resetTimer('focus'); // Isso já chama saveState()
+                resetTimer('focus');
                 renderTasks();
                 hideModal(resetConfirmModalOverlay);
             };
 
-            // ... (o resto das funções de UI, stats, etc. permanecem as mesmas) ...
             const updateUI = () => {
                 updateTimerDisplay(); 
                 
@@ -870,13 +943,11 @@
                     pomodoroSessionCount = state.pomodoroSessionCount || 0;
                     focusMethod = state.focusMethod || 'pomodoro';
 
-                    // Restaura o estado do timer
                     if (state.timerState) {
                         const { isRunning: wasRunning, mode: savedMode, endTime: savedEndTime, totalTime: savedTotalTime } = state.timerState;
                         mode = savedMode;
                         totalTime = savedTotalTime;
                         
-                        // Se o timer estava rodando, recalcula e continua
                         if (wasRunning && savedEndTime && savedEndTime > Date.now()) {
                             endTime = savedEndTime;
                             timeRemaining = Math.round((endTime - Date.now()) / 1000);
@@ -1013,13 +1084,13 @@
 
             // --- INICIALIZAÇÃO DA APLICAÇÃO ---
             loadState();
-            if (!isRunning) { // Só reseta o timer na carga se ele não estiver rodando
-                 resetTimer(mode);
+            if (!isRunning) {
+                resetTimer(mode);
             }
             renderTasks();
             updateMethodToggleUI();
+            updateNotificationUI();
             lucide.createIcons();
-            if ('Notification' in window && Notification.permission === 'default') {}
         });
     </script>
 </body>
