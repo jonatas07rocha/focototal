@@ -424,17 +424,24 @@
             let focusMethod = 'pomodoro';
             let deferredInstallPrompt = null;
             let showCompletedTasks = false;
+            let audioInitialized = false; // Flag para controlar a inicialização do áudio
             
             // ===================================================================
             //  IMPORTANTE: COLE AQUI A SUA 'NEXT_PUBLIC_VAPID_PUBLIC_KEY'
             // ===================================================================
-            const VAPID_PUBLIC_KEY = 'BBBxZjwTP1o7HXeR-y6pgw3dKjamhw7eThGVow5ZgsH0H2kw_0GrD56zynonbekw4LKibM3cZY_m4ibHTYS7XQY';
+            const VAPID_PUBLIC_KEY = ''; // <-- COLE SUA CHAVE PÚBLICA AQUI
 
-            // Inicializa o sintetizador de áudio para feedback sonoro
+            // --- LÓGICA DE ÁUDIO (ATUALIZADA) ---
             let synth;
-            Tone.start().then(() => {
-                synth = new Tone.Synth().toDestination();
-            }).catch(e => console.error("Erro ao iniciar Tone.js:", e));
+            // Função para inicializar o áudio após um gesto do usuário
+            const initializeAudio = () => {
+                if (audioInitialized) return; // Só executa uma vez
+                Tone.start().then(() => {
+                    synth = new Tone.Synth().toDestination();
+                    audioInitialized = true;
+                    console.log("AudioContext iniciado com sucesso pelo usuário.");
+                }).catch(e => console.error("Erro ao iniciar Tone.js:", e));
+            };
 
 
             // --- LÓGICA DE INSTALAÇÃO DO PWA ---
@@ -885,6 +892,7 @@
             };
 
             const addTask = () => {
+                initializeAudio(); // Tenta inicializar o áudio ao adicionar uma tarefa
                 const taskName = newTaskInput.value.trim();
                 const estimate = (focusMethod === 'pomodoro') ? (parseInt(newTaskEstimateInput.value) || 1) : 1; 
                 if (taskName) {
@@ -1078,6 +1086,7 @@
             
             // --- EVENT LISTENERS ---
             startPauseBtn.addEventListener('click', () => {
+                initializeAudio(); // Tenta inicializar o áudio ao clicar em play/pause
                 startPauseBtn.classList.add('start-pause-btn-clicked');
                 startPauseBtn.addEventListener('animationend', () => {
                     startPauseBtn.classList.remove('start-pause-btn-clicked');
