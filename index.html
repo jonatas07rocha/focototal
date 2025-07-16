@@ -429,7 +429,7 @@
             // ===================================================================
             //  IMPORTANTE: COLE AQUI A SUA 'NEXT_PUBLIC_VAPID_PUBLIC_KEY'
             // ===================================================================
-            const VAPID_PUBLIC_KEY = 'BFEMYDrgvsQbBWqZILh3312zu_-4oBlDDwRD8OwHGJdV0A7OcDYUAs6IN7dg_wfL0vu7LlSIb4cYwY7oZGMUjlg';
+            const VAPID_PUBLIC_KEY = 'BFEMYDrgvsQbBWqZILh3312zu_-4oBlDDwRD8OwHGJdV0A7OcDYUAs6IN7dg_wfL0vu7LlSIb4cYwY7oZGMUjlg'; // <-- COLE SUA CHAVE PÚBLICA AQUI
 
             // --- LÓGICA DE ÁUDIO (ATUALIZADA) ---
             let synth;
@@ -479,7 +479,7 @@
                     installBanner.style.display = 'none';
             }
 
-            // --- LÓGICA DE NOTIFICAÇÕES PUSH (ATUALIZADA) ---
+            // --- LÓGICA DE NOTIFICAÇÕES PUSH (ATUALIZADA E CORRIGIDA) ---
             const urlBase64ToUint8Array = (base64String) => {
                 const padding = '='.repeat((4 - base64String.length % 4) % 4);
                 const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -523,32 +523,46 @@
                 }
             };
             
-            const requestNotificationPermission = () => {
+            const requestNotificationPermission = async () => {
                 if (VAPID_PUBLIC_KEY === '') {
                     console.error('ERRO: Chave VAPID pública não foi definida no index.html.');
                     showModal(alertModalOverlay, 'Erro de configuração: A chave de notificação não foi definida.');
                     return;
                 }
                 
-                if (Notification.permission === 'default') {
-                    Notification.requestPermission().then(permission => {
-                        if (permission === 'granted') {
-                            navigator.serviceWorker.ready.then(registration => {
-                                return registration.pushManager.subscribe({
-                                    userVisibleOnly: true,
-                                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-                                });
-                            }).then(sub => {
-                                console.log('Usuário inscrito com sucesso:', sub);
-                                showModal(alertModalOverlay, 'Notificações ativadas com sucesso!');
-                            }).catch(err => {
-                                console.error('Falha ao inscrever o usuário:', err);
-                            });
-                        }
-                        updateNotificationUI();
-                    });
-                } else if (Notification.permission === 'denied') {
-                     showModal(alertModalOverlay, 'Você bloqueou as notificações. Para ativá-las, mude as permissões para este site nas configurações do seu navegador.');
+                const currentPermission = Notification.permission;
+                if (currentPermission === 'granted') {
+                    console.log('A permissão para notificações já foi concedida.');
+                    return;
+                }
+                if (currentPermission === 'denied') {
+                    showModal(alertModalOverlay, 'Você bloqueou as notificações. Para ativá-las, mude as permissões para este site nas configurações do seu navegador.');
+                    return;
+                }
+
+                try {
+                    const permissionResult = await Notification.requestPermission();
+                    updateNotificationUI();
+
+                    if (permissionResult === 'granted') {
+                        console.log('Permissão concedida pelo usuário.');
+                        const registration = await navigator.serviceWorker.ready;
+                        const subscription = await registration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                        });
+                        
+                        console.log('Usuário inscrito com sucesso:', subscription);
+                        await fetch('/api/welcome', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ subscription: subscription })
+                        });
+                    } else {
+                        console.log('Permissão não concedida pelo usuário.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao pedir permissão ou inscrever:', error);
                 }
             };
 
@@ -612,7 +626,6 @@
                     endTime = Date.now() + (focusMethod === 'adaptativo' && mode === 'focus' ? totalTime * 1000 : timeRemaining * 1000);
                 }
                 
-                // --- LÓGICA DE AGENDAMENTO DE NOTIFICAÇÃO (ATUALIZADA) ---
                 if ((focusMethod === 'pomodoro' || mode !== 'focus') && Notification.permission === 'granted') {
                      navigator.serviceWorker.ready.then(reg => {
                         reg.pushManager.getSubscription().then(sub => {
