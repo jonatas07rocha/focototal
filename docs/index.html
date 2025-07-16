@@ -18,9 +18,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Tone.js CDN para feedback sonoro -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <!-- Favicon -->
     <link id="favicon" rel="icon" href="icon-192x192.png" type="image/png">
     <style>
+        html, body {
+            height: 100%; /* Garante que o HTML e o Body ocupem a altura total da viewport */
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #000000;
@@ -46,8 +52,9 @@
             width: 100%;
             max-width: 420px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            height: calc(100vh - 2rem);
-            max-height: 850px;
+            /* Removido height e max-height para permitir que o flex-grow funcione */
+            min-height: calc(100vh - 2rem); /* Garante uma altura mínima baseada na viewport */
+            flex-grow: 1; /* Permite que o device-shell se expanda dentro do body */
         }
 
         .timer-panel {
@@ -132,24 +139,45 @@
             z-index: 2000;
             box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
         }
+
+        /* New: Animation for play/pause button click feedback */
+        .start-pause-btn-clicked {
+            animation: pulse-small 0.3s ease-out;
+        }
+
+        @keyframes pulse-small {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        /* New: Animation for new task item addition */
+        .task-item.added-feedback {
+            animation: new-task-pop 0.3s ease-out;
+        }
+
+        @keyframes new-task-pop {
+            0% { transform: scale(0.98); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
     <div id="device-shell" class="device-shell">
         <!-- CABEÇALHO -->
-        <header class="flex justify-between items-center mb-4">
+        <header class="flex justify-between items-center mb-4 flex-shrink-0">
             <h1 class="text-xl font-bold text-white">Foco Total <span class="text-blue-400 font-semibold">Core</span></h1>
             <div id="focus-method-toggle" class="flex bg-gray-900 rounded-lg p-1 text-xs font-semibold">
-                <button data-method="pomodoro" class="method-btn px-3 py-1 rounded-md transition-colors">Pomodoro</button>
-                <button data-method="adaptativo" class="method-btn px-3 py-1 rounded-md transition-colors">Adaptativo</button>
+                <button data-method="pomodoro" class="method-btn px-3 py-1 rounded-md transition-colors" aria-label="Selecionar modo Pomodoro">Pomodoro</button>
+                <button data-method="adaptativo" class="method-btn px-3 py-1 rounded-md transition-colors" aria-label="Selecionar modo Adaptativo">Adaptativo</button>
             </div>
-            <button id="help-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Ajuda">
+            <button id="help-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Ajuda" aria-label="Ajuda">
                 <i data-lucide="help-circle" class="w-6 h-6"></i>
             </button>
         </header>
 
         <!-- PAINEL DO TIMER -->
-        <div class="timer-panel">
+        <div class="timer-panel flex-shrink-0">
             <div class="relative w-56 h-56 mx-auto">
                 <svg class="w-full h-full" viewBox="0 0 100 100">
                     <circle class="text-gray-800" stroke-width="7" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
@@ -162,52 +190,56 @@
         </div>
 
         <!-- TAREFA ATUAL E CICLOS -->
-        <div class="text-center mb-2">
+        <div class="text-center mb-2 flex-shrink-0">
             <p class="text-gray-400 text-sm">Foco em:</p>
             <p id="current-task-display" class="text-white font-semibold text-base truncate">Nenhuma tarefa selecionada</p>
             <div id="pomodoro-cycles" class="flex justify-center items-center space-x-2 mt-1 h-6"></div>
         </div>
 
+        <!-- CONTROLES PRINCIPAIS -->
+        <div id="player-controls" class="flex items-center justify-center space-x-4 mb-4 flex-shrink-0">
+            <button id="internal-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Interna" aria-label="Registrar Interrupção Interna">
+                <i data-lucide="zap-off" class="w-6 h-6"></i>
+            </button>
+            <button id="start-pause-btn" class="w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center" aria-label="Iniciar/Pausar Timer">
+            </button>
+            <button id="external-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Externa" aria-label="Registrar Interrupção Externa">
+                <i data-lucide="user-x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
         <!-- LISTA DE TAREFAS -->
-        <div class="flex-grow flex flex-col min-h-0 mb-4">
-            <h2 class="text-base font-semibold text-white mb-2">Lista de Tarefas do Dia</h2>
-            <div id="task-list" class="space-y-2 flex-grow overflow-y-auto pr-2"></div>
+        <div class="flex-grow flex flex-col min-h-0">
+            <h2 class="text-base font-semibold text-white mb-2 flex-shrink-0">Lista de Tarefas do Dia</h2>
+            <!-- Botão de filtro de tarefas concluídas -->
+            <div class="flex justify-end mb-2 flex-shrink-0">
+                <button id="toggle-completed-tasks-btn" class="bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1 rounded-md transition-colors" aria-label="Mostrar ou esconder tarefas concluídas">Mostrar Concluídas</button>
+            </div>
+            <div id="task-list" class="flex-grow space-y-2 overflow-y-auto pr-2">
+                <!-- As tarefas serão inseridas aqui pelo JS -->
+            </div>
             <!-- FORMULÁRIO DE ADIÇÃO DE TAREFA -->
-            <div class="flex mt-3 space-x-2 items-center bg-gray-900 p-2 rounded-lg">
-                <input type="text" id="new-task-input" class="flex-grow bg-gray-700 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-sm border-2 border-transparent focus:border-blue-500 focus:outline-none" placeholder="Adicionar nova tarefa...">
+            <div class="flex mt-3 space-x-2 items-center bg-gray-900 p-2 rounded-lg flex-shrink-0">
+                <input type="text" id="new-task-input" class="flex-grow bg-gray-700 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-sm border-2 border-transparent focus:border-blue-500 focus:outline-none" placeholder="Adicionar nova tarefa..." aria-label="Nome da nova tarefa">
                 <div class="flex items-center">
-                    <label for="new-task-estimate" class="text-sm text-gray-400 mr-1 font-bold">#</label>
-                    <input type="number" id="new-task-estimate" class="w-12 bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="1" min="1">
+                    <label for="new-task-estimate" id="new-task-estimate-label" class="text-sm text-gray-400 mr-1 font-bold">#</label>
+                    <input type="number" id="new-task-estimate" class="w-12 bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="1" min="1" aria-label="Estimativa de pomodoros ou minutos">
                 </div>
-                <button id="add-task-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold w-10 h-10 rounded-lg transition-colors text-2xl flex-shrink-0 flex items-center justify-center">+</button>
+                <button id="add-task-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold w-10 h-10 rounded-lg transition-colors text-2xl flex-shrink-0 flex items-center justify-center" aria-label="Adicionar tarefa">+</button>
             </div>
         </div>
         
-        <!-- CONTROLES -->
-        <div class="flex flex-col items-center space-y-4 mt-4">
-            <!-- CONTROLES PRINCIPAIS -->
-            <div id="player-controls" class="flex items-center justify-center space-x-4">
-                <button id="internal-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Interna">
-                    <i data-lucide="zap-off" class="w-6 h-6"></i>
-                </button>
-                <button id="start-pause-btn" class="w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center">
-                </button>
-                <button id="external-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Externa">
-                    <i data-lucide="user-x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            <!-- CONTROLES SECUNDÁRIOS -->
-            <div id="secondary-controls" class="flex items-center justify-center space-x-6">
-                 <button id="reset-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Zerar o dia">
+        <!-- CONTROLES SECUNDÁRIOS (NOVA POSIÇÃO) -->
+        <div id="secondary-controls" class="flex items-center justify-center space-x-6 mt-4 flex-shrink-0">
+                <button id="reset-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Zerar o dia" aria-label="Zerar o dia">
                     <i data-lucide="refresh-cw" class="w-5 h-5"></i>
                 </button>
-                <button id="stats-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Ver Estatísticas">
+                <button id="stats-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Ver Estatísticas" aria-label="Ver Estatísticas">
                     <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
                 </button>
-                <button id="settings-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Configurações">
+                <button id="settings-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Configurações" aria-label="Configurações">
                     <i data-lucide="settings-2" class="w-5 h-5"></i>
                 </button>
-            </div>
         </div>
     </div>
 
@@ -215,14 +247,14 @@
     <div id="alert-modal-overlay" class="modal-overlay">
         <div class="modal-content text-center">
             <p id="alert-modal-message" class="mb-4"></p>
-            <button id="alert-modal-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">OK</button>
+            <button id="alert-modal-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Fechar alerta">OK</button>
         </div>
     </div>
     <div id="session-end-modal-overlay" class="modal-overlay">
         <div class="modal-content text-center">
             <h2 class="text-xl font-bold text-white mb-2">Sessão Finalizada!</h2>
             <p id="session-end-message" class="mb-6 text-gray-300"></p>
-            <button id="session-end-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Ótimo!</button>
+            <button id="session-end-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Fechar modal de fim de sessão">Ótimo!</button>
         </div>
     </div>
     <div id="settings-modal-overlay" class="modal-overlay">
@@ -233,15 +265,15 @@
                 <div class="grid grid-cols-3 gap-2 text-center">
                     <div>
                         <label for="focus-duration" class="block text-xs font-medium text-gray-300">Foco</label>
-                        <input type="number" id="focus-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="25">
+                        <input type="number" id="focus-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="25" aria-label="Duração do foco em minutos">
                     </div>
                     <div>
                         <label for="short-break-duration" class="block text-xs font-medium text-gray-300">Pausa Curta</label>
-                        <input type="number" id="short-break-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="5">
+                        <input type="number" id="short-break-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="5" aria-label="Duração da pausa curta em minutos">
                     </div>
                     <div>
                         <label for="long-break-duration" class="block text-xs font-medium text-gray-300">Pausa Longa</label>
-                        <input type="number" id="long-break-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="15">
+                        <input type="number" id="long-break-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="15" aria-label="Duração da pausa longa em minutos">
                     </div>
                 </div>
             </div>
@@ -249,18 +281,18 @@
                <h3 class="text-base font-semibold text-blue-400 mb-3">Outros Ajustes</h3>
                <div>
                     <label for="long-break-interval" class="block text-xs font-medium text-gray-300">Pomodoros para pausa longa</label>
-                    <input type="number" id="long-break-interval" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="4">
+                    <input type="number" id="long-break-interval" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="4" aria-label="Número de pomodoros antes de uma pausa longa">
                </div>
             </div>
-            <!-- NOVA SEÇÃO DE NOTIFICAÇÕES -->
+            <!-- SEÇÃO DE NOTIFICAÇÕES ATUALIZADA -->
             <div class="mb-4">
                 <h3 class="text-base font-semibold text-blue-400 mb-3">Notificações</h3>
                 <div id="notification-status" class="text-sm text-gray-400 mb-2 text-center"></div>
-                <button id="enable-notifications-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-lg transition-colors text-sm">
+                <button id="enable-notifications-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-lg transition-colors text-sm" aria-label="Ativar notificações">
                     Ativar Notificações
                 </button>
             </div>
-            <button id="settings-save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl mt-6 transition-colors text-sm">
+            <button id="settings-save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl mt-6 transition-colors text-sm" aria-label="Salvar configurações e fechar">
                 Salvar e Fechar
             </button>
         </div>
@@ -271,7 +303,7 @@
                 <h2 class="text-xl font-bold text-white">Relatório do Dia</h2>
             </div>
             <div id="stats-content" class="bg-gray-800 p-4 rounded-lg max-h-80 overflow-y-auto"></div>
-            <button id="stats-modal-close-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors">Fechar</button>
+            <button id="stats-modal-close-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors" aria-label="Fechar relatório de estatísticas">Fechar</button>
         </div>
     </div>
     <div id="help-modal-overlay" class="modal-overlay">
@@ -297,7 +329,7 @@
                     <li>Faça uma pausa e analise por quanto tempo conseguiu focar.</li>
                 </ol>
             </div>
-            <button id="help-modal-close-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors">Entendi!</button>
+            <button id="help-modal-close-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors" aria-label="Entendi, fechar ajuda">Entendi!</button>
         </div>
     </div>
     <div id="reset-confirm-modal-overlay" class="modal-overlay">
@@ -305,8 +337,8 @@
             <h2 class="text-xl font-bold text-white mb-2">Zerar o Dia?</h2>
             <p id="alert-modal-message-reset" class="mb-6 text-gray-300">Todas as tarefas e o progresso serão apagados. As configurações e o modo de foco serão mantidos. Deseja continuar?</p>
             <div class="flex justify-center space-x-4">
-                <button id="reset-cancel-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Cancelar</button>
-                <button id="reset-confirm-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Sim, Zerar</button>
+                <button id="reset-cancel-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Cancelar zerar o dia">Cancelar</button>
+                <button id="reset-confirm-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Confirmar zerar o dia">Sim, Zerar</button>
             </div>
         </div>
     </div>
@@ -316,8 +348,8 @@
         <div class="max-w-md mx-auto">
             <p class="font-semibold mb-2">Tenha a melhor experiência!</p>
             <p class="text-sm mb-3">Adicione o Foco Total à sua tela de início para acesso rápido e notificações confiáveis.</p>
-            <button id="install-btn" class="bg-white text-blue-600 font-bold py-2 px-5 rounded-lg mr-2">Instalar</button>
-            <button id="install-dismiss-btn" class="bg-transparent border border-white text-white font-bold py-2 px-5 rounded-lg">Agora não</button>
+            <button id="install-btn" class="bg-white text-blue-600 font-bold py-2 px-5 rounded-lg mr-2" aria-label="Instalar aplicativo">Instalar</button>
+            <button id="install-dismiss-btn" class="bg-transparent border border-white text-white font-bold py-2 px-5 rounded-lg" aria-label="Agora não, dispensar instalação">Agora não</button>
         </div>
     </div>
     
@@ -348,11 +380,13 @@
             const progressRing = document.getElementById('progress-ring');
             const newTaskInput = document.getElementById('new-task-input');
             const newTaskEstimateInput = document.getElementById('new-task-estimate');
+            const newTaskEstimateLabel = document.getElementById('new-task-estimate-label'); 
             const addTaskBtn = document.getElementById('add-task-btn');
             const taskListEl = document.getElementById('task-list');
             const currentTaskDisplay = document.getElementById('current-task-display');
             const pomodoroCyclesEl = document.getElementById('pomodoro-cycles');
             const focusMethodToggle = document.getElementById('focus-method-toggle');
+            const toggleCompletedTasksBtn = document.getElementById('toggle-completed-tasks-btn');
             // Modais
             const statsModalOverlay = document.getElementById('stats-modal-overlay');
             const statsModalCloseBtn = document.getElementById('stats-modal-close-btn');
@@ -383,15 +417,24 @@
             const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
             const notificationStatus = document.getElementById('notification-status');
 
-
             // --- ESTADO DA APLICAÇÃO ---
             let timerInterval, isRunning = false, mode = 'focus', timeRemaining, totalTime, endTime;
             let tasks = [], selectedTaskId = null, pomodoroSessionCount = 0;
             let settings = { focusDuration: 25, shortBreakDuration: 5, longBreakDuration: 15, longBreakInterval: 4 };
-            let focusMethod = 'pomodoro'; // 'pomodoro' ou 'adaptativo'
+            let focusMethod = 'pomodoro';
             let deferredInstallPrompt = null;
-            // Chave VAPID pública - SUBSTITUA PELA SUA CHAVE GERADA
-            const VAPID_PUBLIC_KEY = 'SUA_CHAVE_VAPID_PUBLICA_AQUI';
+            let showCompletedTasks = false;
+            
+            // ===================================================================
+            //  IMPORTANTE: COLE AQUI A SUA 'NEXT_PUBLIC_VAPID_PUBLIC_KEY'
+            // ===================================================================
+            const VAPID_PUBLIC_KEY = 'BBBxZjwTP1o7HXeR-y6pgw3dKjamhw7eThGVow5ZgsH0H2kw_0GrD56zynonbekw4LKibM3cZY_m4ibHTYS7XQY';
+
+            // Inicializa o sintetizador de áudio para feedback sonoro
+            let synth;
+            Tone.start().then(() => {
+                synth = new Tone.Synth().toDestination();
+            }).catch(e => console.error("Erro ao iniciar Tone.js:", e));
 
 
             // --- LÓGICA DE INSTALAÇÃO DO PWA ---
@@ -426,10 +469,10 @@
             });
             
             if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-                 installBanner.style.display = 'none';
+                    installBanner.style.display = 'none';
             }
 
-            // --- LÓGICA DE NOTIFICAÇÕES PUSH ---
+            // --- LÓGICA DE NOTIFICAÇÕES PUSH (ATUALIZADA) ---
             const urlBase64ToUint8Array = (base64String) => {
                 const padding = '='.repeat((4 - base64String.length % 4) % 4);
                 const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -453,14 +496,14 @@
                     enableNotificationsBtn.disabled = true;
                     enableNotificationsBtn.textContent = 'Notificações Bloqueadas';
                 } else if (Notification.permission === 'granted') {
-                     navigator.serviceWorker.ready.then(reg => {
+                    navigator.serviceWorker.ready.then(reg => {
                         reg.pushManager.getSubscription().then(sub => {
                             if (sub) {
                                 notificationStatus.textContent = 'Notificações ativadas.';
                                 enableNotificationsBtn.disabled = true;
                                 enableNotificationsBtn.textContent = 'Notificações Ativadas';
                             } else {
-                                notificationStatus.textContent = 'Clique para ativar.';
+                                notificationStatus.textContent = 'Clique para reativar.';
                                 enableNotificationsBtn.disabled = false;
                                 enableNotificationsBtn.textContent = 'Ativar Notificações';
                             }
@@ -472,59 +515,38 @@
                     enableNotificationsBtn.textContent = 'Ativar Notificações';
                 }
             };
-
-            const subscribeUserToPush = () => {
-                if (VAPID_PUBLIC_KEY === 'SUA_CHAVE_VAPID_PUBLICA_AQUI') {
-                    console.error('ERRO: Chave VAPID pública não foi definida.');
-                    showModal(alertModalOverlay, 'Erro de configuração: A chave de notificação não foi definida pelo desenvolvedor.');
+            
+            const requestNotificationPermission = () => {
+                if (VAPID_PUBLIC_KEY === '') {
+                    console.error('ERRO: Chave VAPID pública não foi definida no index.html.');
+                    showModal(alertModalOverlay, 'Erro de configuração: A chave de notificação não foi definida.');
                     return;
                 }
-                navigator.serviceWorker.ready.then(registration => {
-                    const subscribeOptions = {
-                        userVisibleOnly: true,
-                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-                    };
-                    return registration.pushManager.subscribe(subscribeOptions);
-                })
-                .then(pushSubscription => {
-                    console.log('Recebida a PushSubscription: ', JSON.stringify(pushSubscription));
-                    sendSubscriptionToServer(pushSubscription);
-                    updateNotificationUI();
-                    return pushSubscription;
-                })
-                .catch(err => {
-                    console.error('Falha ao inscrever o usuário: ', err);
-                    if (Notification.permission === 'denied') {
-                        showModal(alertModalOverlay, 'Você bloqueou as notificações. Para ativá-las, mude as permissões para este site nas configurações do seu navegador.');
-                    }
-                    updateNotificationUI();
-                });
-            };
-
-            const sendSubscriptionToServer = (subscription) => {
-                // TODO: Implementar a lógica para enviar o objeto 'subscription' para o seu backend.
-                // Exemplo:
-                // fetch('/api/subscribe', {
-                //   method: 'POST',
-                //   headers: { 'Content-Type': 'application/json' },
-                //   body: JSON.stringify({ subscription, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone })
-                // });
-                console.log('TODO: Enviar inscrição para o servidor.');
-                showModal(alertModalOverlay, 'Notificações ativadas com sucesso!');
-            };
-
-            enableNotificationsBtn.addEventListener('click', () => {
+                
                 if (Notification.permission === 'default') {
                     Notification.requestPermission().then(permission => {
                         if (permission === 'granted') {
-                            subscribeUserToPush();
+                            navigator.serviceWorker.ready.then(registration => {
+                                return registration.pushManager.subscribe({
+                                    userVisibleOnly: true,
+                                    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                                });
+                            }).then(sub => {
+                                console.log('Usuário inscrito com sucesso:', sub);
+                                showModal(alertModalOverlay, 'Notificações ativadas com sucesso!');
+                            }).catch(err => {
+                                console.error('Falha ao inscrever o usuário:', err);
+                            });
                         }
                         updateNotificationUI();
                     });
-                } else if (Notification.permission === 'granted') {
-                    subscribeUserToPush();
+                } else if (Notification.permission === 'denied') {
+                     showModal(alertModalOverlay, 'Você bloqueou as notificações. Para ativá-las, mude as permissões para este site nas configurações do seu navegador.');
                 }
-            });
+            };
+
+            enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
+
 
             // --- FUNÇÕES DE GESTÃO DE MODO ---
             const updateMethodToggleUI = () => {
@@ -535,7 +557,16 @@
                     btn.classList.toggle('text-gray-400', btn.dataset.method !== focusMethod);
                 });
                 pomodoroCyclesEl.style.display = focusMethod === 'pomodoro' ? 'flex' : 'none';
-                document.getElementById('new-task-estimate').labels[0].textContent = focusMethod === 'pomodoro' ? '#' : 'min';
+                
+                if (focusMethod === 'pomodoro') {
+                    newTaskEstimateInput.style.display = 'inline-block';
+                    newTaskEstimateLabel.style.display = 'inline-block';
+                    newTaskEstimateLabel.textContent = '#';
+                } else {
+                    newTaskEstimateInput.style.display = 'none';
+                    newTaskEstimateLabel.style.display = 'none';
+                }
+
                 helpContentPomodoro.style.display = focusMethod === 'pomodoro' ? 'block' : 'none';
                 helpContentAdaptativo.style.display = focusMethod === 'adaptativo' ? 'block' : 'none';
                 
@@ -571,12 +602,29 @@
 
                 isRunning = true;
                 if (!endTime) {
-                    endTime = Date.now() + timeRemaining * 1000;
+                    endTime = Date.now() + (focusMethod === 'adaptativo' && mode === 'focus' ? totalTime * 1000 : timeRemaining * 1000);
                 }
                 
-                // A lógica de notificação agora é responsabilidade do servidor.
-                // O cliente apenas informa o servidor quando uma sessão começa/termina.
-                // Ex: sendSessionStateToServer({ status: 'started', endTime });
+                // --- LÓGICA DE AGENDAMENTO DE NOTIFICAÇÃO (ATUALIZADA) ---
+                if ((focusMethod === 'pomodoro' || mode !== 'focus') && Notification.permission === 'granted') {
+                     navigator.serviceWorker.ready.then(reg => {
+                        reg.pushManager.getSubscription().then(sub => {
+                            if (sub) {
+                                const notificationData = {
+                                    subscription: sub,
+                                    delay: timeRemaining,
+                                    title: mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!',
+                                    message: mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?'
+                                };
+                                fetch('/api/subscribe', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(notificationData)
+                                }).catch(err => console.error('Erro ao agendar notificação:', err));
+                            }
+                        });
+                    });
+                }
                 
                 updateUI();
                 timerInterval = setInterval(updateTimer, 1000);
@@ -586,7 +634,9 @@
                 if (!isRunning) return;
                 isRunning = false;
                 clearInterval(timerInterval);
-                timeRemaining = Math.round((endTime - Date.now()) / 1000);
+                if (focusMethod === 'pomodoro' || mode !== 'focus') {
+                    timeRemaining = Math.round((endTime - Date.now()) / 1000);
+                }
                 saveState();
                 updateUI();
             };
@@ -602,8 +652,17 @@
                 let offset;
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     offset = circumference - (timeRemaining / totalTime) * circumference;
-                } else { // Adaptativo
-                    offset = (timeRemaining / totalTime) * circumference;
+                } else {
+                    const secondsInCurrentMinute = timeRemaining % 60;
+                    const progressInMinute = secondsInCurrentMinute / 60;
+
+                    if (minutes % 2 === 0) {
+                        offset = (1 - progressInMinute) * circumference;
+                    } else {
+                        offset = circumference - (progressInMinute * circumference);
+                    }
+                    
+                    if (offset < 0) offset = 0;
                     if (offset > circumference) offset = circumference;
                 }
                 progressRing.style.strokeDasharray = circumference;
@@ -611,9 +670,9 @@
             };
 
             const updateTimer = () => {
-                const remaining = Math.round((endTime - Date.now()) / 1000);
-                
+                let remaining;
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
+                    remaining = Math.round((endTime - Date.now()) / 1000);
                     if (remaining >= 0) {
                         timeRemaining = remaining;
                         updateTimerDisplay();
@@ -621,7 +680,7 @@
                         clearInterval(timerInterval);
                         switchMode();
                     }
-                } else { // Adaptativo
+                } else {
                     timeRemaining = Math.floor((Date.now() - (endTime - totalTime * 1000)) / 1000);
                     updateTimerDisplay();
                 }
@@ -657,10 +716,10 @@
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
                     totalTime = timeRemaining;
-                } else { // Adaptativo
+                } else {
                     timeRemaining = 0;
                     const task = tasks.find(t => t.id === selectedTaskId);
-                    totalTime = (task ? task.pomodoroEstimate * 60 : settings.focusDuration * 60) || 1;
+                    totalTime = (task ? task.pomodoroEstimate * 60 : settings.focusDuration * 60) || 1; 
                 }
                 saveState();
                 updateUI();
@@ -687,20 +746,26 @@
                 startPauseBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-green-600', 'hover:bg-green-700', 'bg-red-600', 'hover:bg-red-700');
                 
                 let btnIcon = '';
+                let ariaLabelText = '';
+
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     startPauseBtn.classList.add(`bg-${modeColor}-600`, `hover:bg-${modeColor}-700`);
                     btnIcon = isRunning ? 'pause' : 'play';
-                } else { // Adaptativo
+                    ariaLabelText = isRunning ? 'Pausar Timer' : 'Iniciar Timer';
+                } else {
                     if (isRunning) {
                         startPauseBtn.classList.add('bg-red-600', 'hover:bg-red-700');
-                        btnIcon = 'square'; 
+                        btnIcon = 'square';
+                        ariaLabelText = 'Parar Foco Adaptativo';
                     } else {
                         startPauseBtn.classList.add(`bg-${modeColor}-600`, `hover:bg-${modeColor}-700`);
                         btnIcon = 'play';
+                        ariaLabelText = 'Iniciar Foco Adaptativo';
                     }
                 }
             
                 startPauseBtn.innerHTML = `<i data-lucide="${btnIcon}" class="w-8 h-8 ${btnIcon === 'play' ? 'pl-1' : ''}"></i>`;
+                startPauseBtn.setAttribute('aria-label', ariaLabelText);
             
                 lucide.createIcons();
             };
@@ -752,15 +817,24 @@
             };
             
             const renderTasks = () => {
-                const visibleTasks = tasks.filter(task => !task.completed);
+                const tasksToRender = showCompletedTasks ? tasks : tasks.filter(task => !task.completed);
                 
-                taskListEl.innerHTML = visibleTasks.length === 0 ? '<p class="text-gray-500 text-center text-sm">Adicione a sua primeira tarefa!</p>' : '';
+                taskListEl.innerHTML = tasksToRender.length === 0 ? '<p class="text-gray-500 text-center text-sm">Adicione a sua primeira tarefa!</p>' : '';
                 
-                visibleTasks.forEach(task => {
+                tasksToRender.forEach(task => {
                     const taskEl = document.createElement('div');
-                    taskEl.className = `task-item bg-gray-900 p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''}`;
+                    taskEl.className = `task-item bg-gray-900 p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''} ${task.completed ? 'opacity-60' : ''}`;
                     taskEl.dataset.id = task.id;
                     
+                    if (task.justAdded) {
+                        taskEl.classList.add('added-feedback');
+                        taskEl.addEventListener('animationend', () => {
+                            taskEl.classList.remove('added-feedback');
+                            task.justAdded = false;
+                            saveState();
+                        }, { once: true });
+                    }
+
                     const isEditing = task.isEditing;
                     const estimateLabel = focusMethod === 'pomodoro' ? 'Pomodoros' : 'Estimativa';
                     const iconEstimate = focusMethod === 'pomodoro' ? 'check-circle-2' : 'target';
@@ -769,22 +843,24 @@
                     taskEl.innerHTML = `
                         <div class="flex justify-between items-center">
                             <div class="flex items-center min-w-0 flex-grow">
-                                <button data-complete-id="${task.id}" class="complete-btn text-gray-400 hover:text-green-500 mr-3 flex-shrink-0"><i data-lucide="square" class="w-5 h-5"></i></button>
+                                <button data-complete-id="${task.id}" class="complete-btn text-gray-400 hover:text-green-500 mr-3 flex-shrink-0" aria-label="Marcar tarefa ${task.name} como concluída"><i data-lucide="square" class="w-5 h-5"></i></button>
                                 ${isEditing 
-                                    ? `<input type="text" value="${task.name}" class="task-edit-input bg-gray-800 text-white rounded px-2 py-1 text-sm flex-grow mx-2 border-2 border-blue-500 focus:outline-none" data-edit-input-id="${task.id}">`
-                                    : `<span class="task-name truncate text-sm">${task.name}</span>`
+                                    ? `<input type="text" value="${task.name}" class="task-edit-input bg-gray-800 text-white rounded px-2 py-1 text-sm flex-grow mx-2 border-2 border-blue-500 focus:outline-none" data-edit-input-id="${task.id}" aria-label="Editar nome da tarefa ${task.name}">`
+                                    : `<span class="task-name truncate text-sm ${task.completed ? 'line-through' : ''}">${task.name}</span>`
                                 }
                             </div>
                             <div class="flex items-center space-x-1 flex-shrink-0">
-                                <button data-edit-id="${task.id}" class="edit-btn text-gray-500 hover:text-blue-500 transition-colors p-1 rounded-md"><i data-lucide="${isEditing ? 'save' : 'pencil'}" class="w-4 h-4"></i></button>
-                                <button data-delete-id="${task.id}" class="delete-btn text-gray-500 hover:text-red-500 transition-colors p-1 rounded-md"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                <button data-edit-id="${task.id}" class="edit-btn text-gray-500 hover:text-blue-500 transition-colors p-1 rounded-md" aria-label="${isEditing ? 'Salvar edição da tarefa ' + task.name : 'Editar tarefa ' + task.name}"><i data-lucide="${isEditing ? 'save' : 'pencil'}" class="w-4 h-4"></i></button>
+                                <button data-delete-id="${task.id}" class="delete-btn text-gray-500 hover:text-red-500 transition-colors p-1 rounded-md" aria-label="Excluir tarefa ${task.name}"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
                         <div class="grid grid-cols-4 gap-1 items-center mt-2 pl-8 text-xs text-center">
-                            <span class="text-gray-400 font-bold flex items-center justify-center" title="${estimateLabel}">
-                                <i data-lucide="${iconEstimate}" class="w-4 h-4 mr-1 text-${colorEstimate}-500"></i>
-                                ${focusMethod === 'pomodoro' ? `${task.pomodorosCompleted}/` : ''}${task.pomodoroEstimate}${focusMethod === 'adaptativo' ? 'm' : ''}
-                            </span>
+                            ${focusMethod === 'pomodoro' ? `
+                                <span class="text-gray-400 font-bold flex items-center justify-center" title="${estimateLabel}">
+                                    <i data-lucide="${iconEstimate}" class="w-4 h-4 mr-1 text-${colorEstimate}-500"></i>
+                                    ${task.pomodorosCompleted}/${task.pomodoroEstimate}
+                                </span>
+                            ` : ''}
                             <span class="text-gray-400 font-bold flex items-center justify-center" title="Tempo de Foco Total">
                                 <i data-lucide="clock" class="w-4 h-4 mr-1 text-blue-400"></i>
                                 ${formatTime(task.focusTime)}
@@ -810,7 +886,7 @@
 
             const addTask = () => {
                 const taskName = newTaskInput.value.trim();
-                const estimate = parseInt(newTaskEstimateInput.value) || (focusMethod === 'pomodoro' ? 1 : 25);
+                const estimate = (focusMethod === 'pomodoro') ? (parseInt(newTaskEstimateInput.value) || 1) : 1; 
                 if (taskName) {
                     const newTask = { 
                         id: Date.now(), 
@@ -821,14 +897,22 @@
                         externalInterruptions: 0, 
                         focusTime: 0, 
                         completed: false,
-                        isEditing: false
+                        isEditing: false,
+                        justAdded: true
                     };
                     tasks.push(newTask);
                     newTaskInput.value = '';
-                    newTaskEstimateInput.value = (focusMethod === 'pomodoro' ? '1' : '25');
-                    renderTasks();
-                    if (!selectedTaskId || tasks.find(t => t.id === selectedTaskId)?.completed) {
+                    newTaskEstimateInput.value = '1';
+                    
+                    if (synth) {
+                        synth.triggerAttackRelease("C4", "8n");
+                    }
+
+                    const currentSelectedTask = tasks.find(t => t.id === selectedTaskId);
+                    if (!currentSelectedTask || currentSelectedTask.completed) {
                         selectTask(newTask.id);
+                    } else {
+                        renderTasks();
                     }
                 }
             };
@@ -837,10 +921,10 @@
                 tasks = tasks.filter(task => task.id !== id);
                 if (selectedTaskId === id) {
                     const firstIncompleteTask = tasks.find(t => !t.completed);
-                    selectedTaskId = firstIncompleteTask ? firstIncompleteTask.id : null;
-                    if (!isRunning) resetTimer('focus');
+                    selectTask(firstIncompleteTask ? firstIncompleteTask.id : null);
+                } else {
+                    renderTasks();
                 }
-                renderTasks();
             };
 
             const toggleTaskCompleted = (id) => {
@@ -851,8 +935,9 @@
                         if(isRunning && mode === 'focus') pauseTimer();
                         const firstIncompleteTask = tasks.find(t => !t.completed);
                         selectTask(firstIncompleteTask ? firstIncompleteTask.id : null);
+                    } else {
+                       renderTasks();
                     }
-                    renderTasks();
                 }
             };
             
@@ -883,12 +968,12 @@
                 const task = tasks.find(t => t.id === id);
                 const isAnyTaskEditing = tasks.some(t => t.isEditing);
 
-                if (task && !isAnyTaskEditing) {
+                if ((task || id === null) && !isAnyTaskEditing) {
                     selectedTaskId = id;
+                    renderTasks();
+                    
                     if (!isRunning) {
                         resetTimer('focus');
-                    } else {
-                        renderTasks();
                     }
                 }
             };
@@ -926,7 +1011,8 @@
                     selectedTaskId, 
                     pomodoroSessionCount, 
                     focusMethod,
-                    timerState: { // Salva o estado do timer
+                    showCompletedTasks,
+                    timerState: {
                         isRunning,
                         mode,
                         endTime,
@@ -944,6 +1030,7 @@
                     selectedTaskId = state.selectedTaskId;
                     pomodoroSessionCount = state.pomodoroSessionCount || 0;
                     focusMethod = state.focusMethod || 'pomodoro';
+                    showCompletedTasks = state.showCompletedTasks || false;
 
                     if (state.timerState) {
                         const { isRunning: wasRunning, mode: savedMode, endTime: savedEndTime, totalTime: savedTotalTime } = state.timerState;
@@ -958,6 +1045,8 @@
                             resetTimer(mode);
                         }
                     }
+                } else {
+                    focusMethod = 'pomodoro';
                 }
                 
                 tasks.forEach(t => {
@@ -966,6 +1055,9 @@
                         t.internalInterruptions = 0;
                         t.externalInterruptions = t.interruptions || 0;
                         delete t.interruptions;
+                    }
+                    if (t.justAdded !== undefined) {
+                        delete t.justAdded;
                     }
                 });
 
@@ -986,9 +1078,14 @@
             
             // --- EVENT LISTENERS ---
             startPauseBtn.addEventListener('click', () => {
+                startPauseBtn.classList.add('start-pause-btn-clicked');
+                startPauseBtn.addEventListener('animationend', () => {
+                    startPauseBtn.classList.remove('start-pause-btn-clicked');
+                }, { once: true });
+
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     isRunning ? pauseTimer() : startTimer();
-                } else { // Adaptativo
+                } else {
                     if (isRunning) {
                         pauseTimer();
                         const task = tasks.find(t => t.id === selectedTaskId);
@@ -1005,7 +1102,10 @@
             resetCancelBtn.addEventListener('click', () => hideModal(resetConfirmModalOverlay));
             internalInterruptBtn.addEventListener('click', () => logInterruption('internal'));
             externalInterruptBtn.addEventListener('click', () => logInterruption('external'));
-            settingsBtn.addEventListener('click', () => showModal(settingsModalOverlay));
+            settingsBtn.addEventListener('click', () => {
+                updateNotificationUI();
+                showModal(settingsModalOverlay);
+            });
             statsBtn.addEventListener('click', () => showModal(statsModalOverlay));
             helpBtn.addEventListener('click', () => showModal(helpModalOverlay));
             statsModalCloseBtn.addEventListener('click', () => hideModal(statsModalOverlay));
@@ -1032,6 +1132,12 @@
                 } else if (isRunning) {
                     showModal(alertModalOverlay, 'Não é possível trocar de modo enquanto o timer está rodando.');
                 }
+            });
+
+            toggleCompletedTasksBtn.addEventListener('click', () => {
+                showCompletedTasks = !showCompletedTasks;
+                toggleCompletedTasksBtn.textContent = showCompletedTasks ? 'Esconder Concluídas' : 'Mostrar Concluídas';
+                renderTasks();
             });
 
             [alertModalOverlay, settingsModalOverlay, statsModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay].forEach(overlay => {
@@ -1091,7 +1197,6 @@
             }
             renderTasks();
             updateMethodToggleUI();
-            updateNotificationUI();
             lucide.createIcons();
         });
     </script>
