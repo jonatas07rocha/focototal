@@ -479,7 +479,7 @@
                     installBanner.style.display = 'none';
             }
 
-            // --- LÓGICA DE NOTIFICAÇÕES PUSH (ATUALIZADA E CORRIGIDA) ---
+            // --- LÓGICA DE NOTIFICAÇÕES PUSH (VERSÃO "À PROVA DE BALAS") ---
             const urlBase64ToUint8Array = (base64String) => {
                 const padding = '='.repeat((4 - base64String.length % 4) % 4);
                 const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -553,11 +553,18 @@
                         });
                         
                         console.log('Usuário inscrito com sucesso:', subscription);
-                        await fetch('/api/welcome', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ subscription: subscription })
-                        });
+                        
+                        console.log('Tentando enviar notificação de boas-vindas...');
+                        try {
+                            fetch('/api/welcome', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ subscription: subscription })
+                            });
+                            console.log('Pedido de notificação de boas-vindas enviado. Verifique os logs da Vercel.');
+                        } catch (fetchError) {
+                            console.error('ERRO DENTRO DO FETCH:', fetchError);
+                        }
                     } else {
                         console.log('Permissão não concedida pelo usuário.');
                     }
