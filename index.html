@@ -16,10 +16,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <!-- Tone.js CDN para feedback sonoro -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <!-- Favicon -->
     <link id="favicon" rel="icon" href="icon-192x192.png" type="image/png">
     <style>
@@ -352,6 +348,10 @@
             <button id="install-dismiss-btn" class="bg-transparent border border-white text-white font-bold py-2 px-5 rounded-lg" aria-label="Agora não, dispensar instalação">Agora não</button>
         </div>
     </div>
+
+    <!-- SCRIPTS EXTERNOS MOVIDOS PARA O FIM DO BODY -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     
     <script>
         // --- INÍCIO DO REGISTRO DO SERVICE WORKER ---
@@ -556,12 +556,19 @@
                         
                         console.log('Tentando enviar notificação de boas-vindas...');
                         try {
-                            fetch('/api/welcome', {
+                            const response = await fetch('/api/welcome', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ subscription: subscription })
                             });
-                            console.log('Pedido de notificação de boas-vindas enviado. Verifique os logs da Vercel.');
+
+                            if (!response.ok) {
+                                console.error('Falha ao enviar notificação de boas-vindas. Status:', response.status);
+                                const errorData = await response.json();
+                                console.error('Detalhes do erro:', errorData);
+                            } else {
+                                console.log('Pedido de notificação de boas-vindas enviado com sucesso.');
+                            }
                         } catch (fetchError) {
                             console.error('ERRO DENTRO DO FETCH:', fetchError);
                         }
