@@ -16,17 +16,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <!-- Tone.js CDN para feedback sonoro -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     <!-- Favicon -->
     <link id="favicon" rel="icon" href="icon-192x192.png" type="image/png">
     <style>
         html, body {
-            height: 100%; /* Garante que o HTML e o Body ocupem a altura total da viewport */
+            height: 100%;
         }
-
         body {
             font-family: 'Inter', sans-serif;
             background-color: #000000;
@@ -40,7 +35,6 @@
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
-        
         .device-shell {
             background-color: #1F2937;
             border-radius: 2.5rem;
@@ -52,11 +46,9 @@
             width: 100%;
             max-width: 420px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            /* Removido height e max-height para permitir que o flex-grow funcione */
-            min-height: calc(100vh - 2rem); /* Garante uma altura mínima baseada na viewport */
-            flex-grow: 1; /* Permite que o device-shell se expanda dentro do body */
+            min-height: calc(100vh - 2rem);
+            flex-grow: 1;
         }
-
         .timer-panel {
             background-color: #111827;  
             border-radius: 1.25rem;
@@ -64,11 +56,9 @@
             margin-bottom: 1rem;
             box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5);  
         }
-
         #progress-ring {
             transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
         }
-
         .task-item {
             transition: background-color 0.2s, border-color 0.2s, box-shadow 0.3s ease, opacity 0.3s, transform 0.3s ease;
         }
@@ -77,11 +67,9 @@
             border-color: #3B82F6;
             box-shadow: 0 0 12px rgba(59, 130, 246, 0.7);
         }
-        
         #timer-display {
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
         }
-
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
           -webkit-appearance: none; 
@@ -90,7 +78,6 @@
         input[type=number] {
           -moz-appearance: textfield;
         }
-
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -125,7 +112,6 @@
         .modal-overlay.visible .modal-content {
             transform: scale(1);
         }
-        
         #install-banner {
             display: none;
             position: fixed;
@@ -139,23 +125,17 @@
             z-index: 2000;
             box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
         }
-
-        /* New: Animation for play/pause button click feedback */
         .start-pause-btn-clicked {
             animation: pulse-small 0.3s ease-out;
         }
-
         @keyframes pulse-small {
             0% { transform: scale(1); }
             50% { transform: scale(1.03); }
             100% { transform: scale(1); }
         }
-
-        /* New: Animation for new task item addition */
         .task-item.added-feedback {
             animation: new-task-pop 0.3s ease-out;
         }
-
         @keyframes new-task-pop {
             0% { transform: scale(0.98); opacity: 0.8; }
             100% { transform: scale(1); opacity: 1; }
@@ -164,6 +144,7 @@
 </head>
 <body>
     <div id="device-shell" class="device-shell">
+        <!-- O HTML da sua UI permanece aqui, sem alterações -->
         <!-- CABEÇALHO -->
         <header class="flex justify-between items-center mb-4 flex-shrink-0">
             <h1 class="text-xl font-bold text-white">Foco Total <span class="text-blue-400 font-semibold">Core</span></h1>
@@ -352,12 +333,16 @@
             <button id="install-dismiss-btn" class="bg-transparent border border-white text-white font-bold py-2 px-5 rounded-lg" aria-label="Agora não, dispensar instalação">Agora não</button>
         </div>
     </div>
+
+    <!-- SCRIPTS EXTERNOS MOVIDOS PARA O FIM DO BODY -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     
     <script>
         // --- INÍCIO DO REGISTRO DO SERVICE WORKER ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
+                navigator.serviceWorker.register('/service-worker.js') // Caminho ajustado para a raiz
                     .then(registration => {
                         console.log('Service Worker registrado com sucesso:', registration.scope);
                     }).catch(error => {
@@ -424,25 +409,23 @@
             let focusMethod = 'pomodoro';
             let deferredInstallPrompt = null;
             let showCompletedTasks = false;
-            let audioInitialized = false; // Flag para controlar a inicialização do áudio
+            let audioInitialized = false;
             
             // ===================================================================
             //  IMPORTANTE: COLE AQUI A SUA 'NEXT_PUBLIC_VAPID_PUBLIC_KEY'
             // ===================================================================
             const VAPID_PUBLIC_KEY = 'BFEMYDrgvsQbBWqZILh3312zu_-4oBlDDwRD8OwHGJdV0A7OcDYUAs6IN7dg_wfL0vu7LlSIb4cYwY7oZGMUjlg'; // <-- COLE SUA CHAVE PÚBLICA AQUI
 
-            // --- LÓGICA DE ÁUDIO (ATUALIZADA) ---
+            // --- LÓGICA DE ÁUDIO ---
             let synth;
-            // Função para inicializar o áudio após um gesto do usuário
             const initializeAudio = () => {
-                if (audioInitialized) return; // Só executa uma vez
+                if (audioInitialized) return;
                 Tone.start().then(() => {
                     synth = new Tone.Synth().toDestination();
                     audioInitialized = true;
                     console.log("AudioContext iniciado com sucesso pelo usuário.");
                 }).catch(e => console.error("Erro ao iniciar Tone.js:", e));
             };
-
 
             // --- LÓGICA DE INSTALAÇÃO DO PWA ---
             window.addEventListener('beforeinstallprompt', (event) => {
@@ -479,7 +462,7 @@
                     installBanner.style.display = 'none';
             }
 
-            // --- LÓGICA DE NOTIFICAÇÕES PUSH (ATUALIZADA E CORRIGIDA) ---
+            // --- LÓGICA DE NOTIFICAÇÕES PUSH (Versão Unificada) ---
             const urlBase64ToUint8Array = (base64String) => {
                 const padding = '='.repeat((4 - base64String.length % 4) % 4);
                 const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -531,10 +514,7 @@
                 }
                 
                 const currentPermission = Notification.permission;
-                if (currentPermission === 'granted') {
-                    console.log('A permissão para notificações já foi concedida.');
-                    return;
-                }
+                if (currentPermission === 'granted') return;
                 if (currentPermission === 'denied') {
                     showModal(alertModalOverlay, 'Você bloqueou as notificações. Para ativá-las, mude as permissões para este site nas configurações do seu navegador.');
                     return;
@@ -545,21 +525,21 @@
                     updateNotificationUI();
 
                     if (permissionResult === 'granted') {
-                        console.log('Permissão concedida pelo usuário.');
                         const registration = await navigator.serviceWorker.ready;
                         const subscription = await registration.pushManager.subscribe({
                             userVisibleOnly: true,
                             applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
                         });
                         
-                        console.log('Usuário inscrito com sucesso:', subscription);
-                        await fetch('/api/welcome', {
+                        const welcomePayload = {
+                            title: 'Foco Total Ativado! 🚀',
+                            body: 'Tudo pronto! Suas notificações foram configuradas com sucesso.',
+                        };
+                        await fetch('/api/send-notification', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ subscription: subscription })
+                            body: JSON.stringify({ subscription, payload: welcomePayload })
                         });
-                    } else {
-                        console.log('Permissão não concedida pelo usuário.');
                     }
                 } catch (error) {
                     console.error('Erro ao pedir permissão ou inscrever:', error);
@@ -567,7 +547,6 @@
             };
 
             enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
-
 
             // --- FUNÇÕES DE GESTÃO DE MODO ---
             const updateMethodToggleUI = () => {
@@ -630,16 +609,14 @@
                      navigator.serviceWorker.ready.then(reg => {
                         reg.pushManager.getSubscription().then(sub => {
                             if (sub) {
-                                const notificationData = {
-                                    subscription: sub,
-                                    delay: timeRemaining,
+                                const timerPayload = {
                                     title: mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!',
-                                    message: mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?'
+                                    body: mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?'
                                 };
-                                fetch('/api/subscribe', {
+                                fetch('/api/send-notification', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(notificationData)
+                                    body: JSON.stringify({ subscription: sub, payload: timerPayload, delay: timeRemaining })
                                 }).catch(err => console.error('Erro ao agendar notificação:', err));
                             }
                         });
