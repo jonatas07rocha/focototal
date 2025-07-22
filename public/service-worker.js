@@ -1,32 +1,36 @@
-// A versão do cache foi incrementada para garantir que o navegador instale este novo Service Worker.
-const CACHE_NAME = 'foco-total-core-v2.0';
+// A versão do cache foi incrementada para forçar a atualização.
+const CACHE_NAME = 'foco-total-core-v2.1';
 
-// Arquivos locais que são essenciais para o app funcionar offline.
-const localUrlsToCache = [
-  './',
-  '/index.html',
-  '/manifest.json',
-  '/icon-180x180.png',
-  '/icon-192x192.png',
-  '/icon-512x512.png'
+// Lista de arquivos essenciais e confirmados para o funcionamento offline.
+// Removido o 'icon-512x512.png' que provavelmente estava causando a falha.
+const urlsToCache = [
+  '/',
+  'index.html',
+  'manifest.json',
+  'icon-180x180.png',
+  'icon-192x192.png'
 ];
 
 // --- INSTALAÇÃO ---
+// O Service Worker é instalado.
 self.addEventListener('install', event => {
-  console.log('Service Worker: Instalando nova versão...');
+  console.log('Service Worker: Instalando nova versão v2.1...');
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      console.log('Service Worker: Cacheando recursos locais (App Shell).');
-      return cache.addAll(localUrlsToCache);
-    }).catch(error => {
-        console.error('Falha ao cachear o App Shell inicial:', error);
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('Service Worker: Cacheando App Shell essencial.');
+        return cache.addAll(urlsToCache);
+      })
+      .catch(error => {
+        console.error('Service Worker: Falha crítica ao cachear arquivos iniciais:', error);
+      })
   );
-  self.skipWaiting(); // Força o novo Service Worker a se tornar ativo imediatamente.
+  // Força o novo Service Worker a se tornar ativo imediatamente.
+  self.skipWaiting();
 });
 
 // --- ATIVAÇÃO ---
-// Limpa caches antigos para economizar espaço.
+// Limpa caches antigos para liberar espaço e evitar conflitos.
 self.addEventListener('activate', event => {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
@@ -39,14 +43,17 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => {
+        console.log('Service Worker: Ativado e controlando os clientes.');
+        return self.clients.claim();
+    })
   );
 });
 
 // --- FETCH ---
-// Intercepta as requisições e serve do cache primeiro (estratégia Cache First).
+// Intercepta as requisições de rede (estratégia Cache First).
 self.addEventListener('fetch', event => {
-    // Não cacheia as requisições para a nossa própria API
+    // Ignora requisições para a nossa própria API para não cacheá-las.
     if (event.request.url.includes('/api/')) {
         return;
     }
@@ -58,18 +65,15 @@ self.addEventListener('fetch', event => {
                 return cachedResponse;
             }
 
-            // Se não, busca na rede e tenta cachear para uso futuro.
+            // Se não, busca na rede.
             return fetch(event.request).then(networkResponse => {
-                // Apenas cacheia respostas válidas de GET
-                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic' || event.request.method !== 'GET') {
-                    return networkResponse;
+                // Apenas clona e cacheia respostas válidas.
+                if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseToCache);
+                    });
                 }
-                
-                const responseToCache = networkResponse.clone();
-                caches.open(CACHE_NAME).then(cache => {
-                    cache.put(event.request, responseToCache);
-                });
-                
                 return networkResponse;
             });
         })
@@ -77,12 +81,13 @@ self.addEventListener('fetch', event => {
 });
 
 
-// --- PUSH & NOTIFICATIONCLICK (sem alterações) ---
+// --- PUSH & NOTIFICATIONCLICK ---
+// Ouve por mensagens push do servidor.
 self.addEventListener('push', event => {
     const data = event.data ? event.data.json() : {};
     const title = data.title || 'Foco Total';
     const options = {
-        body: data.body || 'Sua sessão de foco terminou!',
+        body: data.body || 'Sua sessão terminou!',
         icon: 'icon-192x192.png',
         badge: 'icon-192x192.png',
         vibrate: [200, 100, 200]
@@ -92,9 +97,10 @@ self.addEventListener('push', event => {
     );
 });
 
+// Define o que acontece quando o usuário clica na notificação.
 self.addEventListener('notificationclick', event => {
     event.notification.close();
     event.waitUntil(
-        clients.openWindow('/') // Abre a página raiz do app
+        clients.openWindow('/') // Abre a página principal do app.
     );
 });
