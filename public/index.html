@@ -898,7 +898,7 @@
                         isEditing: false,
                         justAdded: true
                     };
-                    tasks.push(newTask);
+                    tasks.push(newTask); // CORREÇÃO APLICADA AQUI
                     newTaskInput.value = '';
                     newTaskEstimateInput.value = '1';
                     
@@ -1112,9 +1112,9 @@
             alertModalCloseBtn.addEventListener('click', () => hideModal(alertModalOverlay));
             sessionEndCloseBtn.addEventListener('click', () => hideModal(sessionEndModalOverlay));
             settingsSaveBtn.addEventListener('click', () => {
-                settings.focusDuration = parseInt(focusDurationInput.value) || 25;
-                settings.shortBreakDuration = parseInt(shortBreakDurationInput.value) || 5;
-                settings.longBreakDuration = parseInt(longBreakDurationInput.value) || 15;
+                settings.focusDuration = parseFloat(focusDurationInput.value) || 25;
+                settings.shortBreakDuration = parseFloat(shortBreakDurationInput.value) || 5;
+                settings.longBreakDuration = parseFloat(longBreakDurationInput.value) || 15;
                 settings.longBreakInterval = parseInt(longBreakIntervalInput.value) || 4;
                 hideModal(settingsModalOverlay);
                 if (!isRunning) resetTimer('focus');
