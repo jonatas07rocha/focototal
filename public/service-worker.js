@@ -5,7 +5,7 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-comp
 // --- CONFIGURAÇÃO DO FIREBASE ---
 // ATENÇÃO: COLE AQUI O MESMO OBJETO 'firebaseConfig' QUE VOCÊ USOU NO INDEX.HTML
 const firebaseConfig = {
-  apiKey: "COLE_A_SUA_NOVA_API_KEY_AQUI", // <-- AQUI
+  apiKey: "AIzaSyAHw27qe_K1l5dRMgiupBfoPbElO-ddHzk", // <-- AQUI
   authDomain: "foco-total-app.firebaseapp.com",
   projectId: "foco-total-app",
   storageBucket: "foco-total-app.firebasestorage.app",
