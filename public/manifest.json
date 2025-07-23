@@ -1,7 +1,8 @@
 {
     "name": "Foco Total Core",
     "short_name": "Foco Core",
-    "start_url": ".",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#1F2937",
     "theme_color": "#1F2937",
