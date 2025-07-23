@@ -4,36 +4,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     
+    <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#1F2937"/>
+    <!-- Ícone principal para iOS -->
     <link rel="apple-touch-icon" sizes="180x180" href="icon-180x180.png">
     <link rel="apple-touch-icon" href="icon-192x192.png">
     <link rel="manifest" href="manifest.json">
     
     <title>Foco Total Core</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Favicon -->
     <link id="favicon" rel="icon" href="icon-192x192.png" type="image/png">
     <style>
-        html, body { height: 100%; }
-        body { font-family: 'Inter', sans-serif; background-color: #000000; background-image: radial-gradient(circle at center, #1a202c 0%, #000000 70%); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 1rem; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        .device-shell { background-color: #1F2937; border-radius: 2.5rem; border: 1px solid rgba(255, 255, 255, 0.05); padding: 1.5rem; display: flex; flex-direction: column; color: #D1D5DB; width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); min-height: calc(100vh - 2rem); flex-grow: 1; }
-        .timer-panel { background-color: #111827; border-radius: 1.25rem; padding: 1rem; margin-bottom: 1rem; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5); }
-        #progress-ring { transition: stroke-dashoffset 1s linear, stroke 0.5s ease; }
-        .task-item { transition: background-color 0.2s, border-color 0.2s, box-shadow 0.3s ease, opacity 0.3s, transform 0.3s ease; }
-        .task-item.selected { background-color: #374151; border-color: #3B82F6; box-shadow: 0 0 12px rgba(59, 130, 246, 0.7); }
-        #timer-display { text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
-        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
-        .modal-overlay.visible { opacity: 1; visibility: visible; }
-        .modal-content { background-color: #1F2937; padding: 2rem; border-radius: 1rem; border: 1px solid #3B82F6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); color: white; transform: scale(0.9); transition: transform 0.3s; width: 90%; max-width: 500px; }
-        .modal-overlay.visible .modal-content { transform: scale(1); }
-        .start-pause-btn-clicked { animation: pulse-small 0.3s ease-out; }
-        @keyframes pulse-small { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+        html, body {
+            height: 100%;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000;
+            background-image: radial-gradient(circle at center, #1a202c 0%, #000000 70%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .device-shell {
+            background-color: #1F2937;
+            border-radius: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            color: #D1D5DB;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            min-height: calc(100vh - 2rem);
+            flex-grow: 1;
+        }
+        .timer-panel {
+            background-color: #111827;  
+            border-radius: 1.25rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5);  
+        }
+        #progress-ring {
+            transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+        }
+        .task-item {
+            transition: background-color 0.2s, border-color 0.2s, box-shadow 0.3s ease, opacity 0.3s, transform 0.3s ease;
+        }
+        .task-item.selected {
+            background-color: #374151;
+            border-color: #3B82F6;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.7);
+        }
+        #timer-display {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+          -webkit-appearance: none; 
+          margin: 0; 
+        } 
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: #1F2937;
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid #3B82F6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            color: white;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+            width: 90%;
+            max-width: 500px;
+        }
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
+        }
+        #install-banner {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #2563EB;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            z-index: 2000;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+        }
+        .start-pause-btn-clicked {
+            animation: pulse-small 0.3s ease-out;
+        }
+        @keyframes pulse-small {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        .task-item.added-feedback {
+            animation: new-task-pop 0.3s ease-out;
+        }
+        @keyframes new-task-pop {
+            0% { transform: scale(0.98); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
     <div id="device-shell" class="device-shell">
+        <!-- CABEÇALHO -->
         <header class="flex justify-between items-center mb-4 flex-shrink-0">
             <h1 class="text-xl font-bold text-white">Foco Total <span class="text-blue-400 font-semibold">Core</span></h1>
             <div id="focus-method-toggle" class="flex bg-gray-900 rounded-lg p-1 text-xs font-semibold">
@@ -44,29 +155,51 @@
                 <i data-lucide="help-circle" class="w-6 h-6"></i>
             </button>
         </header>
+
+        <!-- PAINEL DO TIMER -->
         <div class="timer-panel flex-shrink-0">
             <div class="relative w-56 h-56 mx-auto">
                 <svg class="w-full h-full" viewBox="0 0 100 100">
                     <circle class="text-gray-800" stroke-width="7" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
                     <circle id="progress-ring" class="text-blue-500" stroke-width="7" stroke-linecap="round" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" style="transform: rotate(-90deg); transform-origin: center;" />
                 </svg>
-                <div id="timer-display" class="absolute inset-0 flex items-center justify-center text-5xl font-bold text-white">25:00</div>
+                <div id="timer-display" class="absolute inset-0 flex items-center justify-center text-5xl font-bold text-white">
+                    25:00
+                </div>
             </div>
         </div>
+
+        <!-- TAREFA ATUAL E CICLOS -->
         <div class="text-center mb-2 flex-shrink-0">
             <p class="text-gray-400 text-sm">Foco em:</p>
             <p id="current-task-display" class="text-white font-semibold text-base truncate">Nenhuma tarefa selecionada</p>
             <div id="pomodoro-cycles" class="flex justify-center items-center space-x-2 mt-1 h-6"></div>
         </div>
+
+        <!-- CONTROLES PRINCIPAIS -->
         <div id="player-controls" class="flex items-center justify-center space-x-4 mb-4 flex-shrink-0">
-            <button id="internal-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Interna" aria-label="Registrar Interrupção Interna"><i data-lucide="zap-off" class="w-6 h-6"></i></button>
-            <button id="start-pause-btn" class="w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center" aria-label="Iniciar/Pausar Timer"></button>
-            <button id="external-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Externa" aria-label="Registrar Interrupção Externa"><i data-lucide="user-x" class="w-6 h-6"></i></button>
+            <button id="internal-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Interna" aria-label="Registrar Interrupção Interna">
+                <i data-lucide="zap-off" class="w-6 h-6"></i>
+            </button>
+            <button id="start-pause-btn" class="w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center" aria-label="Iniciar/Pausar Timer">
+                <!-- Ícone será inserido via JS -->
+            </button>
+            <button id="external-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Externa" aria-label="Registrar Interrupção Externa">
+                <i data-lucide="user-x" class="w-6 h-6"></i>
+            </button>
         </div>
+
+        <!-- LISTA DE TAREFAS -->
         <div class="flex-grow flex flex-col min-h-0">
             <h2 class="text-base font-semibold text-white mb-2 flex-shrink-0">Lista de Tarefas do Dia</h2>
-            <div class="flex justify-end mb-2 flex-shrink-0"><button id="toggle-completed-tasks-btn" class="bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1 rounded-md transition-colors" aria-label="Mostrar ou esconder tarefas concluídas">Mostrar Concluídas</button></div>
-            <div id="task-list" class="flex-grow space-y-2 overflow-y-auto pr-2"></div>
+            <!-- Botão de filtro de tarefas concluídas -->
+            <div class="flex justify-end mb-2 flex-shrink-0">
+                <button id="toggle-completed-tasks-btn" class="bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1 rounded-md transition-colors" aria-label="Mostrar ou esconder tarefas concluídas">Mostrar Concluídas</button>
+            </div>
+            <div id="task-list" class="flex-grow space-y-2 overflow-y-auto pr-2">
+                <!-- As tarefas serão inseridas aqui pelo JS -->
+            </div>
+            <!-- FORMULÁRIO DE ADIÇÃO DE TAREFA -->
             <div class="flex mt-3 space-x-2 items-center bg-gray-900 p-2 rounded-lg flex-shrink-0">
                 <input type="text" id="new-task-input" class="flex-grow bg-gray-700 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-sm border-2 border-transparent focus:border-blue-500 focus:outline-none" placeholder="Adicionar nova tarefa..." aria-label="Nome da nova tarefa">
                 <div class="flex items-center">
@@ -76,117 +209,457 @@
                 <button id="add-task-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold w-10 h-10 rounded-lg transition-colors text-2xl flex-shrink-0 flex items-center justify-center" aria-label="Adicionar tarefa">+</button>
             </div>
         </div>
+        
+        <!-- CONTROLES SECUNDÁRIOS (NOVA POSIÇÃO) -->
         <div id="secondary-controls" class="flex items-center justify-center space-x-6 mt-4 flex-shrink-0">
-            <button id="reset-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Zerar o dia" aria-label="Zerar o dia"><i data-lucide="refresh-cw" class="w-5 h-5"></i></button>
-            <button id="stats-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Ver Estatísticas" aria-label="Ver Estatísticas"><i data-lucide="bar-chart-2" class="w-5 h-5"></i></button>
-            <button id="settings-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Configurações" aria-label="Configurações"><i data-lucide="settings-2" class="w-5 h-5"></i></button>
+                <button id="reset-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Zerar o dia" aria-label="Zerar o dia">
+                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                </button>
+                <button id="stats-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Ver Estatísticas" aria-label="Ver Estatísticas">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                </button>
+                <button id="settings-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Configurações" aria-label="Configurações">
+                    <i data-lucide="settings-2" class="w-5 h-5"></i>
+                </button>
         </div>
     </div>
 
-    <div id="alert-modal-overlay" class="modal-overlay"><div class="modal-content text-center"><p id="alert-modal-message" class="mb-4"></p><button id="alert-modal-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">OK</button></div></div>
-    <div id="settings-modal-overlay" class="modal-overlay"><div class="modal-content"><h2 class="text-xl font-bold text-white mb-4 text-center">Configurações</h2><div class="mb-4"><h3 class="text-base font-semibold text-blue-400 mb-3">Duração (minutos)</h3><div class="grid grid-cols-3 gap-2 text-center"><div><label for="focus-duration" class="block text-xs font-medium text-gray-300">Foco</label><input type="number" id="focus-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="25"></div><div><label for="short-break-duration" class="block text-xs font-medium text-gray-300">Pausa Curta</label><input type="number" id="short-break-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="5"></div><div><label for="long-break-duration" class="block text-xs font-medium text-gray-300">Pausa Longa</label><input type="number" id="long-break-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="15"></div></div></div><div class="mb-4"><h3 class="text-base font-semibold text-blue-400 mb-3">Outros Ajustes</h3><div><label for="long-break-interval" class="block text-xs font-medium text-gray-300">Pomodoros para pausa longa</label><input type="number" id="long-break-interval" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="4"></div></div><div class="mb-4"><h3 class="text-base font-semibold text-blue-400 mb-3">Notificações</h3><div id="notification-status" class="text-sm text-gray-400 mb-2 text-center"></div><button id="enable-notifications-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-lg transition-colors text-sm">Ativar Notificações</button></div><button id="settings-save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl mt-6 transition-colors text-sm">Salvar e Fechar</button></div></div>
+    <!-- MODAIS -->
+    <div id="alert-modal-overlay" class="modal-overlay">
+        <div class="modal-content text-center">
+            <p id="alert-modal-message" class="mb-4"></p>
+            <button id="alert-modal-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Fechar alerta">OK</button>
+        </div>
+    </div>
+    <div id="session-end-modal-overlay" class="modal-overlay">
+        <div class="modal-content text-center">
+            <h2 class="text-xl font-bold text-white mb-2">Sessão Finalizada!</h2>
+            <p id="session-end-message" class="mb-6 text-gray-300"></p>
+            <button id="session-end-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Fechar modal de fim de sessão">Ótimo!</button>
+        </div>
+    </div>
+    <div id="settings-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold text-white mb-4 text-center">Configurações</h2>
+            <div class="mb-4">
+                <h3 class="text-base font-semibold text-blue-400 mb-3">Duração (minutos)</h3>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                        <label for="focus-duration" class="block text-xs font-medium text-gray-300">Foco</label>
+                        <input type="number" id="focus-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="25" aria-label="Duração do foco em minutos">
+                    </div>
+                    <div>
+                        <label for="short-break-duration" class="block text-xs font-medium text-gray-300">Pausa Curta</label>
+                        <input type="number" id="short-break-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="5" aria-label="Duração da pausa curta em minutos">
+                    </div>
+                    <div>
+                        <label for="long-break-duration" class="block text-xs font-medium text-gray-300">Pausa Longa</label>
+                        <input type="number" id="long-break-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="15" aria-label="Duração da pausa longa em minutos">
+                    </div>
+                </div>
+            </div>
+            <div class="mb-4">
+               <h3 class="text-base font-semibold text-blue-400 mb-3">Outros Ajustes</h3>
+               <div>
+                    <label for="long-break-interval" class="block text-xs font-medium text-gray-300">Pomodoros para pausa longa</label>
+                    <input type="number" id="long-break-interval" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="4" aria-label="Número de pomodoros antes de uma pausa longa">
+               </div>
+            </div>
+            <!-- SEÇÃO DE NOTIFICAÇÕES ATUALIZADA -->
+            <div class="mb-4">
+                <h3 class="text-base font-semibold text-blue-400 mb-3">Notificações</h3>
+                <div id="notification-status" class="text-sm text-gray-400 mb-2 text-center"></div>
+                <button id="enable-notifications-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-lg transition-colors text-sm" aria-label="Ativar notificações">
+                    Ativar Notificações
+                </button>
+            </div>
+            <button id="settings-save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl mt-6 transition-colors text-sm" aria-label="Salvar configurações e fechar">
+                Salvar e Fechar
+            </button>
+        </div>
+    </div>
+    <div id="stats-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-white">Relatório do Dia</h2>
+            </div>
+            <div id="stats-content" class="bg-gray-800 p-4 rounded-lg max-h-80 overflow-y-auto"></div>
+            <button id="stats-modal-close-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors" aria-label="Fechar relatório de estatísticas">Fechar</button>
+        </div>
+    </div>
+    <div id="help-modal-overlay" class="modal-overlay">
+        <div class="modal-content text-sm">
+            <h2 class="text-xl font-bold text-white mb-4 text-center">Ajuda</h2>
+            <div id="help-content-pomodoro" class="space-y-4 text-gray-300">
+                <h3 class="text-lg font-semibold text-blue-400">O que é a Técnica Pomodoro?</h3>
+                <p>É um método que usa um cronômetro para dividir o trabalho em períodos de foco intenso (geralmente 25 min), separados por pausas curtas.</p>
+                <ol class="list-decimal list-inside space-y-2 bg-gray-800 p-4 rounded-lg">
+                    <li>Escolha uma tarefa e inicie o timer.</li>
+                    <li>Trabalhe na tarefa sem interrupções.</li>
+                    <li>Ao final, faça uma pausa curta.</li>
+                    <li>Após 4 ciclos, faça uma pausa longa.</li>
+                </ol>
+            </div>
+            <div id="help-content-adaptativo" class="space-y-4 text-gray-300 hidden">
+                <h3 class="text-lg font-semibold text-blue-400">O que é o Método Adaptativo?</h3>
+                <p>É um método flexível onde você trabalha pelo tempo que conseguir se manter focado, sem um alarme para te interromper. É ideal para trabalho criativo e profundo.</p>
+                <ol class="list-decimal list-inside space-y-2 bg-gray-800 p-4 rounded-lg">
+                    <li>Escolha uma tarefa e inicie o cronômetro (ele contará para cima).</li>
+                    <li>Mergulhe na tarefa, mantendo o foco.</li>
+                    <li>Quando sentir que sua concentração está diminuindo, pare o cronômetro.</li>
+                    <li>Faça uma pausa e analise por quanto tempo conseguiu focar.</li>
+                </ol>
+            </div>
+            <button id="help-modal-close-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors" aria-label="Entendi, fechar ajuda">Entendi!</button>
+        </div>
+    </div>
+    <div id="reset-confirm-modal-overlay" class="modal-overlay">
+        <div class="modal-content text-center">
+            <h2 class="text-xl font-bold text-white mb-2">Zerar o Dia?</h2>
+            <p id="alert-modal-message-reset" class="mb-6 text-gray-300">Todas as tarefas e o progresso serão apagados. As configurações e o modo de foco serão mantidos. Deseja continuar?</p>
+            <div class="flex justify-center space-x-4">
+                <button id="reset-cancel-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Cancelar zerar o dia">Cancelar</button>
+                <button id="reset-confirm-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Confirmar zerar o dia">Sim, Zerar</button>
+            </div>
+        </div>
+    </div>
     
+    <!-- BANNER DE INSTALAÇÃO DO PWA -->
+    <div id="install-banner">
+        <div class="max-w-md mx-auto">
+            <p class="font-semibold mb-2">Tenha a melhor experiência!</p>
+            <p class="text-sm mb-3">Adicione o Foco Total à sua tela de início para acesso rápido e notificações confiáveis.</p>
+            <button id="install-btn" class="bg-white text-blue-600 font-bold py-2 px-5 rounded-lg mr-2" aria-label="Instalar aplicativo">Instalar</button>
+            <button id="install-dismiss-btn" class="bg-transparent border border-white text-white font-bold py-2 px-5 rounded-lg" aria-label="Agora não, dispensar instalação">Agora não</button>
+        </div>
+    </div>
+
+    <!-- SCRIPTS EXTERNOS MOVIDOS PARA O FIM DO BODY -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAHw27qe_K1l5dRMgiupBfoPbElO-ddHzk",
-            authDomain: "foco-total-app.firebaseapp.com",
-            projectId: "foco-total-app",
-            storageBucket: "foco-total-app.firebasestorage.app",
-            messagingSenderId: "259321591140",
-            appId: "1:259321591140:web:681353d3533ee0477af671"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const messaging = getMessaging(app);
-        const VAPID_PUBLIC_KEY = 'BD6_1NRZJZWhPg71TIOGNpD5ELWSWX7djFN-VpSgSepeTp-B TmRhb2v5m1pYPwGvMnxazY0saw';
+    <script>
+        // --- INÍCIO DO REGISTRO DO SERVICE WORKER ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js') // Caminho ajustado para a raiz
+                    .then(registration => {
+                        console.log('Service Worker registrado com sucesso:', registration.scope);
+                    }).catch(error => {
+                        console.log('Falha ao registrar o Service Worker:', error);
+                    });
+            });
+        }
+        // --- FIM DO REGISTRO DO SERVICE WORKER ---
 
         document.addEventListener('DOMContentLoaded', () => {
-            const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
-            const notificationStatus = document.getElementById('notification-status');
-
-            const requestNotificationPermission = async () => {
-                try {
-                    const permission = await Notification.requestPermission();
-                    if (permission === 'granted') {
-                        await navigator.serviceWorker.ready;
-                        const currentToken = await getToken(messaging, { vapidKey: VAPID_PUBLIC_KEY });
-                        if (currentToken) {
-                            notificationStatus.textContent = 'Notificações ativadas!';
-                            enableNotificationsBtn.disabled = true;
-                        } else {
-                            notificationStatus.textContent = 'Falha ao obter token.';
-                        }
-                    } else {
-                        notificationStatus.textContent = 'Permissão negada.';
-                    }
-                } catch (error) {
-                    console.error('Erro ao obter token:', error);
-                    notificationStatus.textContent = 'Erro ao ativar notificações.';
-                }
-            };
-            
-            enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
-
-            onMessage(messaging, (payload) => {
-                const alertModalOverlay = document.getElementById('alert-modal-overlay');
-                showModal(alertModalOverlay, `${payload.notification.title}: ${payload.notification.body}`);
-            });
-
+            // --- ELEMENTOS DO DOM ---
             const timerDisplay = document.getElementById('timer-display');
             const startPauseBtn = document.getElementById('start-pause-btn');
+            const internalInterruptBtn = document.getElementById('internal-interrupt-btn');
+            const externalInterruptBtn = document.getElementById('external-interrupt-btn');
+            const resetBtn = document.getElementById('reset-btn'); // Agora é o botão de resetar o dia
+            const settingsBtn = document.getElementById('settings-btn'); // Botão de configurações na barra inferior
+            const statsBtn = document.getElementById('stats-btn'); // Botão de estatísticas na barra inferior
+            const helpBtn = document.getElementById('help-btn'); // Botão de ajuda na barra superior
             const progressRing = document.getElementById('progress-ring');
             const newTaskInput = document.getElementById('new-task-input');
-            const newTaskEstimateInput = document.getElementById('new-task-estimate');
+            const newTaskEstimateInput = document.getElementById('new-task-estimate'); 
+            const newTaskEstimateLabel = document.getElementById('new-task-estimate-label'); 
             const addTaskBtn = document.getElementById('add-task-btn');
             const taskListEl = document.getElementById('task-list');
             const currentTaskDisplay = document.getElementById('current-task-display');
-            const settingsBtn = document.getElementById('settings-btn');
+            const pomodoroCyclesEl = document.getElementById('pomodoro-cycles');
+            const focusMethodToggle = document.getElementById('focus-method-toggle');
+            const toggleCompletedTasksBtn = document.getElementById('toggle-completed-tasks-btn');
+            // Modais
+            const statsModalOverlay = document.getElementById('stats-modal-overlay');
+            const statsModalCloseBtn = document.getElementById('stats-modal-close-btn');
+            const statsContentEl = document.getElementById('stats-content');
             const alertModalOverlay = document.getElementById('alert-modal-overlay');
             const alertModalCloseBtn = document.getElementById('alert-modal-close-btn');
+            const sessionEndModalOverlay = document.getElementById('session-end-modal-overlay');
+            const sessionEndCloseBtn = document.getElementById('session-end-close-btn'); // Corrigido para getElementById
             const settingsModalOverlay = document.getElementById('settings-modal-overlay');
             const settingsSaveBtn = document.getElementById('settings-save-btn');
+            const helpModalOverlay = document.getElementById('help-modal-overlay');
+            const helpModalCloseBtn = document.getElementById('help-modal-close-btn');
+            const helpContentPomodoro = document.getElementById('help-content-pomodoro');
+            const helpContentAdaptativo = document.getElementById('help-content-adaptativo');
+            const resetConfirmModalOverlay = document.getElementById('reset-confirm-modal-overlay');
+            const resetConfirmBtn = document.getElementById('reset-confirm-btn');
+            const resetCancelBtn = document.getElementById('reset-cancel-btn');
+            // Inputs de Configurações
             const focusDurationInput = document.getElementById('focus-duration');
             const shortBreakDurationInput = document.getElementById('short-break-duration');
             const longBreakDurationInput = document.getElementById('long-break-duration');
             const longBreakIntervalInput = document.getElementById('long-break-interval');
-            
+            // Banner PWA
+            const installBanner = document.getElementById('install-banner');
+            const installBtn = document.getElementById('install-btn');
+            const installDismissBtn = document.getElementById('install-dismiss-btn');
+            // Notificações
+            const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
+            const notificationStatus = document.getElementById('notification-status');
+
+            // --- ESTADO DA APLICAÇÃO ---
             let timerInterval, isRunning = false, mode = 'focus', timeRemaining, totalTime, endTime;
             let tasks = [], selectedTaskId = null, pomodoroSessionCount = 0;
             let settings = { focusDuration: 25, shortBreakDuration: 5, longBreakDuration: 15, longBreakInterval: 4 };
-            let audioInitialized = false;
-            let synth;
+            let focusMethod = 'pomodoro'; // 'pomodoro' ou 'adaptativo'
+            let deferredInstallPrompt = null;
+            let showCompletedTasks = false;
+            
+            // ===================================================================
+            //  IMPORTANTE: COLE AQUI A SUA 'NEXT_PUBLIC_VAPID_PUBLIC_KEY'
+            // ===================================================================
+            const VAPID_PUBLIC_KEY = 'BFEMYDrgvsQbBWqZILh3312zu_-4oBlDDwRD8OwHGJdV0A7OcDYUAs6IN7dg_wfL0vu7LlSIb4cYwY7oZGMUjlg'; // <-- COLE SUA CHAVE PÚBLICA AQUI
 
-            const initializeAudio = () => {
-                if (audioInitialized || !window.Tone) return;
-                Tone.start().then(() => {
-                    synth = new Tone.Synth().toDestination();
-                    audioInitialized = true;
-                }).catch(e => console.error("Erro ao iniciar Tone.js:", e));
+            // --- LÓGICA DE ÁUDIO (Mecânica do timer_1.html) ---
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            let audioInitialized = false; // Flag para garantir que o contexto de áudio seja resumido uma vez
+
+            const playBeep = (frequency = 800, duration = 200, volume = 0.3) => {
+                // Garante que o contexto de áudio esteja ativo
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume().then(() => {
+                        console.log('AudioContext resumed.');
+                        _playBeepInternal(frequency, duration, volume);
+                    });
+                } else {
+                    _playBeepInternal(frequency, duration, volume);
+                }
+            };
+
+            const _playBeepInternal = (frequency, duration, volume) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration / 1000);
             };
             
-            const showModal = (modalOverlay) => {
+            const playFinishSound = () => {
+                // Sequência de beeps para finalização
+                playBeep(523, 150, 0.4); // C5
+                setTimeout(() => playBeep(659, 150, 0.4), 200); // E5
+                setTimeout(() => playBeep(784, 300, 0.5), 400); // G5
+            };
+            
+            const playTickSound = () => {
+                playBeep(1000, 50, 0.1);
+            };
+
+            // --- LÓGICA DE INSTALAÇÃO DO PWA ---
+            window.addEventListener('beforeinstallprompt', (event) => {
+                event.preventDefault();
+                deferredInstallPrompt = event;
+                if (!localStorage.getItem('installBannerDismissed')) {
+                    installBanner.style.display = 'block';
+                }
+            });
+
+            installBtn.addEventListener('click', () => {
+                if (deferredInstallPrompt) {
+                    deferredInstallPrompt.prompt();
+                    deferredInstallPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('Usuário aceitou a instalação');
+                        } else {
+                            console.log('Usuário recusou a instalação');
+                        }
+                        deferredInstallPrompt = null;
+                        installBanner.style.display = 'none';
+                    });
+                } else if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+                    showModal(alertModalOverlay, 'Para instalar no iOS, toque no ícone de Compartilhar no Safari e depois em "Adicionar à Tela de Início".');
+                }
+            });
+
+            installDismissBtn.addEventListener('click', () => {
+                localStorage.setItem('installBannerDismissed', 'true');
+                installBanner.style.display = 'none';
+            });
+            
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+                    installBanner.style.display = 'none';
+            }
+
+            // --- LÓGICA DE NOTIFICAÇÕES PUSH (Versão Unificada) ---
+            const urlBase64ToUint8Array = (base64String) => {
+                const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+                const rawData = window.atob(base64);
+                const outputArray = new Uint8Array(rawData.length);
+                for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
+                }
+                return outputArray;
+            };
+            
+            const updateNotificationUI = () => {
+                if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+                    notificationStatus.textContent = 'Notificações não suportadas.';
+                    enableNotificationsBtn.disabled = true;
+                    return;
+                }
+
+                if (Notification.permission === 'denied') {
+                    notificationStatus.textContent = 'Permissão bloqueada.';
+                    enableNotificationsBtn.disabled = true;
+                    enableNotificationsBtn.textContent = 'Notificações Bloqueadas';
+                } else if (Notification.permission === 'granted') {
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.pushManager.getSubscription().then(sub => {
+                            if (sub) {
+                                notificationStatus.textContent = 'Notificações ativadas.';
+                                enableNotificationsBtn.disabled = true;
+                                enableNotificationsBtn.textContent = 'Notificações Ativadas';
+                            } else {
+                                notificationStatus.textContent = 'Clique para reativar.';
+                                enableNotificationsBtn.disabled = false;
+                                enableNotificationsBtn.textContent = 'Ativar Notificações';
+                            }
+                        });
+                    });
+                } else {
+                    notificationStatus.textContent = 'Notificações não ativadas.';
+                    enableNotificationsBtn.disabled = false;
+                    enableNotificationsBtn.textContent = 'Ativar Notificações';
+                }
+            };
+            
+            const requestNotificationPermission = async () => {
+                if (VAPID_PUBLIC_KEY === '') {
+                    console.error('ERRO: Chave VAPID pública não foi definida no index.html.');
+                    showModal(alertModalOverlay, 'Erro de configuração: A chave de notificação não foi definida.');
+                    return;
+                }
+                
+                const currentPermission = Notification.permission;
+                if (currentPermission === 'granted') return;
+                if (currentPermission === 'denied') {
+                    showModal(alertModalOverlay, 'Você bloqueou as notificações. Para ativá-las, mude as permissões para este site nas configurações do seu navegador.');
+                    return;
+                }
+
+                try {
+                    const permissionResult = await Notification.requestPermission();
+                    updateNotificationUI();
+
+                    if (permissionResult === 'granted') {
+                        const registration = await navigator.serviceWorker.ready;
+                        const subscription = await registration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                        });
+                        
+                        const welcomePayload = {
+                            title: 'Foco Total Ativado! 🚀',
+                            body: 'Tudo pronto! Suas notificações foram configuradas com sucesso.',
+                        };
+                        await fetch('/api/send-notification', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ subscription, payload: welcomePayload })
+                        });
+                    }
+                } catch (error) {
+                    console.error('Erro ao pedir permissão ou inscrever:', error);
+                }
+            };
+
+            enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
+
+            // --- FUNÇÕES DE GESTÃO DE MODO ---
+            const updateMethodToggleUI = () => {
+                const buttons = focusMethodToggle.querySelectorAll('.method-btn');
+                buttons.forEach(btn => {
+                    btn.classList.toggle('bg-blue-600', btn.dataset.method === focusMethod);
+                    btn.classList.toggle('text-white', btn.dataset.method === focusMethod);
+                    btn.classList.toggle('text-gray-400', btn.dataset.method !== focusMethod);
+                });
+                pomodoroCyclesEl.style.display = focusMethod === 'pomodoro' ? 'flex' : 'none';
+                
+                if (focusMethod === 'pomodoro') {
+                    newTaskEstimateInput.style.display = 'inline-block';
+                    newTaskEstimateLabel.style.display = 'inline-block';
+                    newTaskEstimateLabel.textContent = '#'; // Para Pomodoro, é número de pomodoros
+                } else {
+                    newTaskEstimateInput.style.display = 'none';
+                    newTaskEstimateLabel.style.display = 'none';
+                }
+
+                helpContentPomodoro.style.display = focusMethod === 'pomodoro' ? 'block' : 'none';
+                helpContentAdaptativo.style.display = focusMethod === 'adaptativo' ? 'block' : 'none';
+                
+                if (!isRunning) { // Só reseta o timer se não estiver rodando
+                    resetTimer('focus'); // Garante que o display do timer seja atualizado para o modo correto
+                }
+            };
+
+            // --- FUNÇÕES DO TIMER ---
+            const showModal = (modalOverlay, message) => {
+                const messageElId = modalOverlay.id.replace('-overlay', '-message');
+                const messageEl = document.getElementById(messageElId);
+                if(messageEl && message) messageEl.textContent = message;
                 modalOverlay.classList.add('visible');
             };
 
             const hideModal = (modalOverlay) => {
                 modalOverlay.classList.remove('visible');
-            };
+            }
 
             const startTimer = () => {
                 if (isRunning) return;
                 if (!selectedTaskId && mode === 'focus') {
-                    showModal(alertModalOverlay);
-                    document.getElementById('alert-modal-message').textContent = 'Por favor, selecione uma tarefa para iniciar o foco.';
+                    showModal(alertModalOverlay, 'Por favor, selecione uma tarefa para iniciar o foco.');
                     return;
                 }
+                
+                // Define o tempo total com base no modo e método
+                if (focusMethod === 'pomodoro' || mode !== 'focus') {
+                    timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
+                    totalTime = timeRemaining;
+                } else { // Modo adaptativo, foco
+                    timeRemaining = 0; // Começa a contar para cima
+                    const task = tasks.find(t => t.id === selectedTaskId);
+                    totalTime = (task ? task.pomodoroEstimate * 60 : settings.focusDuration * 60) || 1; // Total estimado para a barra de progresso
+                }
+
                 isRunning = true;
-                endTime = Date.now() + timeRemaining * 1000;
+                if (!endTime) { // Se não estiver continuando de uma pausa
+                    endTime = Date.now() + (focusMethod === 'pomodoro' || mode !== 'focus' ? timeRemaining * 1000 : 0); // endTime para contagem regressiva
+                }
+                
+                // Agendamento de notificação para Pomodoro e Pausas
+                if ((focusMethod === 'pomodoro' || mode !== 'focus') && Notification.permission === 'granted') {
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.pushManager.getSubscription().then(sub => {
+                            if (sub) {
+                                const timerPayload = {
+                                    title: mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!',
+                                    body: mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?'
+                                };
+                                fetch('/api/send-notification', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ subscription: sub, payload: timerPayload, delay: timeRemaining })
+                                }).catch(err => console.error('Erro ao agendar notificação:', err));
+                            }
+                        });
+                    });
+                }
+                
                 updateUI();
                 timerInterval = setInterval(updateTimer, 1000);
             };
@@ -195,7 +668,7 @@
                 if (!isRunning) return;
                 isRunning = false;
                 clearInterval(timerInterval);
-                if (endTime) {
+                if (focusMethod === 'pomodoro' || mode !== 'focus') { // Apenas para contagem regressiva
                     timeRemaining = Math.round((endTime - Date.now()) / 1000);
                 }
                 saveState();
@@ -208,147 +681,628 @@
                 const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
                 timerDisplay.textContent = display;
                 document.title = `${display} - Foco Total`;
+            
                 const circumference = 2 * Math.PI * 45;
-                const offset = circumference - (timeRemaining / totalTime) * circumference;
+                let offset;
+                if (focusMethod === 'pomodoro' || mode !== 'focus') { // Contagem regressiva
+                    offset = circumference - (timeRemaining / totalTime) * circumference;
+                } else { // Contagem progressiva (Adaptativo)
+                    offset = (timeRemaining / 60) % 2 === 0 
+                        ? circumference - (seconds / 60) * circumference // Preenche no minuto ímpar
+                        : (seconds / 60) * circumference; // Esvazia no minuto par
+                }
                 progressRing.style.strokeDasharray = circumference;
                 progressRing.style.strokeDashoffset = isNaN(offset) || offset < 0 ? circumference : offset;
             };
 
             const updateTimer = () => {
-                const remaining = Math.round((endTime - Date.now()) / 1000);
-                if (remaining >= 0) {
-                    timeRemaining = remaining;
+                let remaining;
+                if (focusMethod === 'pomodoro' || mode !== 'focus') { // Contagem regressiva
+                    remaining = Math.round((endTime - Date.now()) / 1000);
+                    if (remaining >= 0) {
+                        timeRemaining = remaining;
+                        updateTimerDisplay();
+                        // Adiciona feedback sonoro de tick para os últimos 10 segundos do foco Pomodoro
+                        if (mode === 'focus' && focusMethod === 'pomodoro' && timeRemaining <= 10 && timeRemaining > 0) {
+                            playTickSound();
+                        }
+                    } else {
+                        clearInterval(timerInterval);
+                        switchMode();
+                    }
+                } else { // Contagem progressiva
+                    timeRemaining = Math.floor((Date.now() - (endTime || Date.now())) / 1000); // endTime é o start time aqui
                     updateTimerDisplay();
-                } else {
-                    clearInterval(timerInterval);
-                    switchMode();
                 }
             };
 
             const switchMode = () => {
                 isRunning = false;
-                endTime = null;
+                endTime = null; 
+                
+                playFinishSound(); // Toca o som de finalização ao mudar de modo
+                
                 if (mode === 'focus') {
-                    pomodoroSessionCount++;
-                    const task = tasks.find(t => t.id === selectedTaskId);
-                    if(task) {
-                        task.pomodorosCompleted++;
-                        task.focusTime += totalTime;
+                    if (focusMethod === 'pomodoro') {
+                        pomodoroSessionCount++;
+                        const task = tasks.find(t => t.id === selectedTaskId);
+                        if(task) {
+                            task.pomodorosCompleted++;
+                            task.focusTime += settings.focusDuration * 60; // Adiciona o tempo de foco completo
+                        }
+                    } else { // Adaptativo
+                        const task = tasks.find(t => t.id === selectedTaskId);
+                        if(task) {
+                            task.focusTime += timeRemaining; // Adiciona o tempo focado
+                        }
                     }
-                    mode = (pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
-                } else {
+                    renderTasks(); // Atualiza a UI das tarefas
+                    mode = (focusMethod === 'pomodoro' && pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
+                    showModal(sessionEndModalOverlay, `Você ${focusMethod === 'pomodoro' ? 'completou um Pomodoro!' : 'finalizou seu foco.'} Hora de fazer uma pausa.`);
+                } else { // Se for uma pausa (curta ou longa)
                     mode = 'focus';
+                    showModal(sessionEndModalOverlay, 'Pausa finalizada! Vamos voltar ao trabalho?');
                 }
-                resetTimer();
-                renderTasks();
+                resetTimer(); // Reseta o timer para o próximo modo
             };
 
-            const resetTimer = (forceMode) => {
+            const resetTimer = (forceMode = null) => {
                 clearInterval(timerInterval);
                 isRunning = false;
                 endTime = null;
                 mode = forceMode || mode;
-                timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
-                totalTime = timeRemaining;
+
+                if (focusMethod === 'pomodoro' || mode !== 'focus') {
+                    timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
+                    totalTime = timeRemaining;
+                } else { // Adaptativo
+                    timeRemaining = 0;
+                    const task = tasks.find(t => t.id === selectedTaskId);
+                    totalTime = (task ? task.pomodoroEstimate * 60 : settings.focusDuration * 60) || 1; // Para a barra de progresso
+                }
+                saveState();
                 updateUI();
             };
 
-            const updateUI = () => {
-                if (timeRemaining === undefined) return; // Previne o NaN
-                updateTimerDisplay(); 
-                const modeColor = mode === 'focus' ? 'blue' : 'green';
-                progressRing.classList.remove('text-blue-500', 'text-green-500');
-                progressRing.classList.add(`text-${modeColor}-500`);
-                startPauseBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-green-600', 'hover:bg-green-700');
-                startPauseBtn.classList.add(`bg-${modeColor}-600`, `hover:bg-${modeColor}-700`);
-                const btnIcon = isRunning ? 'pause' : 'play';
-                startPauseBtn.innerHTML = `<i data-lucide="${btnIcon}" class="w-8 h-8 ${btnIcon === 'play' ? 'pl-1' : ''}"></i>`;
-                lucide.createIcons();
+            const resetDay = () => {
+                pauseTimer();
+                tasks = [];
+                selectedTaskId = null;
+                pomodoroSessionCount = 0;
+                resetTimer('focus');
+                renderTasks();
+                hideModal(resetConfirmModalOverlay);
+                showModal(alertModalOverlay, 'O dia foi zerado com sucesso!');
             };
-            
-            const addTask = () => {
-                initializeAudio();
-                const taskName = newTaskInput.value.trim();
-                const estimate = parseInt(newTaskEstimateInput.value) || 1;
-                if (taskName) {
-                    const newTask = { id: Date.now(), name: taskName, pomodoroEstimate: estimate, pomodorosCompleted: 0, internalInterruptions: 0, externalInterruptions: 0, focusTime: 0, completed: false };
-                    tasks.push(newTask);
-                    newTaskInput.value = '';
-                    newTaskEstimateInput.value = '1';
-                    if (synth) synth.triggerAttackRelease("C4", "8n");
-                    if (!selectedTaskId) selectTask(newTask.id);
-                    else renderTasks();
+
+            const updateUI = () => {
+                updateTimerDisplay(); 
+                
+                let modeColorClass = '';
+                if (mode === 'focus') {
+                    modeColorClass = 'text-blue-500';
+                } else if (mode === 'shortBreak') {
+                    modeColorClass = 'text-green-500';
+                } else if (mode === 'longBreak') {
+                    modeColorClass = 'text-purple-500';
                 }
+                progressRing.className.baseVal = `text-gray-800 ${modeColorClass}`; // Atualiza a cor do círculo
+
+                let btnIcon = '';
+                let btnBgClass = '';
+                let ariaLabelText = '';
+
+                if (focusMethod === 'pomodoro' || mode !== 'focus') {
+                    btnIcon = isRunning ? 'pause' : 'play';
+                    btnBgClass = isRunning ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-blue-600 hover:bg-blue-700';
+                    ariaLabelText = isRunning ? 'Pausar Timer' : 'Iniciar Timer';
+                } else { // Modo Adaptativo
+                    if (isRunning) {
+                        btnIcon = 'square'; // Ícone de parar
+                        btnBgClass = 'bg-red-600 hover:bg-red-700';
+                        ariaLabelText = 'Parar Foco Adaptativo';
+                    } else {
+                        btnIcon = 'play';
+                        btnBgClass = 'bg-blue-600 hover:bg-blue-700';
+                        ariaLabelText = 'Iniciar Foco Adaptativo';
+                    }
+                }
+                
+                startPauseBtn.className = `w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center ${btnBgClass}`;
+                startPauseBtn.innerHTML = `<i data-lucide="${btnIcon}" class="w-8 h-8 ${btnIcon === 'play' ? 'pl-1' : ''}"></i>`; 
+                startPauseBtn.setAttribute('aria-label', ariaLabelText);
+
+                // Visibilidade dos botões de interrupção
+                internalInterruptBtn.style.display = (isRunning && mode === 'focus') ? 'flex' : 'none';
+                externalInterruptBtn.style.display = (isRunning && mode === 'focus') ? 'flex' : 'none';
+                
+                updateCurrentTaskDisplay();
+                updateStatsDisplay(); // Atualiza o modal de estatísticas
+                lucide.createIcons(); // Renderiza os novos ícones Lucide
+            };
+
+            const formatTime = (totalSeconds) => {
+                if (!totalSeconds || totalSeconds < 1) return `0m`;
+                const minutes = Math.floor(totalSeconds / 60);
+                const hours = Math.floor(minutes / 60);
+                const remainingMinutes = minutes % 60;
+                if (hours > 0) return `${hours}h ${remainingMinutes}m`;
+                return `${minutes}m`;
+            };
+
+            const updateStatsDisplay = () => {
+                if (tasks.length === 0) {
+                    statsContentEl.innerHTML = '<p class="text-gray-400 text-center">Nenhuma tarefa para exibir.</p>';
+                    return;
+                }
+                let statsHTML = '<div class="space-y-3">';
+                const sortedTasks = [...tasks].sort((a, b) => a.completed - b.completed); // Concluídas por último
+
+                sortedTasks.forEach(task => {
+                    statsHTML += `
+                        <div class="bg-gray-900 p-3 rounded-lg ${task.completed ? 'opacity-60' : ''}">
+                            <p class="font-bold text-white truncate ${task.completed ? 'line-through' : ''}">${task.name}</p>
+                            <div class="grid grid-cols-4 gap-2 mt-2 text-center text-xs">
+                                <div>
+                                    <p class="text-xs text-gray-400">Foco</p>
+                                    <p class="font-semibold">${formatTime(task.focusTime)}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400">Ciclos</p>
+                                    <p class="font-semibold">${task.pomodorosCompleted}/${task.pomodoroEstimate}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400">Int. Interna</p>
+                                    <p class="font-semibold">${task.internalInterruptions}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400">Int. Externa</p>
+                                    <p class="font-semibold">${task.externalInterruptions}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                statsHTML += '</div>';
+                statsContentEl.innerHTML = statsHTML;
             };
             
             const renderTasks = () => {
-                const tasksToRender = tasks.filter(task => !task.completed);
+                const tasksToRender = showCompletedTasks ? tasks : tasks.filter(task => !task.completed);
+                
                 taskListEl.innerHTML = tasksToRender.length === 0 ? '<p class="text-gray-500 text-center text-sm">Adicione a sua primeira tarefa!</p>' : '';
+                
                 tasksToRender.forEach(task => {
                     const taskEl = document.createElement('div');
-                    taskEl.className = `task-item bg-gray-900 p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''}`;
+                    taskEl.className = `task-item bg-gray-900 p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''} ${task.completed ? 'opacity-60' : ''}`;
                     taskEl.dataset.id = task.id;
-                    taskEl.innerHTML = `<div class="flex justify-between items-center"><span class="truncate text-sm">${task.name}</span><span>${task.pomodorosCompleted}/${task.pomodoroEstimate}</span></div>`;
+                    
+                    if (task.justAdded) {
+                        taskEl.classList.add('added-feedback');
+                        taskEl.addEventListener('animationend', () => {
+                            taskEl.classList.remove('added-feedback');
+                            task.justAdded = false;
+                            saveState();
+                        }, { once: true });
+                    }
+
+                    const isEditing = task.isEditing;
+                    const estimateLabel = focusMethod === 'pomodoro' ? 'Pomodoros' : 'Estimativa';
+                    const iconEstimate = focusMethod === 'pomodoro' ? 'check-circle-2' : 'target';
+                    const colorEstimate = focusMethod === 'pomodoro' ? 'green' : 'yellow';
+
+                    taskEl.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center min-w-0 flex-grow">
+                                <button data-complete-id="${task.id}" class="complete-btn text-gray-400 hover:text-green-500 mr-3 flex-shrink-0" aria-label="Marcar tarefa ${task.name} como concluída"><i data-lucide="${task.completed ? 'check-square' : 'square'}" class="w-5 h-5"></i></button>
+                                ${isEditing 
+                                    ? `<input type="text" value="${task.name}" class="task-edit-input bg-gray-800 text-white rounded px-2 py-1 text-sm flex-grow mx-2 border-2 border-blue-500 focus:outline-none" data-edit-input-id="${task.id}" aria-label="Editar nome da tarefa ${task.name}">`
+                                    : `<span class="task-name truncate text-sm ${task.completed ? 'line-through' : ''}">${task.name}</span>`
+                                }
+                            </div>
+                            <div class="flex items-center space-x-1 flex-shrink-0">
+                                <button data-edit-id="${task.id}" class="edit-btn text-gray-500 hover:text-blue-500 transition-colors p-1 rounded-md" aria-label="${isEditing ? 'Salvar edição da tarefa ' + task.name : 'Editar tarefa ' + task.name}"><i data-lucide="${isEditing ? 'save' : 'pencil'}" class="w-4 h-4"></i></button>
+                                <button data-delete-id="${task.id}" class="delete-btn text-gray-500 hover:text-red-500 transition-colors p-1 rounded-md" aria-label="Excluir tarefa ${task.name}"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1 items-center mt-2 pl-8 text-xs text-center">
+                            ${focusMethod === 'pomodoro' ? `
+                                <span class="text-gray-400 font-bold flex items-center justify-center" title="${estimateLabel}">
+                                    <i data-lucide="${iconEstimate}" class="w-4 h-4 mr-1 text-${colorEstimate}-500"></i>
+                                    ${task.pomodorosCompleted}/${task.pomodoroEstimate}
+                                </span>
+                            ` : ''}
+                            <span class="text-gray-400 font-bold flex items-center justify-center" title="Tempo de Foco Total">
+                                <i data-lucide="clock" class="w-4 h-4 mr-1 text-blue-400"></i>
+                                ${formatTime(task.focusTime)}
+                            </span>
+                            <span class="text-gray-400 font-bold flex items-center justify-center" title="Interrupções Internas">
+                                <i data-lucide="zap-off" class="w-4 h-4 mr-1 text-gray-400"></i>
+                                ${task.internalInterruptions}
+                            </span>
+                            <span class="text-gray-400 font-bold flex items-center justify-center" title="Interrupções Externas">
+                                <i data-lucide="user-x" class="w-4 h-4 mr-1 text-gray-400"></i>
+                                ${task.externalInterruptions}
+                            </span>
+                        </div>`;
+                    
                     taskListEl.appendChild(taskEl);
                 });
+
                 updateCurrentTaskDisplay();
+                updateStatsDisplay();
                 saveState();
+                lucide.createIcons();
+            };
+
+            const addTask = () => {
+                // Tenta inicializar o áudio ao adicionar uma tarefa
+                // O contexto de áudio é resumido no primeiro clique do documento,
+                // então esta chamada é mais para garantir que o áudio esteja pronto.
+                if (!audioInitialized) {
+                    audioContext.resume().then(() => {
+                        audioInitialized = true;
+                        console.log('AudioContext resumed on add task.');
+                    });
+                }
+
+                const taskName = newTaskInput.value.trim();
+                const estimate = (focusMethod === 'pomodoro') ? (parseInt(newTaskEstimateInput.value) || 1) : 1; 
+                if (taskName) {
+                    const newTask = { 
+                        id: Date.now(), 
+                        name: taskName, 
+                        pomodoroEstimate: estimate, 
+                        pomodorosCompleted: 0, 
+                        internalInterruptions: 0, 
+                        externalInterruptions: 0, 
+                        focusTime: 0, 
+                        completed: false,
+                        isEditing: false,
+                        justAdded: true // Para a animação de feedback
+                    };
+                    tasks.push(newTask);
+                    newTaskInput.value = '';
+                    newTaskEstimateInput.value = '1'; // Reseta para o valor padrão
+                    
+                    // Toca um som ao adicionar tarefa
+                    playBeep(440, 100, 0.2); // Um bipe simples ao adicionar tarefa
+
+                    const currentSelectedTask = tasks.find(t => t.id === selectedTaskId);
+                    // Seleciona a nova tarefa se nenhuma estiver selecionada ou a selecionada estiver completa
+                    if (!currentSelectedTask || currentSelectedTask.completed) {
+                        selectTask(newTask.id);
+                    } else {
+                        renderTasks(); // Apenas re-renderiza para mostrar a nova tarefa
+                    }
+                }
+            };
+
+            const deleteTask = (id) => {
+                tasks = tasks.filter(task => task.id !== id);
+                if (selectedTaskId === id) {
+                    const firstIncompleteTask = tasks.find(t => !t.completed);
+                    selectTask(firstIncompleteTask ? firstIncompleteTask.id : null);
+                } else {
+                    renderTasks();
+                }
+            };
+
+            const toggleTaskCompleted = (id) => {
+                const task = tasks.find(t => t.id === id);
+                if (task) {
+                    task.completed = !task.completed;
+                    if (task.completed && selectedTaskId === id) {
+                        if(isRunning && mode === 'focus') pauseTimer(); // Pausa o timer se a tarefa ativa for completada
+                        const firstIncompleteTask = tasks.find(t => !t.completed);
+                        selectTask(firstIncompleteTask ? firstIncompleteTask.id : null);
+                    } else {
+                        renderTasks();
+                    }
+                }
             };
             
-            const selectTask = (id) => {
-                selectedTaskId = id;
+            const toggleEditState = (id) => {
+                tasks.forEach(task => {
+                    task.isEditing = task.id === id ? !task.isEditing : false; // Apenas uma tarefa pode ser editada por vez
+                });
                 renderTasks();
-                if (!isRunning) resetTimer('focus');
+                const input = document.querySelector(`[data-edit-input-id="${id}"]`);
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            };
+
+            const updateTaskName = (id, newName) => {
+                const task = tasks.find(t => t.id === id);
+                if (task) {
+                    if (newName) {
+                        task.name = newName;
+                    }
+                    task.isEditing = false; // Sai do modo de edição
+                    renderTasks();
+                }
+            };
+
+            const selectTask = (id) => {
+                const task = tasks.find(t => t.id === id);
+                const isAnyTaskEditing = tasks.some(t => t.isEditing);
+
+                if ((task || id === null) && !isAnyTaskEditing) { // Permite deselecionar ou selecionar se não estiver editando
+                    selectedTaskId = id;
+                    renderTasks();
+                    
+                    if (!isRunning) { // Se o timer não estiver rodando, atualiza o tempo inicial com base na estimativa da tarefa
+                        resetTimer('focus');
+                    }
+                }
+            };
+
+            const logInterruption = (type) => {
+                if (isRunning && mode === 'focus' && selectedTaskId) {
+                    const task = tasks.find(t => t.id === selectedTaskId);
+                    if (task) {
+                        if (type === 'internal') task.internalInterruptions++;
+                        else if (type === 'external') task.externalInterruptions++;
+                        renderTasks(); // Atualiza a exibição dos contadores
+                        showModal(alertModalOverlay, `Interrupção ${type === 'internal' ? 'interna' : 'externa'} registrada para "${task.name}"!`);
+                    }
+                } else {
+                    showModal(alertModalOverlay, 'Só pode registrar uma interrupção durante um ciclo de foco ativo.');
+                }
             };
             
             const updateCurrentTaskDisplay = () => {
                 const task = tasks.find(t => t.id === selectedTaskId);
                 currentTaskDisplay.textContent = task ? task.name : 'Nenhuma tarefa selecionada';
+                pomodoroCyclesEl.innerHTML = ''; // Limpa os ícones de ciclo
+                if (focusMethod !== 'pomodoro' || !settings.longBreakInterval || settings.longBreakInterval <= 0) return; // Só mostra para Pomodoro
+
+                const cyclesToShow = pomodoroSessionCount % settings.longBreakInterval;
+                for(let i = 0; i < settings.longBreakInterval; i++) {
+                    const icon = i < cyclesToShow ? '<i data-lucide="check-circle-2" class="text-green-500"></i>' : '<i data-lucide="circle" class="text-gray-600"></i>';
+                    pomodoroCyclesEl.innerHTML += `<span class="transition-all">${icon}</span>`;
+                }
+                lucide.createIcons(); // Renderiza os ícones
             };
 
             const saveState = () => {
-                localStorage.setItem('pomodoroCoreState', JSON.stringify({ settings, tasks, selectedTaskId, pomodoroSessionCount }));
+                const state = { 
+                    settings, 
+                    tasks, 
+                    selectedTaskId, 
+                    pomodoroSessionCount, 
+                    focusMethod,
+                    showCompletedTasks,
+                    timerState: { // Salva o estado do timer para recuperação
+                        isRunning,
+                        mode,
+                        endTime,
+                        totalTime // Adicionado para manter a proporção da barra de progresso
+                    }
+                };
+                localStorage.setItem('pomodoroCoreState', JSON.stringify(state));
             };
 
             const loadState = () => {
-                try {
-                    const state = JSON.parse(localStorage.getItem('pomodoroCoreState'));
-                    if (state) {
-                        settings = state.settings || settings;
-                        tasks = Array.isArray(state.tasks) ? state.tasks : [];
-                        selectedTaskId = state.selectedTaskId;
-                        pomodoroSessionCount = state.pomodoroSessionCount || 0;
+                const state = JSON.parse(localStorage.getItem('pomodoroCoreState'));
+                if (state) {
+                    settings = { ...settings, ...state.settings }; // Mescla configurações salvas com as padrão
+                    tasks = state.tasks || [];
+                    selectedTaskId = state.selectedTaskId;
+                    pomodoroSessionCount = state.pomodoroSessionCount || 0;
+                    focusMethod = state.focusMethod || 'pomodoro';
+                    showCompletedTasks = state.showCompletedTasks || false;
+
+                    // Recupera o estado do timer
+                    if (state.timerState) {
+                        const { isRunning: wasRunning, mode: savedMode, endTime: savedEndTime, totalTime: savedTotalTime } = state.timerState;
+                        mode = savedMode;
+                        totalTime = savedTotalTime; // Carrega o totalTime para a barra de progresso
+                        
+                        if (wasRunning && savedEndTime && savedEndTime > Date.now()) {
+                            endTime = savedEndTime;
+                            timeRemaining = Math.round((endTime - Date.now()) / 1000); // Calcula o tempo restante
+                            startTimer(); // Reinicia o timer
+                        } else {
+                            resetTimer(mode); // Reseta para o modo salvo se não estava rodando ou já terminou
+                        }
                     }
-                } catch (e) {
-                    localStorage.removeItem('pomodoroCoreState');
+                } else {
+                    focusMethod = 'pomodoro'; // Define o modo padrão se não houver estado salvo
+                }
+                
+                // Migração e saneamento de dados antigos de tarefas
+                tasks.forEach(t => {
+                    if (t.isEditing === undefined) t.isEditing = false;
+                    if (t.internalInterruptions === undefined) { // Migra interrupções antigas para o novo formato
+                        t.internalInterruptions = 0;
+                        t.externalInterruptions = t.interruptions || 0;
+                        delete t.interruptions;
+                    }
+                    if (t.justAdded !== undefined) { // Limpa a flag de animação
+                        delete t.justAdded;
+                    }
+                    // Garante que focusTime exista
+                    if (t.focusTime === undefined) t.focusTime = 0;
+                    // Garante que pomodorosCompleted exista
+                    if (t.pomodorosCompleted === undefined) t.pomodorosCompleted = 0;
+                    // Garante que pomodoroEstimate exista
+                    if (t.pomodoroEstimate === undefined) t.pomodoroEstimate = 1;
+                });
+
+                // Atualiza os inputs de configuração com os valores carregados
+                focusDurationInput.value = settings.focusDuration;
+                shortBreakDurationInput.value = settings.shortBreakDuration;
+                longBreakDurationInput.value = settings.longBreakDuration;
+                longBreakIntervalInput.value = settings.longBreakInterval;
+
+                // Garante que a tarefa selecionada ainda é válida
+                if (selectedTaskId) {
+                    const task = tasks.find(t => t.id === selectedTaskId);
+                    if (!task || task.completed) selectedTaskId = null; // Desseleciona se não existir ou estiver completa
+                }
+                // Seleciona a primeira tarefa incompleta se nenhuma estiver selecionada
+                if (!selectedTaskId) {
+                    const firstIncompleteTask = tasks.find(t => !t.completed);
+                    if (firstIncompleteTask) selectedTaskId = firstIncompleteTask.id;
                 }
             };
             
-            // --- INICIALIZAÇÃO CORRIGIDA ---
-            loadState();
-            resetTimer(mode); // Garante que o timer tenha um valor antes do primeiro render
-            renderTasks();
-            updateUI();
-            
+            // --- EVENT LISTENERS ---
             startPauseBtn.addEventListener('click', () => {
-                initializeAudio();
-                isRunning ? pauseTimer() : startTimer();
+                // Tenta inicializar o áudio ao clicar em play/pause
+                // O contexto de áudio é resumido no primeiro clique do documento,
+                // então esta chamada é mais para garantir que o áudio esteja pronto.
+                if (!audioInitialized) {
+                    audioContext.resume().then(() => {
+                        audioInitialized = true;
+                        console.log('AudioContext resumed on start/pause click.');
+                    });
+                }
+
+                startPauseBtn.classList.add('start-pause-btn-clicked'); // Adiciona animação de clique
+                startPauseBtn.addEventListener('animationend', () => {
+                    startPauseBtn.classList.remove('start-pause-btn-clicked');
+                }, { once: true });
+
+                if (focusMethod === 'pomodoro' || mode !== 'focus') { // Lógica para Pomodoro e Pausas
+                    isRunning ? pauseTimer() : startTimer();
+                } else { // Lógica para Adaptativo
+                    if (isRunning) {
+                        pauseTimer();
+                        const task = tasks.find(t => t.id === selectedTaskId);
+                        if (task) task.focusTime += timeRemaining; // Adiciona o tempo focado
+                        showModal(sessionEndModalOverlay, `Você se concentrou por ${formatTime(timeRemaining)}.`);
+                        resetTimer('focus'); // Reseta o timer para o início do foco adaptativo
+                    } else {
+                        // Ao iniciar o modo adaptativo, endTime é o tempo de início para contagem crescente
+                        endTime = Date.now();
+                        startTimer();
+                    }
+                }
             });
+            resetBtn.addEventListener('click', () => showModal(resetConfirmModalOverlay));
+            resetConfirmBtn.addEventListener('click', resetDay);
+            resetCancelBtn.addEventListener('click', () => hideModal(resetConfirmModalOverlay));
+            internalInterruptBtn.addEventListener('click', () => logInterruption('internal'));
+            externalInterruptBtn.addEventListener('click', () => logInterruption('external'));
+            settingsBtn.addEventListener('click', () => {
+                updateNotificationUI(); // Atualiza o status das notificações no modal
+                showModal(settingsModalOverlay);
+            });
+            statsBtn.addEventListener('click', () => showModal(statsModalOverlay));
+            helpBtn.addEventListener('click', () => showModal(helpModalOverlay));
+            statsModalCloseBtn.addEventListener('click', () => hideModal(statsModalOverlay));
+            helpModalCloseBtn.addEventListener('click', () => hideModal(helpModalOverlay));
+            alertModalCloseBtn.addEventListener('click', () => hideModal(alertModalOverlay));
+            sessionEndCloseBtn.addEventListener('click', () => hideModal(sessionEndModalOverlay));
             settingsSaveBtn.addEventListener('click', () => {
-                settings.focusDuration = parseFloat(focusDurationInput.value) || 25;
-                settings.shortBreakDuration = parseFloat(shortBreakDurationInput.value) || 5;
-                settings.longBreakDuration = parseFloat(longBreakDurationInput.value) || 15;
+                settings.focusDuration = parseInt(focusDurationInput.value) || 25;
+                settings.shortBreakDuration = parseInt(shortBreakDurationInput.value) || 5;
+                settings.longBreakDuration = parseInt(longBreakDurationInput.value) || 15;
                 settings.longBreakInterval = parseInt(longBreakIntervalInput.value) || 4;
                 hideModal(settingsModalOverlay);
-                if (!isRunning) resetTimer('focus');
+                if (!isRunning) resetTimer('focus'); // Atualiza o timer se não estiver rodando
+                saveState(); // Salva as novas configurações
             });
             addTaskBtn.addEventListener('click', addTask);
-            taskListEl.addEventListener('click', (e) => {
-                const taskItem = e.target.closest('.task-item');
-                if (taskItem) selectTask(parseInt(taskItem.dataset.id));
+            newTaskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
+            
+            focusMethodToggle.addEventListener('click', (e) => {
+                const target = e.target.closest('.method-btn');
+                if (target && !isRunning) { // Só troca de modo se o timer não estiver rodando
+                    focusMethod = target.dataset.method;
+                    updateMethodToggleUI();
+                    renderTasks(); // Re-renderiza tarefas para ajustar o display de estimativa
+                    saveState();
+                } else if (isRunning) {
+                    showModal(alertModalOverlay, 'Não é possível trocar de modo enquanto o timer está rodando.');
+                }
             });
-            settingsBtn.addEventListener('click', () => showModal(settingsModalOverlay));
-            alertModalCloseBtn.addEventListener('click', () => hideModal(alertModalOverlay));
+
+            toggleCompletedTasksBtn.addEventListener('click', () => {
+                showCompletedTasks = !showCompletedTasks;
+                toggleCompletedTasksBtn.textContent = showCompletedTasks ? 'Esconder Concluídas' : 'Mostrar Concluídas';
+                renderTasks();
+            });
+
+            // Fechar modais ao clicar fora
+            [alertModalOverlay, settingsModalOverlay, statsModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay].forEach(overlay => {
+                overlay.addEventListener('click', (e) => { if (e.target === overlay) hideModal(overlay); });
+            });
+            
+            taskListEl.addEventListener('click', (e) => {
+                const deleteBtn = e.target.closest('[data-delete-id]');
+                const completeBtn = e.target.closest('[data-complete-id]');
+                const editBtn = e.target.closest('[data-edit-id]');
+                const taskItem = e.target.closest('.task-item');
+
+                if (deleteBtn) { deleteTask(parseInt(deleteBtn.dataset.deleteId)); return; }
+                if (completeBtn) { toggleTaskCompleted(parseInt(completeBtn.dataset.completeId)); return; }
+                if (editBtn) {
+                    const id = parseInt(editBtn.dataset.editId);
+                    const task = tasks.find(t => t.id === id);
+                    if (task && task.isEditing) { // Se já está editando, salva
+                        const input = taskListEl.querySelector(`[data-edit-input-id="${id}"]`);
+                        if (input) updateTaskName(id, input.value.trim());
+                    } else { // Entra no modo de edição
+                        toggleEditState(id);
+                    }
+                    return;
+                }
+
+                if (taskItem) { selectTask(parseInt(taskItem.dataset.id)); }
+            });
+
+            // Lidar com Enter e Escape em inputs de edição de tarefa
+            taskListEl.addEventListener('keyup', (e) => {
+                if (e.target.matches('.task-edit-input')) {
+                    const id = parseInt(e.target.dataset.editInputId);
+                    if (e.key === 'Enter') {
+                        updateTaskName(id, e.target.value.trim());
+                    } else if (e.key === 'Escape') {
+                        toggleEditState(null); // Sai do modo de edição sem salvar
+                    }
+                }
+            });
+
+            // Lidar com focusout em inputs de edição de tarefa
+            taskListEl.addEventListener('focusout', (e) => {
+                if (e.target.matches('.task-edit-input')) {
+                    const id = parseInt(e.target.dataset.editInputId);
+                    // Pequeno delay para permitir o clique no botão de salvar
+                    setTimeout(() => {
+                        const task = tasks.find(t => t.id === id);
+                        // Verifica se ainda está no modo de edição e não foi salvo por outro clique
+                        if (task && task.isEditing) {
+                           updateTaskName(id, e.target.value.trim());
+                        }
+                    }, 150);
+                }
+            });
+
+            // --- INICIALIZAÇÃO DA APLICAÇÃO ---
+            loadState(); // Carrega o estado salvo
+            if (!isRunning) { // Se não estava rodando, reseta para o modo salvo ou padrão
+                resetTimer(mode);
+            }
+            renderTasks(); // Renderiza as tarefas carregadas
+            updateMethodToggleUI(); // Garante que o toggle de modo esteja correto
+            updateNotificationUI(); // Garante o status correto das notificações
+            lucide.createIcons(); // Inicializa os ícones Lucide
+
+            // Ativar contexto de áudio com interação do usuário (do timer_1.html)
+            // Isso é crucial para que o áudio funcione em navegadores que bloqueiam autoplay
+            document.addEventListener('click', () => {
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume().then(() => {
+                        audioInitialized = true;
+                        console.log('AudioContext resumed by user interaction (initial click).');
+                    });
+                }
+            }, { once: true }); // Executa apenas uma vez
         });
     </script>
 </body>
