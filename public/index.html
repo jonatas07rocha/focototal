@@ -453,7 +453,6 @@
                     enableNotificationsBtn.textContent = 'Notificações Bloqueadas';
                 } else if (permission === 'granted') {
                     try {
-                        // CORREÇÃO: Passa a chave VAPID para obter o token
                         fcmToken = await messaging.getToken({ vapidKey: VAPID_KEY });
                         if (fcmToken) {
                             notificationStatus.textContent = 'Notificações ativadas.';
@@ -477,16 +476,19 @@
 
             const requestNotificationPermission = async () => {
                 try {
-                    await messaging.requestPermission();
-                    // CORREÇÃO: Passa a chave VAPID para obter o token
-                    fcmToken = await messaging.getToken({ vapidKey: VAPID_KEY });
-                    if (fcmToken) {
-                        console.log('Token FCM obtido:', fcmToken);
-                        const welcomePayload = {
-                            title: 'Foco Total Ativado! 🚀',
-                            body: 'Tudo pronto! Suas notificações foram configuradas com sucesso.',
-                        };
-                        scheduleNotification(welcomePayload);
+                    // CORREÇÃO FINAL: Usa a API do navegador para pedir permissão
+                    const permission = await Notification.requestPermission();
+                    
+                    if (permission === 'granted') {
+                        fcmToken = await messaging.getToken({ vapidKey: VAPID_KEY });
+                        if (fcmToken) {
+                            console.log('Token FCM obtido:', fcmToken);
+                            const welcomePayload = {
+                                title: 'Foco Total Ativado! 🚀',
+                                body: 'Tudo pronto! Suas notificações foram configuradas com sucesso.',
+                            };
+                            scheduleNotification(welcomePayload);
+                        }
                     }
                     updateNotificationUI();
                 } catch (error) {
