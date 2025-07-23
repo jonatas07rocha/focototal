@@ -1,62 +1,89 @@
-require('dotenv').config({ path: '../.env' }); // Carrega as variáveis de ambiente do .env
+// Carrega as variáveis de ambiente (necessário para o caminho do service account)
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 
 const express = require('express');
 const bodyParser = require('body-parser');
-const webpush = require('web-push');
+const admin = require('firebase-admin');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000; // Use a porta que for adequada para seu servidor
+const PORT = process.env.PORT || 3000;
 
-// Configurar o body-parser para JSON
+//
+// ATENÇÃO: Configure o caminho para o seu arquivo de chave de conta de serviço no .env
+// Exemplo no .env: GOOGLE_APPLICATION_CREDENTIALS="./caminho/para/sua-chave.json"
+//
+try {
+  admin.initializeApp({
+    credential: admin.credential.applicationDefault()
+  });
+  console.log("Firebase Admin SDK inicializado com sucesso.");
+} catch (error) {
+  console.error("ERRO: Falha ao inicializar o Firebase Admin SDK.", error);
+  console.log("Verifique se a variável de ambiente GOOGLE_APPLICATION_CREDENTIALS está configurada corretamente no seu arquivo .env e aponta para um arquivo JSON válido.");
+  process.exit(1);
+}
+
+
 app.use(bodyParser.json());
 
-// Configurar chaves VAPID
-webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT,
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-);
+// Serve os arquivos estáticos da pasta 'public'
+app.use(express.static(path.join(__dirname, '../public')));
 
-// Rota para enviar notificações
-// Esta é a rota que seu frontend irá chamar
-app.post('/api/send-notification', async (req, res) => {
-    const { subscription, payload, delay } = req.body;
-
-    if (!subscription || !payload) {
-        return res.status(400).json({ error: 'Subscription and payload are required.' });
-    }
-
-    const options = {
-        TTL: delay || 60 // Tempo de vida da notificação em segundos. Padrão 60s, mas pode ser o delay do timer
-    };
-
-    try {
-        // Envia a notificação
-        await webpush.sendNotification(subscription, JSON.stringify(payload), options);
-        res.status(200).json({ message: 'Notification sent successfully!' });
-    } catch (error) {
-        console.error('Error sending notification:', error);
-        if (error.statusCode === 410) { // GONE - Inscrição expirada/inválida
-            // Aqui você deve remover a inscrição inválida do seu banco de dados
-            console.warn('Subscription is no longer valid:', subscription);
-            res.status(410).json({ error: 'Subscription no longer valid.' });
-        } else {
-            res.status(500).json({ error: 'Failed to send notification.', details: error.message });
-        }
+// Rota para registrar um token de cliente
+// (Opcional, mas bom para armazenar tokens em um banco de dados no futuro)
+let clientTokens = []; // Armazenamento temporário em memória
+app.post('/api/register-token', (req, res) => {
+    const { token } = req.body;
+    if (token && !clientTokens.includes(token)) {
+        clientTokens.push(token);
+        console.log('Novo token registrado:', token);
+        res.status(200).json({ message: 'Token registrado com sucesso.' });
+    } else {
+        res.status(400).json({ error: 'Token inválido ou já registrado.' });
     }
 });
 
-// Opcional: Servir arquivos estáticos da pasta public
-// Se você estiver usando este mesmo servidor para servir o frontend,
-// descomente as linhas abaixo.
-// app.use(express.static(path.join(__dirname, '../public')));
 
-// app.get('*', (req, res) => {
-//     res.sendFile(path.join(__dirname, '../public/index.html'));
-// });
+// Rota para enviar notificações usando o Firebase Admin SDK
+app.post('/api/send-notification', async (req, res) => {
+    const { token, payload, delay } = req.body; // Agora esperamos 'token' em vez de 'subscription'
+
+    if (!token || !payload) {
+        return res.status(400).json({ error: 'O token do dispositivo e o payload são obrigatórios.' });
+    }
+
+    const message = {
+        notification: {
+            title: payload.title,
+            body: payload.body,
+        },
+        token: token, // O token de registro do FCM do cliente
+        webpush: { // Configurações específicas para web push
+            notification: {
+                icon: payload.icon || '/icon-192x192.png'
+            }
+        }
+    };
+    
+    try {
+        // Envia a mensagem. O agendamento (delay) não é suportado diretamente aqui.
+        // O agendamento deve ser feito no lado do cliente ou com funções do Cloud Functions.
+        // Para este caso, enviaremos imediatamente.
+        const response = await admin.messaging().send(message);
+        console.log('Notificação enviada com sucesso:', response);
+        res.status(200).json({ message: 'Notificação enviada com sucesso!', response });
+    } catch (error) {
+        console.error('Erro ao enviar notificação:', error);
+        res.status(500).json({ error: 'Falha ao enviar notificação.', details: error.message });
+    }
+});
+
+// Rota catch-all para servir o index.html
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+});
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log('VAPID Public Key:', process.env.VAPID_PUBLIC_KEY);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
