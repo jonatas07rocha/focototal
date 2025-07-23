@@ -5,12 +5,12 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-comp
 // --- CONFIGURAÇÃO DO FIREBASE ---
 // ATENÇÃO: COLE AQUI O MESMO OBJETO 'firebaseConfig' QUE VOCÊ USOU NO INDEX.HTML
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY_AQUI",
-  authDomain: "SEU_AUTH_DOMAIN_AQUI",
-  projectId: "SEU_PROJECT_ID_AQUI",
-  storageBucket: "SEU_STORAGE_BUCKET_AQUI",
-  messagingSenderId: "SEU_MESSAGING_SENDER_ID_AQUI",
-  appId: "SEU_APP_ID_AQUI"
+  apiKey: "COLE_A_SUA_NOVA_API_KEY_AQUI", // <-- AQUI
+  authDomain: "foco-total-app.firebaseapp.com",
+  projectId: "foco-total-app",
+  storageBucket: "foco-total-app.firebasestorage.app",
+  messagingSenderId: "259321591140",
+  appId: "1:259321591140:web:681353d3533ee0477af671"
 };
 
 // Inicializa o Firebase no service worker
