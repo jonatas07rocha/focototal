@@ -38,7 +38,6 @@
 </head>
 <body>
     <div id="device-shell" class="device-shell">
-        <!-- O HTML da UI permanece aqui, sem alterações -->
         <header class="flex justify-between items-center mb-4 flex-shrink-0">
             <h1 class="text-xl font-bold text-white">Foco Total <span class="text-blue-400 font-semibold">Core</span></h1>
             <div id="focus-method-toggle" class="flex bg-gray-900 rounded-lg p-1 text-xs font-semibold">
@@ -88,15 +87,12 @@
         </div>
     </div>
 
-    <!-- MODAIS (sem alterações) -->
     <div id="alert-modal-overlay" class="modal-overlay"><div class="modal-content text-center"><p id="alert-modal-message" class="mb-4"></p><button id="alert-modal-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">OK</button></div></div>
     <div id="settings-modal-overlay" class="modal-overlay"><div class="modal-content"><h2 class="text-xl font-bold text-white mb-4 text-center">Configurações</h2><div class="mb-4"><h3 class="text-base font-semibold text-blue-400 mb-3">Duração (minutos)</h3><div class="grid grid-cols-3 gap-2 text-center"><div><label for="focus-duration" class="block text-xs font-medium text-gray-300">Foco</label><input type="number" id="focus-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="25"></div><div><label for="short-break-duration" class="block text-xs font-medium text-gray-300">Pausa Curta</label><input type="number" id="short-break-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="5"></div><div><label for="long-break-duration" class="block text-xs font-medium text-gray-300">Pausa Longa</label><input type="number" id="long-break-duration" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="15"></div></div></div><div class="mb-4"><h3 class="text-base font-semibold text-blue-400 mb-3">Outros Ajustes</h3><div><label for="long-break-interval" class="block text-xs font-medium text-gray-300">Pomodoros para pausa longa</label><input type="number" id="long-break-interval" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="4"></div></div><div class="mb-4"><h3 class="text-base font-semibold text-blue-400 mb-3">Notificações</h3><div id="notification-status" class="text-sm text-gray-400 mb-2 text-center"></div><button id="enable-notifications-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-lg transition-colors text-sm">Ativar Notificações</button></div><button id="settings-save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl mt-6 transition-colors text-sm">Salvar e Fechar</button></div></div>
     
-    <!-- SCRIPTS EXTERNOS -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     
-    <!-- SCRIPT PRINCIPAL DA APLICAÇÃO (MODIFICADO PARA FIREBASE) -->
     <script type="module">
         // Importa as funções do Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
@@ -116,11 +112,10 @@
         const app = initializeApp(firebaseConfig);
         const messaging = getMessaging(app);
 
-        // Chave VAPID pública (a mesma que usamos antes)
+        // Chave VAPID pública
         const VAPID_PUBLIC_KEY = 'BGGQjzM18EY8bDY6MVqRzZXMy6YHZ6jDwKPS_D1bJESZIEGr2USAd-Mepdbj8IG052i6XxUqoJnoB1bbOZn0izs';
 
         document.addEventListener('DOMContentLoaded', () => {
-            // --- LÓGICA DE NOTIFICAÇÕES (REFEITA COM FIREBASE) ---
             const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
             const notificationStatus = document.getElementById('notification-status');
 
@@ -130,21 +125,14 @@
                     const permission = await Notification.requestPermission();
                     if (permission === 'granted') {
                         console.log('Permissão concedida. Obtendo token...');
-                        
-                        // Obtém o token de registro do dispositivo
-                        const currentToken = await getToken(messaging, {
-                            vapidKey: VAPID_PUBLIC_KEY
-                        });
-
+                        const currentToken = await getToken(messaging, { vapidKey: VAPID_PUBLIC_KEY });
                         if (currentToken) {
                             console.log('Token FCM obtido com sucesso:', currentToken);
                             notificationStatus.textContent = 'Notificações ativadas!';
                             enableNotificationsBtn.disabled = true;
-                            // AQUI, no futuro, você poderia enviar este token para um banco de dados
-                            // para poder enviar notificações para este dispositivo a partir do seu servidor.
                         } else {
-                            console.log('Não foi possível obter o token de registro. O usuário precisa permitir notificações no navegador.');
-                            notificationStatus.textContent = 'Falha ao obter token. Verifique as permissões.';
+                            console.log('Não foi possível obter o token de registro.');
+                            notificationStatus.textContent = 'Falha ao obter token.';
                         }
                     } else {
                         console.log('Permissão de notificação negada.');
@@ -158,23 +146,233 @@
             
             enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
 
-            // Ouve por mensagens enquanto o app está em primeiro plano
             onMessage(messaging, (payload) => {
                 console.log('Mensagem recebida em primeiro plano: ', payload);
-                // Mostra uma notificação customizada ou um alerta no app
+                const alertModalOverlay = document.getElementById('alert-modal-overlay');
                 showModal(alertModalOverlay, `${payload.notification.title}: ${payload.notification.body}`);
             });
 
-            // O resto do seu código da aplicação (timer, tarefas, etc.) permanece aqui
-            // ... (código omitido para brevidade, mas ele continua o mesmo)
             const timerDisplay = document.getElementById('timer-display');
             const startPauseBtn = document.getElementById('start-pause-btn');
-            // ... e assim por diante
+            const internalInterruptBtn = document.getElementById('internal-interrupt-btn');
+            const externalInterruptBtn = document.getElementById('external-interrupt-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const settingsBtn = document.getElementById('settings-btn');
+            const statsBtn = document.getElementById('stats-btn');
+            const helpBtn = document.getElementById('help-btn');
+            const progressRing = document.getElementById('progress-ring');
+            const newTaskInput = document.getElementById('new-task-input');
+            const newTaskEstimateInput = document.getElementById('new-task-estimate');
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const taskListEl = document.getElementById('task-list');
+            const currentTaskDisplay = document.getElementById('current-task-display');
+            const pomodoroCyclesEl = document.getElementById('pomodoro-cycles');
+            const focusMethodToggle = document.getElementById('focus-method-toggle');
+            const toggleCompletedTasksBtn = document.getElementById('toggle-completed-tasks-btn');
+            const alertModalOverlay = document.getElementById('alert-modal-overlay');
+            const alertModalCloseBtn = document.getElementById('alert-modal-close-btn');
+            const settingsModalOverlay = document.getElementById('settings-modal-overlay');
+            const settingsSaveBtn = document.getElementById('settings-save-btn');
+            const focusDurationInput = document.getElementById('focus-duration');
+            const shortBreakDurationInput = document.getElementById('short-break-duration');
+            const longBreakDurationInput = document.getElementById('long-break-duration');
+            const longBreakIntervalInput = document.getElementById('long-break-interval');
             
-            // --- CÓDIGO DA APLICAÇÃO (SEM ALTERAÇÕES SIGNIFICATIVAS) ---
-            // (Cole o resto do seu código JavaScript aqui, da declaração de 'timerDisplay' até o final)
-            // A única mudança é que você deve REMOVER a chamada `fetch` para `/api/send-notification`
-            // de dentro da função `startTimer`. O envio agora será feito pelo console do Firebase.
+            let timerInterval, isRunning = false, mode = 'focus', timeRemaining, totalTime, endTime;
+            let tasks = [], selectedTaskId = null, pomodoroSessionCount = 0;
+            let settings = { focusDuration: 25, shortBreakDuration: 5, longBreakDuration: 15, longBreakInterval: 4 };
+            let focusMethod = 'pomodoro';
+            let showCompletedTasks = false;
+            let audioInitialized = false;
+            let synth;
+
+            const initializeAudio = () => {
+                if (audioInitialized || !window.Tone) return;
+                Tone.start().then(() => {
+                    synth = new Tone.Synth().toDestination();
+                    audioInitialized = true;
+                }).catch(e => console.error("Erro ao iniciar Tone.js:", e));
+            };
+            
+            const showModal = (modalOverlay, message) => {
+                const messageElId = modalOverlay.id.replace('-overlay', '-message');
+                const messageEl = document.getElementById(messageElId);
+                if(messageEl && message) messageEl.textContent = message;
+                modalOverlay.classList.add('visible');
+            };
+
+            const hideModal = (modalOverlay) => {
+                modalOverlay.classList.remove('visible');
+            };
+
+            const startTimer = () => {
+                if (isRunning) return;
+                if (!selectedTaskId && mode === 'focus') {
+                    showModal(alertModalOverlay, 'Por favor, selecione uma tarefa para iniciar o foco.');
+                    return;
+                }
+                isRunning = true;
+                endTime = Date.now() + timeRemaining * 1000;
+                updateUI();
+                timerInterval = setInterval(updateTimer, 1000);
+            };
+
+            const pauseTimer = () => {
+                if (!isRunning) return;
+                isRunning = false;
+                clearInterval(timerInterval);
+                if (endTime) {
+                    timeRemaining = Math.round((endTime - Date.now()) / 1000);
+                }
+                saveState();
+                updateUI();
+            };
+            
+            const updateTimerDisplay = () => {
+                const minutes = Math.floor(Math.abs(timeRemaining) / 60);
+                const seconds = Math.abs(timeRemaining) % 60;
+                const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                timerDisplay.textContent = display;
+                document.title = `${display} - Foco Total`;
+                const circumference = 2 * Math.PI * 45;
+                const offset = circumference - (timeRemaining / totalTime) * circumference;
+                progressRing.style.strokeDasharray = circumference;
+                progressRing.style.strokeDashoffset = isNaN(offset) || offset < 0 ? circumference : offset;
+            };
+
+            const updateTimer = () => {
+                const remaining = Math.round((endTime - Date.now()) / 1000);
+                if (remaining >= 0) {
+                    timeRemaining = remaining;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    switchMode();
+                }
+            };
+
+            const switchMode = () => {
+                isRunning = false;
+                endTime = null;
+                if (mode === 'focus') {
+                    pomodoroSessionCount++;
+                    const task = tasks.find(t => t.id === selectedTaskId);
+                    if(task) {
+                        task.pomodorosCompleted++;
+                        task.focusTime += totalTime;
+                    }
+                    mode = (pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
+                } else {
+                    mode = 'focus';
+                }
+                resetTimer();
+                renderTasks();
+            };
+
+            const resetTimer = (forceMode) => {
+                clearInterval(timerInterval);
+                isRunning = false;
+                endTime = null;
+                mode = forceMode || mode;
+                timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
+                totalTime = timeRemaining;
+                saveState();
+                updateUI();
+            };
+
+            const updateUI = () => {
+                updateTimerDisplay(); 
+                const modeColor = mode === 'focus' ? 'blue' : 'green';
+                progressRing.classList.remove('text-blue-500', 'text-green-500');
+                progressRing.classList.add(`text-${modeColor}-500`);
+                startPauseBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-green-600', 'hover:bg-green-700');
+                startPauseBtn.classList.add(`bg-${modeColor}-600`, `hover:bg-${modeColor}-700`);
+                const btnIcon = isRunning ? 'pause' : 'play';
+                startPauseBtn.innerHTML = `<i data-lucide="${btnIcon}" class="w-8 h-8 ${btnIcon === 'play' ? 'pl-1' : ''}"></i>`;
+                lucide.createIcons();
+            };
+            
+            const addTask = () => {
+                initializeAudio();
+                const taskName = newTaskInput.value.trim();
+                const estimate = parseInt(newTaskEstimateInput.value) || 1;
+                if (taskName) {
+                    const newTask = { id: Date.now(), name: taskName, pomodoroEstimate: estimate, pomodorosCompleted: 0, internalInterruptions: 0, externalInterruptions: 0, focusTime: 0, completed: false };
+                    tasks.push(newTask);
+                    newTaskInput.value = '';
+                    newTaskEstimateInput.value = '1';
+                    if (synth) synth.triggerAttackRelease("C4", "8n");
+                    if (!selectedTaskId) selectTask(newTask.id);
+                    else renderTasks();
+                }
+            };
+            
+            const renderTasks = () => {
+                const tasksToRender = showCompletedTasks ? tasks : tasks.filter(task => !task.completed);
+                taskListEl.innerHTML = tasksToRender.length === 0 ? '<p class="text-gray-500 text-center text-sm">Adicione a sua primeira tarefa!</p>' : '';
+                tasksToRender.forEach(task => {
+                    const taskEl = document.createElement('div');
+                    taskEl.className = `task-item bg-gray-900 p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''} ${task.completed ? 'opacity-60' : ''}`;
+                    taskEl.dataset.id = task.id;
+                    taskEl.innerHTML = `<div class="flex justify-between items-center"><span class="truncate text-sm ${task.completed ? 'line-through' : ''}">${task.name}</span><span>${task.pomodorosCompleted}/${task.pomodoroEstimate}</span></div>`;
+                    taskListEl.appendChild(taskEl);
+                });
+                updateCurrentTaskDisplay();
+                saveState();
+            };
+            
+            const selectTask = (id) => {
+                selectedTaskId = id;
+                renderTasks();
+                if (!isRunning) resetTimer('focus');
+            };
+            
+            const updateCurrentTaskDisplay = () => {
+                const task = tasks.find(t => t.id === selectedTaskId);
+                currentTaskDisplay.textContent = task ? task.name : 'Nenhuma tarefa selecionada';
+            };
+
+            const saveState = () => {
+                localStorage.setItem('pomodoroCoreState', JSON.stringify({ settings, tasks, selectedTaskId, pomodoroSessionCount }));
+            };
+
+            const loadState = () => {
+                try {
+                    const state = JSON.parse(localStorage.getItem('pomodoroCoreState'));
+                    if (state) {
+                        settings = state.settings || settings;
+                        tasks = Array.isArray(state.tasks) ? state.tasks : [];
+                        selectedTaskId = state.selectedTaskId;
+                        pomodoroSessionCount = state.pomodoroSessionCount || 0;
+                    }
+                } catch (e) {
+                    localStorage.removeItem('pomodoroCoreState');
+                }
+            };
+            
+            loadState();
+            renderTasks();
+            updateUI();
+            
+            startPauseBtn.addEventListener('click', () => {
+                initializeAudio();
+                isRunning ? pauseTimer() : startTimer();
+            });
+            settingsSaveBtn.addEventListener('click', () => {
+                settings.focusDuration = parseFloat(focusDurationInput.value) || 25;
+                settings.shortBreakDuration = parseFloat(shortBreakDurationInput.value) || 5;
+                settings.longBreakDuration = parseFloat(longBreakDurationInput.value) || 15;
+                settings.longBreakInterval = parseInt(longBreakIntervalInput.value) || 4;
+                hideModal(settingsModalOverlay);
+                if (!isRunning) resetTimer('focus');
+            });
+            addTaskBtn.addEventListener('click', addTask);
+            taskListEl.addEventListener('click', (e) => {
+                const taskItem = e.target.closest('.task-item');
+                if (taskItem) selectTask(parseInt(taskItem.dataset.id));
+            });
+            settingsBtn.addEventListener('click', () => showModal(settingsModalOverlay));
+            alertModalCloseBtn.addEventListener('click', () => hideModal(alertModalOverlay));
         });
     </script>
 </body>
