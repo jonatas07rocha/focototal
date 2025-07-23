@@ -94,11 +94,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
     
     <script type="module">
-        // Importa as funções do Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
         import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging.js";
 
-        // Sua configuração do Firebase que você copiou do console
         const firebaseConfig = {
             apiKey: "AIzaSyAHw27qe_K1l5dRMgiupBfoPbElO-ddHzk",
             authDomain: "foco-total-app.firebaseapp.com",
@@ -108,12 +106,11 @@
             appId: "1:259321591140:web:681353d3533ee0477af671"
         };
 
-        // Inicializa o Firebase
         const app = initializeApp(firebaseConfig);
         const messaging = getMessaging(app);
-
-        // Chave VAPID pública
-        const VAPID_PUBLIC_KEY = 'BGGQjzM18EY8bDY6MVqRzZXMy6YHZ6jDwKPS_D1bJESZIEGr2USAd-Mepdbj8IG052i6XxUqoJnoB1bbOZn0izs';
+        
+        // *** CHAVE ATUALIZADA COM O VALOR DO FIREBASE ***
+        const VAPID_PUBLIC_KEY = 'BD6_1NRZJZWhPg71TIOGNpD5ELWSWX7djFN-VpSgSepeTp-B TmRhb2v5m1pYPwGvMnxazY0saw';
 
         document.addEventListener('DOMContentLoaded', () => {
             const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
@@ -124,8 +121,11 @@
                 try {
                     const permission = await Notification.requestPermission();
                     if (permission === 'granted') {
-                        console.log('Permissão concedida. Obtendo token...');
+                        console.log('Permissão concedida. Aguardando Service Worker ficar pronto...');
+                        await navigator.serviceWorker.ready;
+                        console.log('Service Worker pronto. Obtendo token...');
                         const currentToken = await getToken(messaging, { vapidKey: VAPID_PUBLIC_KEY });
+                        
                         if (currentToken) {
                             console.log('Token FCM obtido com sucesso:', currentToken);
                             notificationStatus.textContent = 'Notificações ativadas!';
@@ -152,6 +152,7 @@
                 showModal(alertModalOverlay, `${payload.notification.title}: ${payload.notification.body}`);
             });
 
+            // --- CÓDIGO ORIGINAL DA APLICAÇÃO ---
             const timerDisplay = document.getElementById('timer-display');
             const startPauseBtn = document.getElementById('start-pause-btn');
             const internalInterruptBtn = document.getElementById('internal-interrupt-btn');
