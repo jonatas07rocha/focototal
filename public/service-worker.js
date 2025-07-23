@@ -1,9 +1,8 @@
-// A versão do cache foi incrementada para forçar a atualização e o diagnóstico.
-const CACHE_NAME = 'foco-total-core-v2.2';
+// Versão final do cache.
+const CACHE_NAME = 'foco-total-core-v3.0';
 
-// Lista de arquivos essenciais. O ícone 512x512 foi restaurado.
+// Lista de arquivos essenciais e otimizada. A entrada '/' foi removida para evitar conflitos.
 const urlsToCache = [
-  '/',
   'index.html',
   'manifest.json',
   'icon-180x180.png',
@@ -17,16 +16,16 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log(`[SW v${CACHE_NAME}] Cache aberto. Cacheando App Shell:`, urlsToCache);
+        console.log(`[SW v${CACHE_NAME}] Cache aberto. Cacheando App Shell.`);
+        // Usamos 'add' em vez de 'addAll' para um controle de erro mais granular, se necessário no futuro.
+        // Por agora, 'addAll' é suficiente.
         return cache.addAll(urlsToCache);
       })
       .then(() => {
         console.log(`[SW v${CACHE_NAME}] App Shell cacheado com sucesso. Forçando ativação...`);
-        // Força o novo Service Worker a se tornar ativo imediatamente.
         return self.skipWaiting();
       })
       .catch(error => {
-        // Log detalhado do erro de cache
         console.error(`[SW v${CACHE_NAME}] Falha crítica ao cachear arquivos. O SW não será instalado.`, error);
       })
   );
@@ -48,7 +47,6 @@ self.addEventListener('activate', event => {
       );
     }).then(() => {
         console.log(`[SW v${CACHE_NAME}] Service Worker ativado e pronto para controlar os clientes.`);
-        // Garante que o SW controle a página imediatamente.
         return self.clients.claim();
     })
   );
@@ -63,10 +61,12 @@ self.addEventListener('fetch', event => {
 
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
+            // Se o recurso estiver no cache, retorna ele.
             if (cachedResponse) {
                 return cachedResponse;
             }
 
+            // Se não, busca na rede.
             return fetch(event.request).then(networkResponse => {
                 if (networkResponse && networkResponse.status === 200) {
                     const responseToCache = networkResponse.clone();
