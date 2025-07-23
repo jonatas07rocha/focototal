@@ -423,13 +423,17 @@
             // --- CONFIGURAÇÃO E LÓGICA DO FIREBASE ---
             // ATENÇÃO: COLE AQUI O OBJETO DE CONFIGURAÇÃO DO FIREBASE DO SEU PROJETO
             const firebaseConfig = {
-              apiKey: "AIzaSyAHw27qe_K1l5dRMgiupBfoPbElO-ddHzk",
-              authDomain: "foco-total-app.firebaseapp.com",
-              projectId: "foco-total-app",
-              storageBucket: "foco-total-app.firebasestorage.app",
-              messagingSenderId: "259321591140",
-              appId: "1:259321591140:web:681353d3533ee0477af671"
+              apiKey: "SUA_API_KEY",
+              authDomain: "SEU_AUTH_DOMAIN",
+              projectId: "SEU_PROJECT_ID",
+              storageBucket: "SEU_STORAGE_BUCKET",
+              messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+              appId: "SEU_APP_ID"
             };
+            
+            // ATENÇÃO: COLE AQUI A SUA CHAVE PÚBLICA VAPID DO FIREBASE
+            // Encontre em: Configurações do Projeto > Cloud Messaging > Certificados de push da Web
+            const VAPID_KEY = "BF4RvxrUdUVX96zESCFVSPCTAHLR8xU9DUxbNrAx-_5lS0l-_E-OBaihk38gyYIVifQmja4QAUTSwtBYi5D5x34";
 
             // Inicializa o Firebase
             firebase.initializeApp(firebaseConfig);
@@ -449,13 +453,13 @@
                     enableNotificationsBtn.textContent = 'Notificações Bloqueadas';
                 } else if (permission === 'granted') {
                     try {
-                        fcmToken = await messaging.getToken();
+                        // CORREÇÃO: Passa a chave VAPID para obter o token
+                        fcmToken = await messaging.getToken({ vapidKey: VAPID_KEY });
                         if (fcmToken) {
                             notificationStatus.textContent = 'Notificações ativadas.';
                             enableNotificationsBtn.disabled = true;
                             enableNotificationsBtn.textContent = 'Notificações Ativadas';
                         } else {
-                            // Isso pode acontecer se o token for revogado
                             notificationStatus.textContent = 'Clique para reativar.';
                             enableNotificationsBtn.disabled = false;
                             enableNotificationsBtn.textContent = 'Ativar Notificações';
@@ -474,14 +478,14 @@
             const requestNotificationPermission = async () => {
                 try {
                     await messaging.requestPermission();
-                    fcmToken = await messaging.getToken();
+                    // CORREÇÃO: Passa a chave VAPID para obter o token
+                    fcmToken = await messaging.getToken({ vapidKey: VAPID_KEY });
                     if (fcmToken) {
                         console.log('Token FCM obtido:', fcmToken);
                         const welcomePayload = {
                             title: 'Foco Total Ativado! 🚀',
                             body: 'Tudo pronto! Suas notificações foram configuradas com sucesso.',
                         };
-                        // Envia uma notificação de boas-vindas
                         scheduleNotification(welcomePayload);
                     }
                     updateNotificationUI();
