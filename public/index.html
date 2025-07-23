@@ -4,18 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     
-    <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#1F2937"/>
     <link rel="apple-touch-icon" sizes="180x180" href="icon-180x180.png">
     <link rel="apple-touch-icon" href="icon-192x192.png">
     <link rel="manifest" href="manifest.json">
     
     <title>Foco Total Core</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <!-- Favicon -->
     <link id="favicon" rel="icon" href="icon-192x192.png" type="image/png">
     <style>
         html, body { height: 100%; }
@@ -108,8 +104,6 @@
 
         const app = initializeApp(firebaseConfig);
         const messaging = getMessaging(app);
-        
-        // *** CHAVE ATUALIZADA COM O VALOR DO FIREBASE ***
         const VAPID_PUBLIC_KEY = 'BD6_1NRZJZWhPg71TIOGNpD5ELWSWX7djFN-VpSgSepeTp-B TmRhb2v5m1pYPwGvMnxazY0saw';
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -117,29 +111,22 @@
             const notificationStatus = document.getElementById('notification-status');
 
             const requestNotificationPermission = async () => {
-                console.log('Pedindo permissão para notificações...');
                 try {
                     const permission = await Notification.requestPermission();
                     if (permission === 'granted') {
-                        console.log('Permissão concedida. Aguardando Service Worker ficar pronto...');
                         await navigator.serviceWorker.ready;
-                        console.log('Service Worker pronto. Obtendo token...');
                         const currentToken = await getToken(messaging, { vapidKey: VAPID_PUBLIC_KEY });
-                        
                         if (currentToken) {
-                            console.log('Token FCM obtido com sucesso:', currentToken);
                             notificationStatus.textContent = 'Notificações ativadas!';
                             enableNotificationsBtn.disabled = true;
                         } else {
-                            console.log('Não foi possível obter o token de registro.');
                             notificationStatus.textContent = 'Falha ao obter token.';
                         }
                     } else {
-                        console.log('Permissão de notificação negada.');
                         notificationStatus.textContent = 'Permissão negada.';
                     }
                 } catch (error) {
-                    console.error('Ocorreu um erro ao obter o token.', error);
+                    console.error('Erro ao obter token:', error);
                     notificationStatus.textContent = 'Erro ao ativar notificações.';
                 }
             };
@@ -147,29 +134,19 @@
             enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
 
             onMessage(messaging, (payload) => {
-                console.log('Mensagem recebida em primeiro plano: ', payload);
                 const alertModalOverlay = document.getElementById('alert-modal-overlay');
                 showModal(alertModalOverlay, `${payload.notification.title}: ${payload.notification.body}`);
             });
 
-            // --- CÓDIGO ORIGINAL DA APLICAÇÃO ---
             const timerDisplay = document.getElementById('timer-display');
             const startPauseBtn = document.getElementById('start-pause-btn');
-            const internalInterruptBtn = document.getElementById('internal-interrupt-btn');
-            const externalInterruptBtn = document.getElementById('external-interrupt-btn');
-            const resetBtn = document.getElementById('reset-btn');
-            const settingsBtn = document.getElementById('settings-btn');
-            const statsBtn = document.getElementById('stats-btn');
-            const helpBtn = document.getElementById('help-btn');
             const progressRing = document.getElementById('progress-ring');
             const newTaskInput = document.getElementById('new-task-input');
             const newTaskEstimateInput = document.getElementById('new-task-estimate');
             const addTaskBtn = document.getElementById('add-task-btn');
             const taskListEl = document.getElementById('task-list');
             const currentTaskDisplay = document.getElementById('current-task-display');
-            const pomodoroCyclesEl = document.getElementById('pomodoro-cycles');
-            const focusMethodToggle = document.getElementById('focus-method-toggle');
-            const toggleCompletedTasksBtn = document.getElementById('toggle-completed-tasks-btn');
+            const settingsBtn = document.getElementById('settings-btn');
             const alertModalOverlay = document.getElementById('alert-modal-overlay');
             const alertModalCloseBtn = document.getElementById('alert-modal-close-btn');
             const settingsModalOverlay = document.getElementById('settings-modal-overlay');
@@ -182,8 +159,6 @@
             let timerInterval, isRunning = false, mode = 'focus', timeRemaining, totalTime, endTime;
             let tasks = [], selectedTaskId = null, pomodoroSessionCount = 0;
             let settings = { focusDuration: 25, shortBreakDuration: 5, longBreakDuration: 15, longBreakInterval: 4 };
-            let focusMethod = 'pomodoro';
-            let showCompletedTasks = false;
             let audioInitialized = false;
             let synth;
 
@@ -195,10 +170,7 @@
                 }).catch(e => console.error("Erro ao iniciar Tone.js:", e));
             };
             
-            const showModal = (modalOverlay, message) => {
-                const messageElId = modalOverlay.id.replace('-overlay', '-message');
-                const messageEl = document.getElementById(messageElId);
-                if(messageEl && message) messageEl.textContent = message;
+            const showModal = (modalOverlay) => {
                 modalOverlay.classList.add('visible');
             };
 
@@ -209,7 +181,8 @@
             const startTimer = () => {
                 if (isRunning) return;
                 if (!selectedTaskId && mode === 'focus') {
-                    showModal(alertModalOverlay, 'Por favor, selecione uma tarefa para iniciar o foco.');
+                    showModal(alertModalOverlay);
+                    document.getElementById('alert-modal-message').textContent = 'Por favor, selecione uma tarefa para iniciar o foco.';
                     return;
                 }
                 isRunning = true;
@@ -277,11 +250,11 @@
                 mode = forceMode || mode;
                 timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
                 totalTime = timeRemaining;
-                saveState();
                 updateUI();
             };
 
             const updateUI = () => {
+                if (timeRemaining === undefined) return; // Previne o NaN
                 updateTimerDisplay(); 
                 const modeColor = mode === 'focus' ? 'blue' : 'green';
                 progressRing.classList.remove('text-blue-500', 'text-green-500');
@@ -309,13 +282,13 @@
             };
             
             const renderTasks = () => {
-                const tasksToRender = showCompletedTasks ? tasks : tasks.filter(task => !task.completed);
+                const tasksToRender = tasks.filter(task => !task.completed);
                 taskListEl.innerHTML = tasksToRender.length === 0 ? '<p class="text-gray-500 text-center text-sm">Adicione a sua primeira tarefa!</p>' : '';
                 tasksToRender.forEach(task => {
                     const taskEl = document.createElement('div');
-                    taskEl.className = `task-item bg-gray-900 p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''} ${task.completed ? 'opacity-60' : ''}`;
+                    taskEl.className = `task-item bg-gray-900 p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''}`;
                     taskEl.dataset.id = task.id;
-                    taskEl.innerHTML = `<div class="flex justify-between items-center"><span class="truncate text-sm ${task.completed ? 'line-through' : ''}">${task.name}</span><span>${task.pomodorosCompleted}/${task.pomodoroEstimate}</span></div>`;
+                    taskEl.innerHTML = `<div class="flex justify-between items-center"><span class="truncate text-sm">${task.name}</span><span>${task.pomodorosCompleted}/${task.pomodoroEstimate}</span></div>`;
                     taskListEl.appendChild(taskEl);
                 });
                 updateCurrentTaskDisplay();
@@ -351,7 +324,9 @@
                 }
             };
             
+            // --- INICIALIZAÇÃO CORRIGIDA ---
             loadState();
+            resetTimer(mode); // Garante que o timer tenha um valor antes do primeiro render
             renderTasks();
             updateUI();
             
