@@ -1,6 +1,6 @@
 {
-    "name": "Foco Total Core",
-    "short_name": "Foco Core",
+    "name": "Foco Total",
+    "short_name": "Foco Total",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
