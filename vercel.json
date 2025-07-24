@@ -2,11 +2,11 @@
   "version": 2,
   "builds": [
     {
-      "src": "server/send-notification.js",
+      "src": "/server/send-notification.js",
       "use": "@vercel/node"
     },
     {
-      "src": "public/**",
+      "src": "public/**/*",
       "use": "@vercel/static"
     }
   ],
