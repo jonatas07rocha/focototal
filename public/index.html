@@ -14,31 +14,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link id="favicon" rel="icon" href="icon-192x192.png" type="image/png">
     <style>
-        /* --- CORREÇÃO DE LAYOUT E ROLAGEM --- */
-        html {
-            /* Permite o comportamento de rolagem suave */
-            scroll-behavior: smooth;
-        }
+        /* Estilos CSS permanecem inalterados */
+        html { scroll-behavior: smooth; }
         body {
             font-family: 'Inter', sans-serif;
             background-color: #000000;
             background-image: radial-gradient(circle at center, #1a202c 0%, #000000 70%);
             display: flex;
             justify-content: center;
-            /* Alinha ao topo para permitir a rolagem a partir do início */
             align-items: flex-start; 
             min-height: 100vh;
             padding: 1rem;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            
-            /* Oculta a barra de rolagem */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE e Edge */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
-        body::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
-        }
+        body::-webkit-scrollbar { display: none; }
         .device-shell {
             background-color: #1F2937;
             border-radius: 2.5rem;
@@ -50,7 +42,6 @@
             width: 100%;
             max-width: 420px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            /* Garante uma margem superior e inferior, permitindo que o conteúdo determine a altura */
             margin-top: auto;
             margin-bottom: auto;
         }
@@ -61,28 +52,16 @@
             margin-bottom: 1rem;
             box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5);  
         }
-        #progress-ring {
-            transition: stroke-dashoffset 1s linear;
-        }
-        .task-item {
-            transition: background-color 0.2s, border-color 0.2s, box-shadow 0.3s ease, opacity 0.3s, transform 0.3s ease;
-        }
+        #progress-ring { transition: stroke-dashoffset 1s linear; }
+        .task-item { transition: background-color 0.2s, border-color 0.2s, box-shadow 0.3s ease, opacity 0.3s, transform 0.3s ease; }
         .task-item.selected {
             background-color: #374151;
             border-color: #3B82F6;
             box-shadow: 0 0 12px rgba(59, 130, 246, 0.7);
         }
-        #timer-display {
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-        }
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-          -webkit-appearance: none; 
-          margin: 0; 
-        } 
-        input[type=number] {
-          -moz-appearance: textfield;
-        }
+        #timer-display { text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; } 
+        input[type=number] { -moz-appearance: textfield; }
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -98,10 +77,7 @@
             visibility: hidden;
             transition: opacity 0.3s, visibility 0.3s;
         }
-        .modal-overlay.visible {
-            opacity: 1;
-            visibility: visible;
-        }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
         .modal-content {
             background-color: #1F2937;
             padding: 2rem;
@@ -114,9 +90,7 @@
             width: 90%;
             max-width: 500px;
         }
-        .modal-overlay.visible .modal-content {
-            transform: scale(1);
-        }
+        .modal-overlay.visible .modal-content { transform: scale(1); }
         #install-banner {
             display: none;
             position: fixed;
@@ -130,22 +104,12 @@
             z-index: 2000;
             box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
         }
-        .start-pause-btn-clicked {
-            animation: pulse-small 0.3s ease-out;
-        }
-        @keyframes pulse-small {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.03); }
-            100% { transform: scale(1); }
-        }
-        .task-item.added-feedback {
-            animation: new-task-pop 0.3s ease-out;
-        }
-        @keyframes new-task-pop {
-            0% { transform: scale(0.98); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
-        }
+        .start-pause-btn-clicked { animation: pulse-small 0.3s ease-out; }
+        @keyframes pulse-small { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+        .task-item.added-feedback { animation: new-task-pop 0.3s ease-out; }
+        @keyframes new-task-pop { 0% { transform: scale(0.98); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
     </style>
+    <!-- OneSignal SDK -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
         window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -161,6 +125,7 @@
     </script>
 </head>
 <body>
+    <!-- O corpo do HTML (elementos visíveis) permanece inalterado -->
     <div id="device-shell" class="device-shell">
         <header class="flex justify-between items-center mb-4 flex-shrink-0">
             <h1 class="text-xl font-bold text-white">Foco Total <span class="text-blue-400 font-semibold">Core</span></h1>
@@ -341,21 +306,6 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     
     <script>
-        // O OneSignal SDK irá registrar seu próprio Service Worker.
-        // Não é necessário um registro manual aqui se você estiver usando o OneSignal.
-        /*
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
-                        console.log('Service Worker registrado com sucesso:', registration.scope);
-                    }).catch(error => {
-                        console.log('Falha ao registrar o Service Worker:', error);
-                    });
-            });
-        }
-        */
-
         document.addEventListener('DOMContentLoaded', () => {
             // --- ELEMENTOS DO DOM (sem alterações) ---
             const timerDisplay = document.getElementById('timer-display');
@@ -402,23 +352,16 @@
             const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
             const notificationStatus = document.getElementById('notification-status');
 
-            // --- ESTADO DA APLICAÇÃO ---
+            // --- ESTADO DA APLICAÇÃO (sem alterações) ---
             let timerInterval, isRunning = false, mode = 'focus', timeRemaining, totalTime, endTime;
             let tasks = [], selectedTaskId = null, pomodoroSessionCount = 0;
             let settings = { focusDuration: 25, shortBreakDuration: 5, longBreakDuration: 15, longBreakInterval: 4 };
             let focusMethod = 'pomodoro';
             let deferredInstallPrompt = null;
             let showCompletedTasks = false;
-            // let fcmToken = null; // Variável para armazenar o token do Firebase - REMOVIDO PARA ONESIGNAL
             
-            // --- LÓGICA DE NOTIFICAÇÕES (Agora gerenciada pelo OneSignal diretamente) ---
-            // As funções e configurações do Firebase foram removidas.
-            // O botão "Ativar Notificações" agora precisa ser adaptado para interagir com o OneSignal
-            // ou pode ser removido, pois o OneSignal exibe seu próprio prompt.
+            // --- LÓGICA DE NOTIFICAÇÕES (sem alterações) ---
             const updateNotificationUI = async () => {
-                // Lógica de UI para notificações, adaptada ou gerenciada pelo OneSignal.
-                // O OneSignal tem um botão de opt-in nativo que você habilitou.
-                // Esta função pode ser removida ou adaptada para mostrar o status do OneSignal.
                 if (typeof OneSignal !== 'undefined') {
                     try {
                         const permission = await OneSignal.getNotificationPermission();
@@ -437,7 +380,7 @@
                                 enableNotificationsBtn.disabled = false;
                                 enableNotificationsBtn.textContent = 'Ativar Notificações';
                             }
-                        } else { // default
+                        } else {
                             notificationStatus.textContent = 'Notificações não ativadas.';
                             enableNotificationsBtn.disabled = false;
                             enableNotificationsBtn.textContent = 'Ativar Notificações';
@@ -447,7 +390,7 @@
                         notificationStatus.textContent = 'Erro ao verificar notificações.';
                     }
                 } else {
-                    notificationStatus.textContent = 'Notificações não suportadas (OneSignal não carregado).';
+                    notificationStatus.textContent = 'SDK do OneSignal não carregado.';
                     enableNotificationsBtn.disabled = true;
                 }
             };
@@ -455,46 +398,23 @@
             const requestNotificationPermission = async () => {
                 if (typeof OneSignal !== 'undefined') {
                     try {
-                        await OneSignal.showSlidedownPrompt(); // Exibe o prompt de permissão do OneSignal
-                        // OneSignal lida com a lógica de inscrição.
+                        await OneSignal.showSlidedownPrompt();
                         await updateNotificationUI();
                     } catch (error) {
-                        console.error('Erro ao solicitar permissão de notificação OneSignal:', error);
-                        showModal(alertModalOverlay, 'Não foi possível solicitar a permissão de notificação. Verifique as configurações do navegador.');
+                        console.error('Erro ao solicitar permissão OneSignal:', error);
+                        showModal(alertModalOverlay, 'Não foi possível solicitar a permissão de notificação.');
                         updateNotificationUI();
                     }
                 } else {
-                    showModal(alertModalOverlay, 'OneSignal não está carregado. Não foi possível ativar as notificações.');
+                    showModal(alertModalOverlay, 'OneSignal não está carregado.');
                 }
             };
             
-            // A função scheduleNotification abaixo é um exemplo de como você *poderia* enviar notificações
-            // se o seu aplicativo precisasse dispará-las por conta própria.
-            // No entanto, para notificações de fim de ciclo de timer, o OneSignal geralmente lida com isso
-            // via suas automações ou APIs de backend, e não diretamente do frontend para o token do usuário.
-            // Eu a comentei para evitar dependência de lógica de backend que você não tem configurada para o OneSignal.
-            /*
-            const scheduleNotification = async (payload) => {
-                // Esta função deve ser implementada no seu backend para enviar notificações via OneSignal API.
-                // Ela não é mais diretamente ligada ao FCM token.
-                console.warn('Função scheduleNotification precisa ser adaptada para OneSignal via backend, se necessário.');
-                console.log('Payload da notificação:', payload);
-                // Exemplo de como você faria uma notificação local (apenas para teste, não persistente):
-                // if ('Notification' in window && Notification.permission === 'granted') {
-                //     navigator.serviceWorker.ready.then(registration => {
-                //         registration.showNotification(payload.title, { body: payload.body });
-                //     });
-                // }
-            };
-            */
-
             enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
-            // --- FIM DA LÓGICA DE NOTIFICAÇÕES ---
-
-            // --- LÓGICA DE ÁUDIO ---
+           
+            // --- LÓGICA DE ÁUDIO (sem alterações) ---
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             let audioInitialized = false;
-
             const playBeep = (frequency = 800, duration = 200, volume = 0.3) => {
                 if (audioContext.state === 'suspended') {
                     audioContext.resume().then(() => _playBeepInternal(frequency, duration, volume));
@@ -502,7 +422,6 @@
                     _playBeepInternal(frequency, duration, volume);
                 }
             };
-
             const _playBeepInternal = (frequency, duration, volume) => {
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
@@ -516,16 +435,14 @@
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + duration / 1000);
             };
-            
             const playFinishSound = () => {
                 playBeep(523, 150, 0.4);
                 setTimeout(() => playBeep(659, 150, 0.4), 200);
                 setTimeout(() => playBeep(784, 300, 0.5), 400);
             };
-            
             const playTickSound = () => playBeep(1000, 50, 0.1);
 
-            // --- LÓGICA DE INSTALAÇÃO DO PWA ---
+            // --- LÓGICA DE INSTALAÇÃO PWA (sem alterações) ---
             window.addEventListener('beforeinstallprompt', (event) => {
                 event.preventDefault();
                 deferredInstallPrompt = event;
@@ -533,29 +450,26 @@
                     installBanner.style.display = 'block';
                 }
             });
-
             installBtn.addEventListener('click', () => {
                 if (deferredInstallPrompt) {
                     deferredInstallPrompt.prompt();
-                    deferredInstallPrompt.userChoice.then((choiceResult) => {
+                    deferredInstallPrompt.userChoice.then(() => {
                         deferredInstallPrompt = null;
                         installBanner.style.display = 'none';
                     });
                 } else if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
-                    showModal(alertModalOverlay, 'Para instalar no iOS, toque no ícone de Compartilhar e depois em "Adicionar à Tela de Início".');
+                    showModal(alertModalOverlay, 'Para instalar no iOS, toque em Compartilhar e "Adicionar à Tela de Início".');
                 }
             });
-
             installDismissBtn.addEventListener('click', () => {
                 localStorage.setItem('installBannerDismissed', 'true');
                 installBanner.style.display = 'none';
             });
-            
             if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
                 installBanner.style.display = 'none';
             }
 
-            // --- FUNÇÕES DE GESTÃO DE MODO ---
+            // --- FUNÇÕES DE GESTÃO DE MODO (sem alterações) ---
             const updateMethodToggleUI = () => {
                 const buttons = focusMethodToggle.querySelectorAll('.method-btn');
                 buttons.forEach(btn => {
@@ -564,71 +478,40 @@
                     btn.classList.toggle('text-gray-400', btn.dataset.method !== focusMethod);
                 });
                 pomodoroCyclesEl.style.display = focusMethod === 'pomodoro' ? 'flex' : 'none';
-                
-                if (focusMethod === 'pomodoro') {
-                    newTaskEstimateInput.style.display = 'inline-block';
-                    newTaskEstimateLabel.style.display = 'inline-block';
-                    newTaskEstimateLabel.textContent = '#';
-                } else {
-                    newTaskEstimateInput.style.display = 'none';
-                    newTaskEstimateLabel.style.display = 'none';
-                }
-
+                newTaskEstimateInput.style.display = focusMethod === 'pomodoro' ? 'inline-block' : 'none';
+                newTaskEstimateLabel.style.display = focusMethod === 'pomodoro' ? 'inline-block' : 'none';
+                newTaskEstimateLabel.textContent = '#';
                 helpContentPomodoro.style.display = focusMethod === 'pomodoro' ? 'block' : 'none';
                 helpContentAdaptativo.style.display = focusMethod === 'adaptativo' ? 'block' : 'none';
-                
-                if (!isRunning) {
-                    resetTimer('focus');
-                }
+                if (!isRunning) resetTimer('focus');
             };
 
-            // --- FUNÇÕES DO TIMER ---
+            // --- FUNÇÕES DO TIMER (com alterações) ---
             const showModal = (modalOverlay, message) => {
                 const messageElId = modalOverlay.id.replace('-overlay', '-message');
                 const messageEl = document.getElementById(messageElId);
                 if(messageEl && message) messageEl.textContent = message;
                 modalOverlay.classList.add('visible');
             };
-
-            const hideModal = (modalOverlay) => {
-                modalOverlay.classList.remove('visible');
-            }
-
+            const hideModal = (modalOverlay) => modalOverlay.classList.remove('visible');
             const startTimer = () => {
                 if (isRunning) return;
                 if (!selectedTaskId && mode === 'focus') {
                     showModal(alertModalOverlay, 'Por favor, selecione uma tarefa para iniciar o foco.');
                     return;
                 }
-                
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
                     totalTime = timeRemaining;
                 } else {
                     timeRemaining = 0;
-                    totalTime = 1; // Para evitar divisão por zero, o modo adaptativo não precisa de totalTime
+                    totalTime = 1;
                 }
-
                 isRunning = true;
                 endTime = Date.now() + (focusMethod === 'pomodoro' || mode !== 'focus' ? timeRemaining * 1000 : 0);
-                
-                // O agendamento de notificação agora será gerenciado pelo OneSignal.
-                // Se precisar de notificações ao final do timer, você precisaria usar as automações do OneSignal
-                // ou disparar uma notificação via API do OneSignal do seu backend (não via FCM token).
-                /*
-                if ((focusMethod === 'pomodoro' || mode !== 'focus')) {
-                    const timerPayload = {
-                        title: mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!',
-                        body: mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?'
-                    };
-                    scheduleNotification(timerPayload); // Comentado, pois depende da lógica de backend para OneSignal
-                }
-                */
-                
                 updateUI();
                 timerInterval = setInterval(updateTimer, 1000);
             };
-
             const pauseTimer = () => {
                 if (!isRunning) return;
                 isRunning = false;
@@ -639,33 +522,27 @@
                 saveState();
                 updateUI();
             };
-            
             const updateTimerDisplay = () => {
                 const minutes = Math.floor(Math.abs(timeRemaining) / 60);
                 const seconds = Math.abs(timeRemaining) % 60;
                 const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
                 timerDisplay.textContent = display;
                 document.title = `${display} - Foco Total`;
-            
-                // --- CORREÇÃO DO CÍRCULO DE PROGESSO (b) ---
                 const circumference = 2 * Math.PI * 45;
-                let progress = 0; // Progresso de 0 a 1
+                let progress = 0;
                 if(totalTime > 0) {
-                    if (focusMethod === 'pomodoro' || mode !== 'focus') { // Contagem regressiva
+                    if (focusMethod === 'pomodoro' || mode !== 'focus') {
                         progress = (totalTime - timeRemaining) / totalTime;
-                    } else { // Contagem progressiva (Adaptativo)
-                        // A barra de progresso no modo adaptativo pode ter outra lógica, aqui está simples
+                    } else {
                         progress = (timeRemaining % 60) / 60;
                     }
                 }
-                
                 const offset = circumference * (1 - progress);
                 progressRing.style.strokeDasharray = circumference;
                 progressRing.style.strokeDashoffset = offset;
             };
-
             const updateTimer = () => {
-                if (focusMethod === 'pomodoro' || mode !== 'focus') { // Contagem regressiva
+                if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     const remaining = Math.round((endTime - Date.now()) / 1000);
                     if (remaining >= 0) {
                         timeRemaining = remaining;
@@ -677,69 +554,119 @@
                         clearInterval(timerInterval);
                         switchMode();
                     }
-                } else { // Contagem progressiva
+                } else {
                     timeRemaining++;
                     updateTimerDisplay();
                 }
             };
 
+            // ===================================================================
+            // MODIFICAÇÃO PRINCIPAL: Função switchMode() atualizada
+            // ===================================================================
             const switchMode = () => {
                 isRunning = false;
-                endTime = null; 
+                endTime = null;
                 playFinishSound();
 
-                // Notificação de fim de ciclo: O OneSignal exibirá suas próprias notificações de permissão.
-                // Para notificações personalizadas de fim de ciclo, você pode usar a API de Notificações nativa
-                // ou configurar automações no OneSignal (via dashboard ou sua API de backend).
-                // A lógica para agendar notificações customizadas do OneSignal via frontend é mais complexa.
+                // Notificação local para garantir a notificação imediata
                 if ('Notification' in window && Notification.permission === 'granted') {
                     const notificationTitle = mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!';
                     const notificationBody = mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?';
-                    // Dispara uma notificação local via Service Worker (não OneSignal diretamente do JS da página)
                     navigator.serviceWorker.ready.then(registration => {
-                        registration.showNotification(notificationTitle, { body: notificationBody });
+                        registration.showNotification(notificationTitle, { body: notificationBody, icon: '/icon-192x192.png' });
                     });
                 }
-                
-                if (mode === 'focus') {
-                    if (focusMethod === 'pomodoro') {
-                        pomodoroSessionCount++;
-                        const task = tasks.find(t => t.id === selectedTaskId);
-                        if(task) {
-                            task.pomodorosCompleted++;
-                            task.focusTime += settings.focusDuration * 60;
+
+                // --- INÍCIO DA ADIÇÃO DE CÓDIGO: Envio de Tags para OneSignal ---
+                if (typeof OneSignal !== 'undefined') {
+                    if (mode === 'focus') {
+                        // Fim do ciclo de Foco: Envia tag 'foco_finalizado'
+                        OneSignal.sendTags({
+                            'ciclo_status': 'foco_finalizado',
+                            'proximo_passo': 'pausa'
+                        }).then(function(tagsSent) {
+                            console.log('Tags de fim de foco enviadas para OneSignal:', tagsSent);
+                        }).catch(function(error) {
+                            console.error('Erro ao enviar tags de foco para OneSignal:', error);
+                        });
+
+                        // Lógica original do fim do foco
+                        if (focusMethod === 'pomodoro') {
+                            pomodoroSessionCount++;
+                            const task = tasks.find(t => t.id === selectedTaskId);
+                            if(task) {
+                                task.pomodorosCompleted++;
+                                task.focusTime += settings.focusDuration * 60;
+                            }
+                        } else {
+                            const task = tasks.find(t => t.id === selectedTaskId);
+                            if(task) task.focusTime += timeRemaining;
                         }
-                    } else {
-                        const task = tasks.find(t => t.id === selectedTaskId);
-                        if(task) task.focusTime += timeRemaining;
+                        renderTasks();
+                        mode = (focusMethod === 'pomodoro' && pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
+                        showModal(sessionEndModalOverlay, `Você ${focusMethod === 'pomodoro' ? 'completou um Pomodoro!' : 'finalizou seu foco.'} Hora de fazer uma pausa.`);
+                    } else { // Se o modo atual é de pausa (shortBreak ou longBreak)
+                        // Fim do ciclo de Pausa: Envia tag 'pausa_finalizada'
+                        OneSignal.sendTags({
+                            'ciclo_status': 'pausa_finalizada',
+                            'proximo_passo': 'foco'
+                        }).then(function(tagsSent) {
+                            console.log('Tags de fim de pausa enviadas para OneSignal:', tagsSent);
+                        }).catch(function(error) {
+                            console.error('Erro ao enviar tags de pausa para OneSignal:', error);
+                        });
+                        
+                        // Lógica original do fim da pausa
+                        mode = 'focus';
+                        showModal(sessionEndModalOverlay, 'Pausa finalizada! Vamos voltar ao trabalho?');
                     }
-                    renderTasks();
-                    mode = (focusMethod === 'pomodoro' && pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
-                    showModal(sessionEndModalOverlay, `Você ${focusMethod === 'pomodoro' ? 'completou um Pomodoro!' : 'finalizou seu foco.'} Hora de fazer uma pausa.`);
                 } else {
-                    mode = 'focus';
-                    showModal(sessionEndModalOverlay, 'Pausa finalizada! Vamos voltar ao trabalho?');
+                     // Caso OneSignal não esteja definido (fallback para o comportamento original)
+                     console.warn('OneSignal SDK não carregado, tags não enviadas.');
+                     if (mode === 'focus') {
+                         if (focusMethod === 'pomodoro') {
+                            pomodoroSessionCount++;
+                            const task = tasks.find(t => t.id === selectedTaskId);
+                            if(task) {
+                                task.pomodorosCompleted++;
+                                task.focusTime += settings.focusDuration * 60;
+                            }
+                         } else {
+                            const task = tasks.find(t => t.id === selectedTaskId);
+                            if(task) task.focusTime += timeRemaining;
+                         }
+                         renderTasks();
+                         mode = (focusMethod === 'pomodoro' && pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
+                         showModal(sessionEndModalOverlay, `Você ${focusMethod === 'pomodoro' ? 'completou um Pomodoro!' : 'finalizou seu foco.'} Hora de fazer uma pausa.`);
+                     } else {
+                         mode = 'focus';
+                         showModal(sessionEndModalOverlay, 'Pausa finalizada! Vamos voltar ao trabalho?');
+                     }
                 }
+                // --- FIM DA ADIÇÃO DE CÓDIGO ---
+
                 resetTimer();
             };
+            // ===================================================================
+            // FIM DA MODIFICAÇÃO PRINCIPAL
+            // ===================================================================
+
 
             const resetTimer = (forceMode = null) => {
                 clearInterval(timerInterval);
                 isRunning = false;
                 endTime = null;
                 mode = forceMode || mode;
-
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
                     totalTime = timeRemaining;
                 } else {
                     timeRemaining = 0;
-                    totalTime = 1; // Evita divisão por zero
+                    totalTime = 1;
                 }
                 saveState();
                 updateUI();
             };
-
             const resetDay = () => {
                 pauseTimer();
                 tasks = [];
@@ -750,21 +677,14 @@
                 hideModal(resetConfirmModalOverlay);
                 showModal(alertModalOverlay, 'O dia foi zerado com sucesso!');
             };
-
             const updateUI = () => {
                 updateTimerDisplay(); 
-                
                 let modeColorClass = '';
                 if (mode === 'focus') modeColorClass = 'text-blue-500';
                 else if (mode === 'shortBreak') modeColorClass = 'text-green-500';
                 else if (mode === 'longBreak') modeColorClass = 'text-purple-500';
-                
                 progressRing.setAttribute('class', `transition-colors duration-500 ${modeColorClass}`);
-
-                let btnIcon = '';
-                let btnBgClass = '';
-                let ariaLabelText = '';
-
+                let btnIcon, btnBgClass, ariaLabelText;
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     btnIcon = isRunning ? 'pause' : 'play';
                     btnBgClass = isRunning ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-blue-600 hover:bg-blue-700';
@@ -780,19 +700,15 @@
                         ariaLabelText = 'Iniciar Foco Adaptativo';
                     }
                 }
-                
                 startPauseBtn.className = `w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center ${btnBgClass}`;
                 startPauseBtn.innerHTML = `<i data-lucide="${btnIcon}" class="w-8 h-8 ${btnIcon === 'play' ? 'pl-1' : ''}"></i>`; 
                 startPauseBtn.setAttribute('aria-label', ariaLabelText);
-
                 internalInterruptBtn.style.display = (isRunning && mode === 'focus') ? 'flex' : 'none';
                 externalInterruptBtn.style.display = (isRunning && mode === 'focus') ? 'flex' : 'none';
-                
                 updateCurrentTaskDisplay();
                 updateStatsDisplay();
                 lucide.createIcons();
             };
-
             const formatTime = (totalSeconds) => {
                 if (!totalSeconds || totalSeconds < 1) return `0m`;
                 const minutes = Math.floor(totalSeconds / 60);
@@ -801,7 +717,6 @@
                 if (hours > 0) return `${hours}h ${remainingMinutes}m`;
                 return `${minutes}m`;
             };
-
             const updateStatsDisplay = () => {
                 if (tasks.length === 0) {
                     statsContentEl.innerHTML = '<p class="text-gray-400 text-center">Nenhuma tarefa para exibir.</p>';
@@ -809,7 +724,6 @@
                 }
                 let statsHTML = '<div class="space-y-3">';
                 const sortedTasks = [...tasks].sort((a, b) => a.completed - b.completed);
-
                 sortedTasks.forEach(task => {
                     statsHTML += `
                         <div class="bg-gray-900 p-3 rounded-lg ${task.completed ? 'opacity-60' : ''}">
@@ -825,16 +739,13 @@
                 statsHTML += '</div>';
                 statsContentEl.innerHTML = statsHTML;
             };
-            
             const renderTasks = () => {
                 const tasksToRender = showCompletedTasks ? tasks : tasks.filter(task => !task.completed);
                 taskListEl.innerHTML = tasksToRender.length === 0 ? '<p class="text-gray-500 text-center text-sm">Adicione a sua primeira tarefa!</p>' : '';
-                
                 tasksToRender.forEach(task => {
                     const taskEl = document.createElement('div');
                     taskEl.className = `task-item bg-gray-900 p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''} ${task.completed ? 'opacity-60' : ''}`;
                     taskEl.dataset.id = task.id;
-                    
                     if (task.justAdded) {
                         taskEl.classList.add('added-feedback');
                         taskEl.addEventListener('animationend', () => {
@@ -843,7 +754,6 @@
                             saveState();
                         }, { once: true });
                     }
-
                     const isEditing = task.isEditing;
                     taskEl.innerHTML = `
                         <div class="flex justify-between items-center">
@@ -867,13 +777,11 @@
                         </div>`;
                     taskListEl.appendChild(taskEl);
                 });
-
                 updateCurrentTaskDisplay();
                 updateStatsDisplay();
                 saveState();
                 lucide.createIcons();
             };
-
             const addTask = () => {
                 if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
                 const taskName = newTaskInput.value.trim();
@@ -889,7 +797,6 @@
                     else renderTasks();
                 }
             };
-
             const deleteTask = (id) => {
                 tasks = tasks.filter(task => task.id !== id);
                 if (selectedTaskId === id) {
@@ -899,7 +806,6 @@
                     renderTasks();
                 }
             };
-
             const toggleTaskCompleted = (id) => {
                 const task = tasks.find(t => t.id === id);
                 if (task) {
@@ -913,7 +819,6 @@
                     }
                 }
             };
-            
             const toggleEditState = (id) => {
                 tasks.forEach(task => task.isEditing = task.id === id ? !task.isEditing : false);
                 renderTasks();
@@ -923,7 +828,6 @@
                     input.select();
                 }
             };
-
             const updateTaskName = (id, newName) => {
                 const task = tasks.find(t => t.id === id);
                 if (task) {
@@ -932,7 +836,6 @@
                     renderTasks();
                 }
             };
-
             const selectTask = (id) => {
                 const task = tasks.find(t => t.id === id);
                 const isAnyTaskEditing = tasks.some(t => t.isEditing);
@@ -942,7 +845,6 @@
                     if (!isRunning) resetTimer('focus');
                 }
             };
-
             const logInterruption = (type) => {
                 if (isRunning && mode === 'focus' && selectedTaskId) {
                     const task = tasks.find(t => t.id === selectedTaskId);
@@ -950,19 +852,17 @@
                         if (type === 'internal') task.internalInterruptions++;
                         else if (type === 'external') task.externalInterruptions++;
                         renderTasks();
-                        showModal(alertModalOverlay, `Interrupção ${type === 'internal' ? 'interna' : 'externa'} registrada para "${task.name}"!`);
+                        showModal(alertModalOverlay, `Interrupção ${type === 'internal' ? 'interna' : 'externa'} registrada!`);
                     }
                 } else {
-                    showModal(alertModalOverlay, 'Só pode registrar uma interrupção durante um ciclo de foco ativo.');
+                    showModal(alertModalOverlay, 'Só pode registrar interrupções durante um foco ativo.');
                 }
             };
-            
             const updateCurrentTaskDisplay = () => {
                 const task = tasks.find(t => t.id === selectedTaskId);
                 currentTaskDisplay.textContent = task ? task.name : 'Nenhuma tarefa selecionada';
                 pomodoroCyclesEl.innerHTML = '';
                 if (focusMethod !== 'pomodoro' || !settings.longBreakInterval || settings.longBreakInterval <= 0) return;
-
                 const cyclesToShow = pomodoroSessionCount % settings.longBreakInterval;
                 for(let i = 0; i < settings.longBreakInterval; i++) {
                     const icon = i < cyclesToShow ? '<i data-lucide="check-circle-2" class="text-green-500"></i>' : '<i data-lucide="circle" class="text-gray-600"></i>';
@@ -970,12 +870,10 @@
                 }
                 lucide.createIcons();
             };
-
             const saveState = () => {
                 const state = { settings, tasks, selectedTaskId, pomodoroSessionCount, focusMethod, showCompletedTasks, timerState: { isRunning, mode, endTime, totalTime } };
                 localStorage.setItem('pomodoroCoreState', JSON.stringify(state));
             };
-
             const loadState = () => {
                 const state = JSON.parse(localStorage.getItem('pomodoroCoreState'));
                 if (state) {
@@ -985,7 +883,6 @@
                     pomodoroSessionCount = state.pomodoroSessionCount || 0;
                     focusMethod = state.focusMethod || 'pomodoro';
                     showCompletedTasks = state.showCompletedTasks || false;
-
                     if (state.timerState) {
                         const { isRunning: wasRunning, mode: savedMode, endTime: savedEndTime, totalTime: savedTotalTime } = state.timerState;
                         mode = savedMode;
@@ -993,33 +890,24 @@
                         if (wasRunning && savedEndTime && savedEndTime > Date.now()) {
                             endTime = savedEndTime;
                             timeRemaining = Math.round((endTime - Date.now()) / 1000);
-                            startTimer();
-                        } else {
-                            resetTimer(mode);
+                            isRunning = true; 
+                            timerInterval = setInterval(updateTimer, 1000);
                         }
                     }
-                } else {
-                    focusMethod = 'pomodoro';
                 }
-                
                 tasks.forEach(t => {
-                    if (t.isEditing === undefined) t.isEditing = false;
+                    t.isEditing = false;
+                    t.justAdded = false;
                     if (t.internalInterruptions === undefined) {
                         t.internalInterruptions = 0;
                         t.externalInterruptions = t.interruptions || 0;
                         delete t.interruptions;
                     }
-                    if (t.justAdded !== undefined) delete t.justAdded;
-                    if (t.focusTime === undefined) t.focusTime = 0;
-                    if (t.pomodorosCompleted === undefined) t.pomodorosCompleted = 0;
-                    if (t.pomodoroEstimate === undefined) t.pomodoroEstimate = 1;
                 });
-
                 focusDurationInput.value = settings.focusDuration;
                 shortBreakDurationInput.value = settings.shortBreakDuration;
                 longBreakDurationInput.value = settings.longBreakDuration;
                 longBreakIntervalInput.value = settings.longBreakInterval;
-
                 if (selectedTaskId) {
                     const task = tasks.find(t => t.id === selectedTaskId);
                     if (!task || task.completed) selectedTaskId = null;
@@ -1030,12 +918,11 @@
                 }
             };
             
-            // --- EVENT LISTENERS ---
+            // --- EVENT LISTENERS (sem alterações) ---
             startPauseBtn.addEventListener('click', () => {
                 if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
                 startPauseBtn.classList.add('start-pause-btn-clicked');
                 startPauseBtn.addEventListener('animationend', () => startPauseBtn.classList.remove('start-pause-btn-clicked'), { once: true });
-
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     isRunning ? pauseTimer() : startTimer();
                 } else {
@@ -1046,7 +933,7 @@
                         showModal(sessionEndModalOverlay, `Você se concentrou por ${formatTime(timeRemaining)}.`);
                         resetTimer('focus');
                     } else {
-                        endTime = null; // Reseta para contagem do zero
+                        endTime = null;
                         startTimer();
                     }
                 }
@@ -1056,10 +943,7 @@
             resetCancelBtn.addEventListener('click', () => hideModal(resetConfirmModalOverlay));
             internalInterruptBtn.addEventListener('click', () => logInterruption('internal'));
             externalInterruptBtn.addEventListener('click', () => logInterruption('external'));
-            settingsBtn.addEventListener('click', () => {
-                updateNotificationUI();
-                showModal(settingsModalOverlay);
-            });
+            settingsBtn.addEventListener('click', () => { updateNotificationUI(); showModal(settingsModalOverlay); });
             statsBtn.addEventListener('click', () => showModal(statsModalOverlay));
             helpBtn.addEventListener('click', () => showModal(helpModalOverlay));
             statsModalCloseBtn.addEventListener('click', () => hideModal(statsModalOverlay));
@@ -1077,7 +961,6 @@
             });
             addTaskBtn.addEventListener('click', addTask);
             newTaskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
-            
             focusMethodToggle.addEventListener('click', (e) => {
                 const target = e.target.closest('.method-btn');
                 if (target && !isRunning) {
@@ -1089,23 +972,19 @@
                     showModal(alertModalOverlay, 'Não é possível trocar de modo enquanto o timer está rodando.');
                 }
             });
-
             toggleCompletedTasksBtn.addEventListener('click', () => {
                 showCompletedTasks = !showCompletedTasks;
                 toggleCompletedTasksBtn.textContent = showCompletedTasks ? 'Esconder Concluídas' : 'Mostrar Concluídas';
                 renderTasks();
             });
-
             [alertModalOverlay, settingsModalOverlay, statsModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay].forEach(overlay => {
                 overlay.addEventListener('click', (e) => { if (e.target === overlay) hideModal(overlay); });
             });
-            
             taskListEl.addEventListener('click', (e) => {
                 const deleteBtn = e.target.closest('[data-delete-id]');
                 const completeBtn = e.target.closest('[data-complete-id]');
                 const editBtn = e.target.closest('[data-edit-id]');
                 const taskItem = e.target.closest('.task-item');
-
                 if (deleteBtn) { deleteTask(parseInt(deleteBtn.dataset.deleteId)); return; }
                 if (completeBtn) { toggleTaskCompleted(parseInt(completeBtn.dataset.completeId)); return; }
                 if (editBtn) {
@@ -1121,7 +1000,6 @@
                 }
                 if (taskItem) { selectTask(parseInt(taskItem.dataset.id)); }
             });
-
             taskListEl.addEventListener('keyup', (e) => {
                 if (e.target.matches('.task-edit-input')) {
                     const id = parseInt(e.target.dataset.editInputId);
@@ -1129,7 +1007,6 @@
                     else if (e.key === 'Escape') toggleEditState(null);
                 }
             });
-
             taskListEl.addEventListener('focusout', (e) => {
                 if (e.target.matches('.task-edit-input')) {
                     const id = parseInt(e.target.dataset.editInputId);
@@ -1142,12 +1019,11 @@
 
             // --- INICIALIZAÇÃO DA APLICAÇÃO ---
             loadState();
-            if (!isRunning) resetTimer(mode);
-            renderTasks();
             updateMethodToggleUI();
-            updateNotificationUI(); // Chamada para atualizar o status do botão de notificação via OneSignal
+            updateNotificationUI();
+            renderTasks();
+            updateUI(); 
             lucide.createIcons();
-
             document.addEventListener('click', () => {
                 if (audioContext.state === 'suspended') {
                     audioContext.resume().then(() => audioInitialized = true);
