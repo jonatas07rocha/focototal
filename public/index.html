@@ -4,18 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     
-    <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#1F2937"/>
     <link rel="apple-touch-icon" sizes="180x180" href="icon-180x180.png">
     <link rel="apple-touch-icon" href="icon-192x192.png">
     <link rel="manifest" href="manifest.json">
     
     <title>Foco Total Core</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <!-- Favicon -->
     <link id="favicon" rel="icon" href="icon-192x192.png" type="image/png">
     <style>
         /* --- CORREÇÃO DE LAYOUT E ROLAGEM --- */
@@ -150,10 +146,22 @@
             100% { transform: scale(1); opacity: 1; }
         }
     </style>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.init({
+                appId: "6135a39e-4887-4780-8a52-7ef3aec772da",
+                safari_web_id: "web.onesignal.auto.1560ab56-4a76-4fcb-b8cd-3f5423fe1d6c",
+                notifyButton: {
+                    enable: true,
+                },
+            });
+        });
+    </script>
 </head>
 <body>
     <div id="device-shell" class="device-shell">
-        <!-- CABEÇALHO -->
         <header class="flex justify-between items-center mb-4 flex-shrink-0">
             <h1 class="text-xl font-bold text-white">Foco Total <span class="text-blue-400 font-semibold">Core</span></h1>
             <div id="focus-method-toggle" class="flex bg-gray-900 rounded-lg p-1 text-xs font-semibold">
@@ -165,13 +173,10 @@
             </button>
         </header>
 
-        <!-- PAINEL DO TIMER -->
         <div class="timer-panel flex-shrink-0">
             <div class="relative w-56 h-56 mx-auto">
                 <svg class="w-full h-full" viewBox="0 0 100 100">
-                    <!-- Círculo de fundo -->
                     <circle class="text-gray-800" stroke-width="7" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
-                    <!-- Círculo de progresso -->
                     <circle id="progress-ring" class="text-blue-500" stroke-width="7" stroke-linecap="round" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" style="transform: rotate(-90deg); transform-origin: center;" />
                 </svg>
                 <div id="timer-display" class="absolute inset-0 flex items-center justify-center text-5xl font-bold text-white">
@@ -180,37 +185,29 @@
             </div>
         </div>
 
-        <!-- TAREFA ATUAL E CICLOS -->
         <div class="text-center mb-2 flex-shrink-0">
             <p class="text-gray-400 text-sm">Foco em:</p>
             <p id="current-task-display" class="text-white font-semibold text-base truncate">Nenhuma tarefa selecionada</p>
             <div id="pomodoro-cycles" class="flex justify-center items-center space-x-2 mt-1 h-6"></div>
         </div>
 
-        <!-- CONTROLES PRINCIPAIS -->
         <div id="player-controls" class="flex items-center justify-center space-x-4 mb-4 flex-shrink-0">
             <button id="internal-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Interna" aria-label="Registrar Interrupção Interna">
                 <i data-lucide="zap-off" class="w-6 h-6"></i>
             </button>
             <button id="start-pause-btn" class="w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center" aria-label="Iniciar/Pausar Timer">
-                <!-- Ícone será inserido via JS -->
-            </button>
+                </button>
             <button id="external-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Externa" aria-label="Registrar Interrupção Externa">
                 <i data-lucide="user-x" class="w-6 h-6"></i>
             </button>
         </div>
 
-        <!-- LISTA DE TAREFAS (COM SCROLL) -->
-        <div class="flex-grow flex flex-col"> <!-- A classe min-h-0 foi removida para permitir a expansão -->
-            <div class="flex justify-between items-center mb-2 flex-shrink-0">
+        <div class="flex-grow flex flex-col"> <div class="flex justify-between items-center mb-2 flex-shrink-0">
                 <h2 class="text-base font-semibold text-white">Lista de Tarefas do Dia</h2>
                 <button id="toggle-completed-tasks-btn" class="bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1 rounded-md transition-colors" aria-label="Mostrar ou esconder tarefas concluídas">Mostrar Concluídas</button>
             </div>
-            <!-- Contêiner da lista agora se expande naturalmente -->
             <div id="task-list" class="flex-grow space-y-2 pr-2">
-                <!-- As tarefas serão inseridas aqui pelo JS -->
-            </div>
-            <!-- FORMULÁRIO DE ADIÇÃO DE TAREFA -->
+                </div>
             <div class="flex mt-3 space-x-2 items-center bg-gray-900 p-2 rounded-lg flex-shrink-0">
                 <input type="text" id="new-task-input" class="flex-grow bg-gray-700 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-sm border-2 border-transparent focus:border-blue-500 focus:outline-none" placeholder="Adicionar nova tarefa..." aria-label="Nome da nova tarefa">
                 <div class="flex items-center">
@@ -221,7 +218,6 @@
             </div>
         </div>
         
-        <!-- CONTROLES SECUNDÁRIOS -->
         <div id="secondary-controls" class="flex items-center justify-center space-x-6 mt-4 flex-shrink-0">
                 <button id="reset-btn" class="text-gray-400 hover:text-white p-2 rounded-full transition-colors" title="Zerar o dia" aria-label="Zerar o dia">
                     <i data-lucide="refresh-cw" class="w-5 h-5"></i>
@@ -235,7 +231,6 @@
         </div>
     </div>
 
-    <!-- MODAIS (sem alterações) -->
     <div id="alert-modal-overlay" class="modal-overlay">
         <div class="modal-content text-center">
             <p id="alert-modal-message" class="mb-4"></p>
@@ -334,7 +329,6 @@
         </div>
     </div>
     
-    <!-- BANNER DE INSTALAÇÃO DO PWA -->
     <div id="install-banner">
         <div class="max-w-md mx-auto">
             <p class="font-semibold mb-2">Tenha a melhor experiência!</p>
@@ -344,15 +338,12 @@
         </div>
     </div>
 
-    <!-- SCRIPTS EXTERNOS -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     
-    <!-- SCRIPTS DO FIREBASE -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js"></script>
-
     <script>
-        // --- INÍCIO DO REGISTRO DO SERVICE WORKER ---
+        // O OneSignal SDK irá registrar seu próprio Service Worker.
+        // Não é necessário um registro manual aqui se você estiver usando o OneSignal.
+        /*
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
@@ -363,7 +354,7 @@
                     });
             });
         }
-        // --- FIM DO REGISTRO DO SERVICE WORKER ---
+        */
 
         document.addEventListener('DOMContentLoaded', () => {
             // --- ELEMENTOS DO DOM (sem alterações) ---
@@ -418,108 +409,87 @@
             let focusMethod = 'pomodoro';
             let deferredInstallPrompt = null;
             let showCompletedTasks = false;
-            let fcmToken = null; // Variável para armazenar o token do Firebase
+            // let fcmToken = null; // Variável para armazenar o token do Firebase - REMOVIDO PARA ONESIGNAL
             
-            // --- CONFIGURAÇÃO E LÓGICA DO FIREBASE ---
-            // ATENÇÃO: COLE AQUI O OBJETO DE CONFIGURAÇÃO DO FIREBASE DO SEU PROJETO
-            const firebaseConfig = {
-            apiKey: "AIzaSyAHw27qe_K1l5dRMgiupBfoPbElO-ddHzk", // <-- AQUI
-            authDomain: "foco-total-app.firebaseapp.com",
-            projectId: "foco-total-app",
-            storageBucket: "foco-total-app.firebasestorage.app",
-            messagingSenderId: "259321591140",
-            appId: "1:259321591140:web:681353d3533ee0477af671"
-            };
-            
-            // ATENÇÃO: COLE AQUI A SUA CHAVE PÚBLICA VAPID DO FIREBASE
-            // Encontre em: Configurações do Projeto > Cloud Messaging > Certificados de push da Web
-            const VAPID_KEY = "BF4RvxrUdUVX96zESCFVSPCTAHLR8xU9DUxbNrAx-_5lS0l-_E-OBaihk38gyYIVifQmja4QAUTSwtBYi5D5x34";
-
-            // Inicializa o Firebase
-            firebase.initializeApp(firebaseConfig);
-            const messaging = firebase.messaging();
-
+            // --- LÓGICA DE NOTIFICAÇÕES (Agora gerenciada pelo OneSignal diretamente) ---
+            // As funções e configurações do Firebase foram removidas.
+            // O botão "Ativar Notificações" agora precisa ser adaptado para interagir com o OneSignal
+            // ou pode ser removido, pois o OneSignal exibe seu próprio prompt.
             const updateNotificationUI = async () => {
-                if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-                    notificationStatus.textContent = 'Notificações não suportadas.';
-                    enableNotificationsBtn.disabled = true;
-                    return;
-                }
-
-                const permission = Notification.permission;
-                if (permission === 'denied') {
-                    notificationStatus.textContent = 'Permissão bloqueada.';
-                    enableNotificationsBtn.disabled = true;
-                    enableNotificationsBtn.textContent = 'Notificações Bloqueadas';
-                } else if (permission === 'granted') {
+                // Lógica de UI para notificações, adaptada ou gerenciada pelo OneSignal.
+                // O OneSignal tem um botão de opt-in nativo que você habilitou.
+                // Esta função pode ser removida ou adaptada para mostrar o status do OneSignal.
+                if (typeof OneSignal !== 'undefined') {
                     try {
-                        // CORREÇÃO FINAL: Passa o registro do service worker para o getToken
-                        const registration = await navigator.serviceWorker.ready;
-                        fcmToken = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
-                        if (fcmToken) {
-                            notificationStatus.textContent = 'Notificações ativadas.';
+                        const permission = await OneSignal.getNotificationPermission();
+                        if (permission === 'denied') {
+                            notificationStatus.textContent = 'Permissão de notificação bloqueada.';
                             enableNotificationsBtn.disabled = true;
-                            enableNotificationsBtn.textContent = 'Notificações Ativadas';
-                        } else {
-                            notificationStatus.textContent = 'Clique para reativar.';
+                            enableNotificationsBtn.textContent = 'Notificações Bloqueadas';
+                        } else if (permission === 'granted') {
+                            const isSubscribed = await OneSignal.isPushNotificationsEnabled();
+                            if (isSubscribed) {
+                                notificationStatus.textContent = 'Notificações ativadas.';
+                                enableNotificationsBtn.disabled = true;
+                                enableNotificationsBtn.textContent = 'Notificações Ativadas';
+                            } else {
+                                notificationStatus.textContent = 'Notificações desativadas. Clique para reativar.';
+                                enableNotificationsBtn.disabled = false;
+                                enableNotificationsBtn.textContent = 'Ativar Notificações';
+                            }
+                        } else { // default
+                            notificationStatus.textContent = 'Notificações não ativadas.';
                             enableNotificationsBtn.disabled = false;
                             enableNotificationsBtn.textContent = 'Ativar Notificações';
                         }
                     } catch (error) {
-                        console.error('Erro ao obter token FCM:', error);
-                        notificationStatus.textContent = 'Erro ao obter token.';
+                        console.error('Erro ao verificar status do OneSignal:', error);
+                        notificationStatus.textContent = 'Erro ao verificar notificações.';
                     }
                 } else {
-                    notificationStatus.textContent = 'Notificações não ativadas.';
-                    enableNotificationsBtn.disabled = false;
-                    enableNotificationsBtn.textContent = 'Ativar Notificações';
+                    notificationStatus.textContent = 'Notificações não suportadas (OneSignal não carregado).';
+                    enableNotificationsBtn.disabled = true;
                 }
             };
 
             const requestNotificationPermission = async () => {
-                try {
-                    const permission = await Notification.requestPermission();
-                    
-                    if (permission === 'granted') {
-                        // CORREÇÃO FINAL: Passa o registro do service worker para o getToken
-                        const registration = await navigator.serviceWorker.ready;
-                        fcmToken = await messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
-                        if (fcmToken) {
-                            console.log('Token FCM obtido:', fcmToken);
-                            const welcomePayload = {
-                                title: 'Foco Total Ativado! 🚀',
-                                body: 'Tudo pronto! Suas notificações foram configuradas com sucesso.',
-                            };
-                            scheduleNotification(welcomePayload);
-                        }
+                if (typeof OneSignal !== 'undefined') {
+                    try {
+                        await OneSignal.showSlidedownPrompt(); // Exibe o prompt de permissão do OneSignal
+                        // OneSignal lida com a lógica de inscrição.
+                        await updateNotificationUI();
+                    } catch (error) {
+                        console.error('Erro ao solicitar permissão de notificação OneSignal:', error);
+                        showModal(alertModalOverlay, 'Não foi possível solicitar a permissão de notificação. Verifique as configurações do navegador.');
+                        updateNotificationUI();
                     }
-                    updateNotificationUI();
-                } catch (error) {
-                    console.error('Não foi possível obter permissão para notificação:', error);
-                    if (error.code === 'messaging/permission-blocked') {
-                        showModal(alertModalOverlay, 'Você bloqueou as notificações. Para ativá-las, mude as permissões para este site nas configurações do seu navegador.');
-                    }
+                } else {
+                    showModal(alertModalOverlay, 'OneSignal não está carregado. Não foi possível ativar as notificações.');
                 }
             };
-
+            
+            // A função scheduleNotification abaixo é um exemplo de como você *poderia* enviar notificações
+            // se o seu aplicativo precisasse dispará-las por conta própria.
+            // No entanto, para notificações de fim de ciclo de timer, o OneSignal geralmente lida com isso
+            // via suas automações ou APIs de backend, e não diretamente do frontend para o token do usuário.
+            // Eu a comentei para evitar dependência de lógica de backend que você não tem configurada para o OneSignal.
+            /*
             const scheduleNotification = async (payload) => {
-                if (!fcmToken) {
-                    console.warn('Token FCM não disponível. Não é possível agendar notificação.');
-                    return;
-                }
-                try {
-                    await fetch('/api/send-notification', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token: fcmToken, payload: payload })
-                    });
-                } catch (err) {
-                    console.error('Erro ao agendar notificação via backend:', err);
-                }
+                // Esta função deve ser implementada no seu backend para enviar notificações via OneSignal API.
+                // Ela não é mais diretamente ligada ao FCM token.
+                console.warn('Função scheduleNotification precisa ser adaptada para OneSignal via backend, se necessário.');
+                console.log('Payload da notificação:', payload);
+                // Exemplo de como você faria uma notificação local (apenas para teste, não persistente):
+                // if ('Notification' in window && Notification.permission === 'granted') {
+                //     navigator.serviceWorker.ready.then(registration => {
+                //         registration.showNotification(payload.title, { body: payload.body });
+                //     });
+                // }
             };
+            */
 
             enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
-            // --- FIM DA LÓGICA DO FIREBASE ---
+            // --- FIM DA LÓGICA DE NOTIFICAÇÕES ---
 
             // --- LÓGICA DE ÁUDIO ---
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -642,15 +612,18 @@
                 isRunning = true;
                 endTime = Date.now() + (focusMethod === 'pomodoro' || mode !== 'focus' ? timeRemaining * 1000 : 0);
                 
-                // Agendamento de notificação (agora usa a função do Firebase)
+                // O agendamento de notificação agora será gerenciado pelo OneSignal.
+                // Se precisar de notificações ao final do timer, você precisaria usar as automações do OneSignal
+                // ou disparar uma notificação via API do OneSignal do seu backend (não via FCM token).
+                /*
                 if ((focusMethod === 'pomodoro' || mode !== 'focus')) {
                     const timerPayload = {
                         title: mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!',
                         body: mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?'
                     };
-                    // O agendamento real deve ser feito no backend. Aqui, apenas enviamos a notificação quando o timer termina.
-                    // Para um agendamento real, o backend precisaria de uma lógica mais complexa (ex: Cloud Functions).
+                    scheduleNotification(timerPayload); // Comentado, pois depende da lógica de backend para OneSignal
                 }
+                */
                 
                 updateUI();
                 timerInterval = setInterval(updateTimer, 1000);
@@ -674,7 +647,7 @@
                 timerDisplay.textContent = display;
                 document.title = `${display} - Foco Total`;
             
-                // --- CORREÇÃO DO CÍRCULO DE PROGRESSO (b) ---
+                // --- CORREÇÃO DO CÍRCULO DE PROGESSO (b) ---
                 const circumference = 2 * Math.PI * 45;
                 let progress = 0; // Progresso de 0 a 1
                 if(totalTime > 0) {
@@ -715,12 +688,18 @@
                 endTime = null; 
                 playFinishSound();
 
-                // Envia a notificação de fim de ciclo
-                const timerPayload = {
-                    title: mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!',
-                    body: mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?'
-                };
-                scheduleNotification(timerPayload);
+                // Notificação de fim de ciclo: O OneSignal exibirá suas próprias notificações de permissão.
+                // Para notificações personalizadas de fim de ciclo, você pode usar a API de Notificações nativa
+                // ou configurar automações no OneSignal (via dashboard ou sua API de backend).
+                // A lógica para agendar notificações customizadas do OneSignal via frontend é mais complexa.
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    const notificationTitle = mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!';
+                    const notificationBody = mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?';
+                    // Dispara uma notificação local via Service Worker (não OneSignal diretamente do JS da página)
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification(notificationTitle, { body: notificationBody });
+                    });
+                }
                 
                 if (mode === 'focus') {
                     if (focusMethod === 'pomodoro') {
@@ -1166,7 +1145,7 @@
             if (!isRunning) resetTimer(mode);
             renderTasks();
             updateMethodToggleUI();
-            updateNotificationUI();
+            updateNotificationUI(); // Chamada para atualizar o status do botão de notificação via OneSignal
             lucide.createIcons();
 
             document.addEventListener('click', () => {
