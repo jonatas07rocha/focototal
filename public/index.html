@@ -9,12 +9,12 @@
     <link rel="apple-touch-icon" href="icon-192x192.png">
     <link rel="manifest" href="manifest.json">
     
-    <title>Foco Total Core</title>
+    <title>Foco Total</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link id="favicon" rel="icon" href="icon-192x192.png" type="image/png">
     <style>
-        /* Estilos CSS permanecem inalterados */
+        /* Estilos CSS com nova animação */
         html { scroll-behavior: smooth; }
         body {
             font-family: 'Inter', sans-serif;
@@ -52,7 +52,7 @@
             margin-bottom: 1rem;
             box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5);  
         }
-        #progress-ring { transition: stroke-dashoffset 1s linear; }
+        #progress-ring { transition: stroke-dashoffset 1s linear, stroke-opacity 0.5s; }
         .task-item { transition: background-color 0.2s, border-color 0.2s, box-shadow 0.3s ease, opacity 0.3s, transform 0.3s ease; }
         .task-item.selected {
             background-color: #374151;
@@ -108,27 +108,22 @@
         @keyframes pulse-small { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
         .task-item.added-feedback { animation: new-task-pop 0.3s ease-out; }
         @keyframes new-task-pop { 0% { transform: scale(0.98); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+        
+        /* ADICIONADO: Animação de respiração para o modo adaptativo */
+        @keyframes breathe-animation { 
+            0% { stroke-opacity: 0.5; } 
+            50% { stroke-opacity: 1; } 
+            100% { stroke-opacity: 0.5; } 
+        }
+        .breathing {
+            animation: breathe-animation 2.5s ease-in-out infinite;
+        }
     </style>
-    <!-- OneSignal SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function(OneSignal) {
-            await OneSignal.init({
-                appId: "6135a39e-4887-4780-8a52-7ef3aec772da",
-                safari_web_id: "web.onesignal.auto.1560ab56-4a76-4fcb-b8cd-3f5423fe1d6c",
-                notifyButton: {
-                    enable: true,
-                },
-            });
-        });
-    </script>
 </head>
 <body>
-    <!-- O corpo do HTML (elementos visíveis) permanece inalterado -->
     <div id="device-shell" class="device-shell">
         <header class="flex justify-between items-center mb-4 flex-shrink-0">
-            <h1 class="text-xl font-bold text-white">Foco Total <span class="text-blue-400 font-semibold">Core</span></h1>
+            <h1 class="text-xl font-bold text-white">Foco Total</h1>
             <div id="focus-method-toggle" class="flex bg-gray-900 rounded-lg p-1 text-xs font-semibold">
                 <button data-method="pomodoro" class="method-btn px-3 py-1 rounded-md transition-colors" aria-label="Selecionar modo Pomodoro">Pomodoro</button>
                 <button data-method="adaptativo" class="method-btn px-3 py-1 rounded-md transition-colors" aria-label="Selecionar modo Adaptativo">Adaptativo</button>
@@ -161,7 +156,7 @@
                 <i data-lucide="zap-off" class="w-6 h-6"></i>
             </button>
             <button id="start-pause-btn" class="w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center" aria-label="Iniciar/Pausar Timer">
-                </button>
+            </button>
             <button id="external-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Externa" aria-label="Registrar Interrupção Externa">
                 <i data-lucide="user-x" class="w-6 h-6"></i>
             </button>
@@ -172,7 +167,7 @@
                 <button id="toggle-completed-tasks-btn" class="bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1 rounded-md transition-colors" aria-label="Mostrar ou esconder tarefas concluídas">Mostrar Concluídas</button>
             </div>
             <div id="task-list" class="flex-grow space-y-2 pr-2">
-                </div>
+            </div>
             <div class="flex mt-3 space-x-2 items-center bg-gray-900 p-2 rounded-lg flex-shrink-0">
                 <input type="text" id="new-task-input" class="flex-grow bg-gray-700 text-white placeholder-gray-500 rounded-lg px-3 py-2 text-sm border-2 border-transparent focus:border-blue-500 focus:outline-none" placeholder="Adicionar nova tarefa..." aria-label="Nome da nova tarefa">
                 <div class="flex items-center">
@@ -196,6 +191,7 @@
         </div>
     </div>
 
+    <!-- Modals (sem alterações estruturais) -->
     <div id="alert-modal-overlay" class="modal-overlay">
         <div class="modal-content text-center">
             <p id="alert-modal-message" class="mb-4"></p>
@@ -205,7 +201,8 @@
     <div id="session-end-modal-overlay" class="modal-overlay">
         <div class="modal-content text-center">
             <h2 class="text-xl font-bold text-white mb-2">Sessão Finalizada!</h2>
-            <p id="session-end-message" class="mb-6 text-gray-300"></p>
+            <p id="session-end-message" class="mb-4 text-gray-300"></p>
+            <div id="ios-calendar-prompt" class="mb-6" style="display: none;"></div>
             <button id="session-end-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Fechar modal de fim de sessão">Ótimo!</button>
         </div>
     </div>
@@ -235,13 +232,6 @@
                     <label for="long-break-interval" class="block text-xs font-medium text-gray-300">Pomodoros para pausa longa</label>
                     <input type="number" id="long-break-interval" class="mt-1 w-full bg-gray-700 text-white rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-blue-500 focus:outline-none" value="4" aria-label="Número de pomodoros antes de uma pausa longa">
                </div>
-            </div>
-            <div class="mb-4">
-                <h3 class="text-base font-semibold text-blue-400 mb-3">Notificações</h3>
-                <div id="notification-status" class="text-sm text-gray-400 mb-2 text-center"></div>
-                <button id="enable-notifications-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-lg transition-colors text-sm" aria-label="Ativar notificações">
-                    Ativar Notificações
-                </button>
             </div>
             <button id="settings-save-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl mt-6 transition-colors text-sm" aria-label="Salvar configurações e fechar">
                 Salvar e Fechar
@@ -293,7 +283,6 @@
             </div>
         </div>
     </div>
-    
     <div id="install-banner">
         <div class="max-w-md mx-auto">
             <p class="font-semibold mb-2">Tenha a melhor experiência!</p>
@@ -349,8 +338,7 @@
             const installBanner = document.getElementById('install-banner');
             const installBtn = document.getElementById('install-btn');
             const installDismissBtn = document.getElementById('install-dismiss-btn');
-            const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
-            const notificationStatus = document.getElementById('notification-status');
+            const iosCalendarPrompt = document.getElementById('ios-calendar-prompt');
 
             // --- ESTADO DA APLICAÇÃO (sem alterações) ---
             let timerInterval, isRunning = false, mode = 'focus', timeRemaining, totalTime, endTime;
@@ -360,58 +348,18 @@
             let deferredInstallPrompt = null;
             let showCompletedTasks = false;
             
-            // --- LÓGICA DE NOTIFICAÇÕES (sem alterações) ---
-            const updateNotificationUI = async () => {
-                if (typeof OneSignal !== 'undefined') {
-                    try {
-                        const permission = await OneSignal.getNotificationPermission();
-                        if (permission === 'denied') {
-                            notificationStatus.textContent = 'Permissão de notificação bloqueada.';
-                            enableNotificationsBtn.disabled = true;
-                            enableNotificationsBtn.textContent = 'Notificações Bloqueadas';
-                        } else if (permission === 'granted') {
-                            const isSubscribed = await OneSignal.isPushNotificationsEnabled();
-                            if (isSubscribed) {
-                                notificationStatus.textContent = 'Notificações ativadas.';
-                                enableNotificationsBtn.disabled = true;
-                                enableNotificationsBtn.textContent = 'Notificações Ativadas';
-                            } else {
-                                notificationStatus.textContent = 'Notificações desativadas. Clique para reativar.';
-                                enableNotificationsBtn.disabled = false;
-                                enableNotificationsBtn.textContent = 'Ativar Notificações';
-                            }
-                        } else {
-                            notificationStatus.textContent = 'Notificações não ativadas.';
-                            enableNotificationsBtn.disabled = false;
-                            enableNotificationsBtn.textContent = 'Ativar Notificações';
-                        }
-                    } catch (error) {
-                        console.error('Erro ao verificar status do OneSignal:', error);
-                        notificationStatus.textContent = 'Erro ao verificar notificações.';
-                    }
-                } else {
-                    notificationStatus.textContent = 'SDK do OneSignal não carregado.';
-                    enableNotificationsBtn.disabled = true;
+            // --- LÓGICA DE BADGING API ---
+            const clearBadge = () => {
+                if ('clearAppBadge' in navigator) {
+                    navigator.clearAppBadge().catch(err => console.error("Erro ao limpar badge:", err));
                 }
             };
+            const setBadge = () => {
+                if ('setAppBadge' in navigator) {
+                    navigator.setAppBadge(1).catch(err => console.error("Erro ao definir badge:", err));
+                }
+            }
 
-            const requestNotificationPermission = async () => {
-                if (typeof OneSignal !== 'undefined') {
-                    try {
-                        await OneSignal.showSlidedownPrompt();
-                        await updateNotificationUI();
-                    } catch (error) {
-                        console.error('Erro ao solicitar permissão OneSignal:', error);
-                        showModal(alertModalOverlay, 'Não foi possível solicitar a permissão de notificação.');
-                        updateNotificationUI();
-                    }
-                } else {
-                    showModal(alertModalOverlay, 'OneSignal não está carregado.');
-                }
-            };
-            
-            enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
-            
             // --- LÓGICA DE ÁUDIO (sem alterações) ---
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             let audioInitialized = false;
@@ -486,20 +434,24 @@
                 if (!isRunning) resetTimer('focus');
             };
 
-            // --- FUNÇÕES DO TIMER (com alterações) ---
+            // --- FUNÇÕES DO TIMER ---
             const showModal = (modalOverlay, message) => {
                 const messageElId = modalOverlay.id.replace('-overlay', '-message');
                 const messageEl = document.getElementById(messageElId);
                 if(messageEl && message) messageEl.textContent = message;
                 modalOverlay.classList.add('visible');
             };
-            const hideModal = (modalOverlay) => modalOverlay.classList.remove('visible');
+            const hideModal = (modalOverlay) => {
+                clearBadge();
+                modalOverlay.classList.remove('visible');
+            }
             const startTimer = () => {
                 if (isRunning) return;
                 if (!selectedTaskId && mode === 'focus') {
                     showModal(alertModalOverlay, 'Por favor, selecione uma tarefa para iniciar o foco.');
                     return;
                 }
+                clearBadge();
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
                     totalTime = timeRemaining;
@@ -522,26 +474,47 @@
                 saveState();
                 updateUI();
             };
+            
+            // ===================================================================
+            // MODIFICAÇÃO: updateTimerDisplay() atualizada
+            // ===================================================================
             const updateTimerDisplay = () => {
-                const minutes = Math.floor(Math.abs(timeRemaining) / 60);
-                const seconds = Math.abs(timeRemaining) % 60;
-                const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                // Lógica de exibição de tempo com horas
+                const totalSecondsAbs = Math.abs(timeRemaining);
+                const hours = Math.floor(totalSecondsAbs / 3600);
+                const minutes = Math.floor((totalSecondsAbs % 3600) / 60);
+                const seconds = totalSecondsAbs % 60;
+
+                let display;
+                if (hours > 0) {
+                    display = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                } else {
+                    display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                }
                 timerDisplay.textContent = display;
                 document.title = `${display} - Foco Total`;
+                
+                // Lógica do anel de progresso
                 const circumference = 2 * Math.PI * 45;
                 let progress = 0;
-                if(totalTime > 0) {
-                    if (focusMethod === 'pomodoro' || mode !== 'focus') {
+
+                if (focusMethod === 'pomodoro' || mode !== 'focus') {
+                    if (totalTime > 0) {
                         progress = (totalTime - timeRemaining) / totalTime;
-                    } else {
-                        // Para o modo adaptativo, o círculo se preenche a cada minuto.
-                        progress = (timeRemaining % 60) / 60;
                     }
+                } else { // Modo Adaptativo
+                    // O anel fica totalmente visível quando o timer está rodando para a animação "breathing" funcionar
+                    progress = isRunning ? 1 : 0;
                 }
+                
                 const offset = circumference * (1 - progress);
                 progressRing.style.strokeDasharray = circumference;
                 progressRing.style.strokeDashoffset = offset;
             };
+            // ===================================================================
+            // FIM DA MODIFICAÇÃO
+            // ===================================================================
+
             const updateTimer = () => {
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     const remaining = Math.round((endTime - Date.now()) / 1000);
@@ -556,48 +529,51 @@
                         switchMode();
                     }
                 } else {
-                    // Lógica para o modo adaptativo (contagem crescente)
                     timeRemaining++;
                     updateTimerDisplay();
                 }
             };
 
-            // ===================================================================
-            // MODIFICAÇÃO PRINCIPAL: Função switchMode() atualizada para consolidação de lógica OneSignal
-            // ===================================================================
+            const generateICS = (startTime, endTime, title, description) => {
+                const formatDT = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                const icsContent = [
+                    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FocoTotal//PWA//PT',
+                    'BEGIN:VEVENT', 'UID:' + Date.now() + '@focototal.app', 'DTSTAMP:' + formatDT(new Date()),
+                    'DTSTART:' + formatDT(startTime), 'DTEND:' + formatDT(endTime),
+                    'SUMMARY:' + title, 'DESCRIPTION:' + description, 'END:VEVENT', 'END:VCALENDAR'
+                ].join('\r\n');
+                return icsContent;
+            };
+
+            const downloadICS = (icsContent, filename) => {
+                const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+            };
+
             const switchMode = () => {
                 isRunning = false;
                 endTime = null;
                 playFinishSound();
+                setBadge();
 
-                // Notificação local para garantir a notificação imediata
+                if ('vibrate' in navigator) {
+                    navigator.vibrate([200, 100, 200]);
+                }
+
                 if ('Notification' in window && Notification.permission === 'granted') {
                     const notificationTitle = mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!';
                     const notificationBody = mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?';
                     navigator.serviceWorker.ready.then(registration => {
-                        registration.showNotification(notificationTitle, { body: notificationBody, icon: '/icon-192x192.png' });
+                        registration.showNotification(notificationTitle, { body: notificationBody, icon: '/icon-192x192.png', renotify: true, tag: 'foco-total-notification' });
                     });
                 }
-
-                // Lógica para enviar tags OneSignal (SE OneSignal estiver definido)
-                if (typeof OneSignal !== 'undefined') {
-                    let tagsToSend = {};
-                    if (mode === 'focus') {
-                        tagsToSend = { 'ciclo_status': 'foco_finalizado', 'proximo_passo': 'pausa' };
-                    } else { // Se o modo atual é de pausa (shortBreak ou longBreak)
-                        tagsToSend = { 'ciclo_status': 'pausa_finalizada', 'proximo_passo': 'foco' };
-                    }
-                    OneSignal.sendTags(tagsToSend)
-                        .then(function(tagsSent) {
-                            console.log('Tags enviadas para OneSignal:', tagsSent);
-                        }).catch(function(error) {
-                            console.error('Erro ao enviar tags para OneSignal:', error);
-                        });
-                } else {
-                    console.warn('OneSignal SDK não carregado, tags não enviadas.');
-                }
-
-                // Lógica comum após o fim do ciclo
+                
                 if (mode === 'focus') {
                     if (focusMethod === 'pomodoro') {
                         pomodoroSessionCount++;
@@ -606,25 +582,41 @@
                             task.pomodorosCompleted++;
                             task.focusTime += settings.focusDuration * 60;
                         }
-                    } else { // Modo Adaptativo
+                    } else {
                         const task = tasks.find(t => t.id === selectedTaskId);
-                        if(task) task.focusTime += timeRemaining; // timeRemaining já é o tempo decorrido
+                        if(task) task.focusTime += timeRemaining;
                     }
                     mode = (focusMethod === 'pomodoro' && pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
                     showModal(sessionEndModalOverlay, `Você ${focusMethod === 'pomodoro' ? 'completou um Pomodoro!' : 'finalizou seu foco.'} Hora de fazer uma pausa.`);
-                } else { // Se o modo atual é de pausa (shortBreak ou longBreak)
+                } else {
                     mode = 'focus';
                     showModal(sessionEndModalOverlay, 'Pausa finalizada! Vamos voltar ao trabalho?');
                 }
+
+                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                if (isIOS) {
+                    const nextSessionDuration = (settings[`${mode}Duration`] || 25) * 60 * 1000;
+                    const startTime = new Date();
+                    const endTime = new Date(startTime.getTime() + nextSessionDuration);
+                    const eventTitle = mode === 'focus' ? 'Sessão de Foco' : (mode === 'shortBreak' ? 'Pausa Curta' : 'Pausa Longa');
+                    const taskName = (mode === 'focus' && selectedTaskId) ? tasks.find(t => t.id === selectedTaskId)?.name : 'Foco Total';
+                    const eventDescription = `Próxima sessão: ${eventTitle} para a tarefa '${taskName}'.`;
+                    const icsData = generateICS(startTime, endTime, eventTitle, eventDescription);
+                    iosCalendarPrompt.innerHTML = `<button id="add-to-calendar-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Adicionar ao Calendário</button>`;
+                    iosCalendarPrompt.style.display = 'block';
+                    document.getElementById('add-to-calendar-btn').onclick = () => {
+                        downloadICS(icsData, 'lembrete-foco.ics');
+                        e.target.textContent = 'Adicionado!';
+                        e.target.disabled = true;
+                    };
+                } else {
+                    iosCalendarPrompt.style.display = 'none';
+                    iosCalendarPrompt.innerHTML = '';
+                }
                 
-                // Garante que o timer seja resetado e a interface atualizada após a troca de modo
                 resetTimer(); 
                 renderTasks(); 
             };
-            // ===================================================================
-            // FIM DA MODIFICAÇÃO PRINCIPAL
-            // ===================================================================
-
 
             const resetTimer = (forceMode = null) => {
                 clearInterval(timerInterval);
@@ -635,9 +627,8 @@
                     timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
                     totalTime = timeRemaining;
                 } else {
-                    // Para o modo adaptativo, reinicia a contagem do tempo decorrido
                     timeRemaining = 0;
-                    totalTime = 1; // Mantido para o cálculo de progresso do círculo (preenche a cada minuto)
+                    totalTime = 1;
                 }
                 saveState();
                 updateUI();
@@ -652,13 +643,26 @@
                 hideModal(resetConfirmModalOverlay);
                 showModal(alertModalOverlay, 'O dia foi zerado com sucesso!');
             };
+            
+            // ===================================================================
+            // MODIFICAÇÃO: updateUI() atualizada
+            // ===================================================================
             const updateUI = () => {
                 updateTimerDisplay(); 
+                
                 let modeColorClass = '';
                 if (mode === 'focus') modeColorClass = 'text-blue-500';
                 else if (mode === 'shortBreak') modeColorClass = 'text-green-500';
                 else if (mode === 'longBreak') modeColorClass = 'text-purple-500';
-                progressRing.setAttribute('class', `transition-colors duration-500 ${modeColorClass}`);
+                
+                // Gerencia classes do anel de progresso
+                progressRing.className = 'transition-colors duration-500'; // Reseta as classes para evitar acúmulo
+                progressRing.classList.add(modeColorClass); // Adiciona a cor do modo atual
+                if (focusMethod === 'adaptativo' && mode === 'focus' && isRunning) {
+                    progressRing.classList.add('breathing');
+                }
+
+                // Restante da lógica da UI (botões, etc.)
                 let btnIcon, btnBgClass, ariaLabelText;
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     btnIcon = isRunning ? 'pause' : 'play';
@@ -684,6 +688,10 @@
                 updateStatsDisplay();
                 lucide.createIcons();
             };
+            // ===================================================================
+            // FIM DA MODIFICAÇÃO
+            // ===================================================================
+
             const formatTime = (totalSeconds) => {
                 if (!totalSeconds || totalSeconds < 1) return `0m`;
                 const minutes = Math.floor(totalSeconds / 60);
@@ -781,33 +789,23 @@
                     renderTasks();
                 }
             };
-
-            // ===================================================================
-            // MODIFICAÇÃO: Função toggleTaskCompleted() para pausar timer e resetar no foco
-            // ===================================================================
             const toggleTaskCompleted = (id) => {
                 const task = tasks.find(t => t.id === id);
                 if (task) {
                     task.completed = !task.completed;
                     if (task.completed && selectedTaskId === id) {
-                        if(isRunning) { // Se o timer está rodando (em qualquer modo)
-                            pauseTimer(); // Pausa o timer
+                        if(isRunning) {
+                            pauseTimer();
                         }
                         const firstIncompleteTask = tasks.find(t => !t.completed);
                         selectTask(firstIncompleteTask ? firstIncompleteTask.id : null);
-                        // Se o timer estava em foco e foi pausado por completar a tarefa,
-                        // e não há outra tarefa selecionada, resetar o timer para o modo foco inicial.
                         if (!isRunning && mode === 'focus') { 
                             resetTimer('focus'); 
                         }
                     } 
-                    renderTasks(); // Sempre renderiza para atualizar o estado da tarefa visualmente
+                    renderTasks();
                 }
             };
-            // ===================================================================
-            // FIM DA MODIFICAÇÃO
-            // ===================================================================
-
             const toggleEditState = (id) => {
                 tasks.forEach(task => task.isEditing = task.id === id ? !task.isEditing : false);
                 renderTasks();
@@ -861,10 +859,10 @@
             };
             const saveState = () => {
                 const state = { settings, tasks, selectedTaskId, pomodoroSessionCount, focusMethod, showCompletedTasks, timerState: { isRunning, mode, endTime, totalTime } };
-                localStorage.setItem('pomodoroCoreState', JSON.stringify(state));
+                localStorage.setItem('pomodoroAppState', JSON.stringify(state));
             };
             const loadState = () => {
-                const state = JSON.parse(localStorage.getItem('pomodoroCoreState'));
+                const state = JSON.parse(localStorage.getItem('pomodoroAppState'));
                 if (state) {
                     settings = { ...settings, ...state.settings };
                     tasks = state.tasks || [];
@@ -907,7 +905,7 @@
                 }
             };
             
-            // --- EVENT LISTENERS (sem alterações) ---
+            // --- EVENT LISTENERS (sem alterações significativas) ---
             startPauseBtn.addEventListener('click', () => {
                 if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
                 startPauseBtn.classList.add('start-pause-btn-clicked');
@@ -932,7 +930,7 @@
             resetCancelBtn.addEventListener('click', () => hideModal(resetConfirmModalOverlay));
             internalInterruptBtn.addEventListener('click', () => logInterruption('internal'));
             externalInterruptBtn.addEventListener('click', () => logInterruption('external'));
-            settingsBtn.addEventListener('click', () => { updateNotificationUI(); showModal(settingsModalOverlay); });
+            settingsBtn.addEventListener('click', () => showModal(settingsModalOverlay));
             statsBtn.addEventListener('click', () => showModal(statsModalOverlay));
             helpBtn.addEventListener('click', () => showModal(helpModalOverlay));
             statsModalCloseBtn.addEventListener('click', () => hideModal(statsModalOverlay));
@@ -1009,7 +1007,6 @@
             // --- INICIALIZAÇÃO DA APLICAÇÃO ---
             loadState();
             updateMethodToggleUI();
-            updateNotificationUI();
             renderTasks();
             updateUI(); 
             lucide.createIcons();
@@ -1017,6 +1014,7 @@
                 if (audioContext.state === 'suspended') {
                     audioContext.resume().then(() => audioInitialized = true);
                 }
+                clearBadge();
             }, { once: true });
         });
     </script>
