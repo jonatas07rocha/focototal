@@ -513,17 +513,34 @@
                     'SUMMARY:' + title, 'DESCRIPTION:' + description, 'END:VEVENT', 'END:VCALENDAR'
                 ].join('\r\n');
             };
+            
+            // ===================================================================
+            // MODIFICAÇÃO PRINCIPAL: Função downloadICS() atualizada para iOS
+            // ===================================================================
+            const downloadICS = (icsContent) => {
+                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-            const downloadICS = (icsContent, filename) => {
-                const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(link.href);
+                if (isIOS) {
+                    // Para iOS, a abordagem mais confiável é usar um data URI com codificação Base64
+                    // para forçar o Safari a abrir a tela de adicionar evento.
+                    // O btoa() codifica a string para Base64.
+                    const base64Content = btoa(icsContent);
+                    window.location.href = `data:text/calendar;base64,${base64Content}`;
+                } else {
+                    // O método padrão com Blob e download funciona bem em outras plataformas.
+                    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'lembrete_foco.ics'; // Nome de arquivo genérico
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(link.href);
+                }
             };
+            // ===================================================================
+            // FIM DA MODIFICAÇÃO
+            // ===================================================================
 
             const switchMode = () => {
                 isRunning = false;
@@ -868,7 +885,7 @@
             
             // MODIFICADO: Listener de confirmação do prompt do iOS
             iosPromptConfirmBtn.addEventListener('click', () => {
-                let duration, eventTitle, eventDescription, fileName;
+                let duration, eventTitle, eventDescription;
 
                 if (mode === 'focus') {
                     const task = tasks.find(t => t.id === selectedTaskId);
@@ -876,21 +893,18 @@
                     eventTitle = `Fim do Foco: ${taskName}`;
                     eventDescription = `Sua sessão de foco na tarefa "${taskName}" terminou. Hora de fazer uma pausa!`;
                     duration = settings.focusDuration;
-                    fileName = 'lembrete_foco.ics';
                 } else if (mode === 'shortBreak') {
                     eventTitle = `Fim da Pausa Curta`;
                     eventDescription = `Sua pausa curta acabou. Hora de voltar ao foco!`;
                     duration = settings.shortBreakDuration;
-                    fileName = 'lembrete_pausa_curta.ics';
                 } else { // longBreak
                     eventTitle = `Fim da Pausa Longa`;
                     eventDescription = `Sua pausa longa acabou. Hora de voltar ao foco!`;
                     duration = settings.longBreakDuration;
-                    fileName = 'lembrete_pausa_longa.ics';
                 }
                 
                 const icsContent = generateICS(duration, eventTitle, eventDescription);
-                downloadICS(icsContent, fileName);
+                downloadICS(icsContent);
                 
                 handleStartPauseClick(); // Inicia o timer
                 hideModal(iosStartPromptModalOverlay);
