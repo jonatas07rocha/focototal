@@ -14,7 +14,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link id="favicon" rel="icon" href="icon-192x192.png" type="image/png">
     <style>
-        /* Estilos CSS com nova animação */
         html { scroll-behavior: smooth; }
         body {
             font-family: 'Inter', sans-serif;
@@ -109,7 +108,6 @@
         .task-item.added-feedback { animation: new-task-pop 0.3s ease-out; }
         @keyframes new-task-pop { 0% { transform: scale(0.98); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
         
-        /* ADICIONADO: Animação de respiração para o modo adaptativo */
         @keyframes breathe-animation { 
             0% { stroke-opacity: 0.5; } 
             50% { stroke-opacity: 1; } 
@@ -191,7 +189,7 @@
         </div>
     </div>
 
-    <!-- Modals (sem alterações estruturais) -->
+    <!-- Modals -->
     <div id="alert-modal-overlay" class="modal-overlay">
         <div class="modal-content text-center">
             <p id="alert-modal-message" class="mb-4"></p>
@@ -202,7 +200,6 @@
         <div class="modal-content text-center">
             <h2 class="text-xl font-bold text-white mb-2">Sessão Finalizada!</h2>
             <p id="session-end-message" class="mb-4 text-gray-300"></p>
-            <div id="ios-calendar-prompt" class="mb-6" style="display: none;"></div>
             <button id="session-end-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Fechar modal de fim de sessão">Ótimo!</button>
         </div>
     </div>
@@ -283,6 +280,19 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de Lembrete para iOS (Texto Atualizado) -->
+    <div id="ios-start-prompt-modal-overlay" class="modal-overlay">
+        <div class="modal-content text-center">
+            <h2 id="ios-prompt-title" class="text-xl font-bold text-white mb-2">Notificação no iOS</h2>
+            <p id="ios-prompt-message" class="mb-6 text-gray-300">Para garantir o alarme no final desta sessão, recomendamos criar um lembrete. Deseja fazer isso agora?</p>
+            <div class="flex justify-center space-x-4">
+                <button id="ios-prompt-cancel-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Não, iniciar sem lembrete">Não, Iniciar Direto</button>
+                <button id="ios-prompt-confirm-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Sim, criar lembrete">Sim, Criar Lembrete</button>
+            </div>
+        </div>
+    </div>
+    
     <div id="install-banner">
         <div class="max-w-md mx-auto">
             <p class="font-semibold mb-2">Tenha a melhor experiência!</p>
@@ -296,7 +306,7 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- ELEMENTOS DO DOM (sem alterações) ---
+            // --- ELEMENTOS DO DOM ---
             const timerDisplay = document.getElementById('timer-display');
             const startPauseBtn = document.getElementById('start-pause-btn');
             const internalInterruptBtn = document.getElementById('internal-interrupt-btn');
@@ -338,9 +348,13 @@
             const installBanner = document.getElementById('install-banner');
             const installBtn = document.getElementById('install-btn');
             const installDismissBtn = document.getElementById('install-dismiss-btn');
-            const iosCalendarPrompt = document.getElementById('ios-calendar-prompt');
+            const iosStartPromptModalOverlay = document.getElementById('ios-start-prompt-modal-overlay');
+            const iosPromptConfirmBtn = document.getElementById('ios-prompt-confirm-btn');
+            const iosPromptCancelBtn = document.getElementById('ios-prompt-cancel-btn');
+            const iosPromptTitle = document.getElementById('ios-prompt-title');
+            const iosPromptMessage = document.getElementById('ios-prompt-message');
 
-            // --- ESTADO DA APLICAÇÃO (sem alterações) ---
+            // --- ESTADO DA APLICAÇÃO ---
             let timerInterval, isRunning = false, mode = 'focus', timeRemaining, totalTime, endTime;
             let tasks = [], selectedTaskId = null, pomodoroSessionCount = 0;
             let settings = { focusDuration: 25, shortBreakDuration: 5, longBreakDuration: 15, longBreakInterval: 4 };
@@ -348,28 +362,11 @@
             let deferredInstallPrompt = null;
             let showCompletedTasks = false;
             
-            // --- LÓGICA DE BADGING API ---
-            const clearBadge = () => {
-                if ('clearAppBadge' in navigator) {
-                    navigator.clearAppBadge().catch(err => console.error("Erro ao limpar badge:", err));
-                }
-            };
-            const setBadge = () => {
-                if ('setAppBadge' in navigator) {
-                    navigator.setAppBadge(1).catch(err => console.error("Erro ao definir badge:", err));
-                }
-            }
-
-            // --- LÓGICA DE ÁUDIO (sem alterações) ---
+            // --- LÓGICA DE BADGING E ÁUDIO (sem alterações) ---
+            const clearBadge = () => { if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(console.error); };
+            const setBadge = () => { if ('setAppBadge' in navigator) navigator.setAppBadge(1).catch(console.error); };
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             let audioInitialized = false;
-            const playBeep = (frequency = 800, duration = 200, volume = 0.3) => {
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume().then(() => _playBeepInternal(frequency, duration, volume));
-                } else {
-                    _playBeepInternal(frequency, duration, volume);
-                }
-            };
             const _playBeepInternal = (frequency, duration, volume) => {
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
@@ -383,6 +380,10 @@
                 oscillator.start(audioContext.currentTime);
                 oscillator.stop(audioContext.currentTime + duration / 1000);
             };
+            const playBeep = (frequency = 800, duration = 200, volume = 0.3) => {
+                if (audioContext.state === 'suspended') audioContext.resume().then(() => _playBeepInternal(frequency, duration, volume));
+                else _playBeepInternal(frequency, duration, volume);
+            };
             const playFinishSound = () => {
                 playBeep(523, 150, 0.4);
                 setTimeout(() => playBeep(659, 150, 0.4), 200);
@@ -394,18 +395,13 @@
             window.addEventListener('beforeinstallprompt', (event) => {
                 event.preventDefault();
                 deferredInstallPrompt = event;
-                if (!localStorage.getItem('installBannerDismissed')) {
-                    installBanner.style.display = 'block';
-                }
+                if (!localStorage.getItem('installBannerDismissed')) installBanner.style.display = 'block';
             });
             installBtn.addEventListener('click', () => {
                 if (deferredInstallPrompt) {
                     deferredInstallPrompt.prompt();
-                    deferredInstallPrompt.userChoice.then(() => {
-                        deferredInstallPrompt = null;
-                        installBanner.style.display = 'none';
-                    });
-                } else if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+                    deferredInstallPrompt.userChoice.then(() => { deferredInstallPrompt = null; installBanner.style.display = 'none'; });
+                } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     showModal(alertModalOverlay, 'Para instalar no iOS, toque em Compartilhar e "Adicionar à Tela de Início".');
                 }
             });
@@ -413,14 +409,11 @@
                 localStorage.setItem('installBannerDismissed', 'true');
                 installBanner.style.display = 'none';
             });
-            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-                installBanner.style.display = 'none';
-            }
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) installBanner.style.display = 'none';
 
             // --- FUNÇÕES DE GESTÃO DE MODO (sem alterações) ---
             const updateMethodToggleUI = () => {
-                const buttons = focusMethodToggle.querySelectorAll('.method-btn');
-                buttons.forEach(btn => {
+                document.querySelectorAll('#focus-method-toggle .method-btn').forEach(btn => {
                     btn.classList.toggle('bg-blue-600', btn.dataset.method === focusMethod);
                     btn.classList.toggle('text-white', btn.dataset.method === focusMethod);
                     btn.classList.toggle('text-gray-400', btn.dataset.method !== focusMethod);
@@ -428,7 +421,6 @@
                 pomodoroCyclesEl.style.display = focusMethod === 'pomodoro' ? 'flex' : 'none';
                 newTaskEstimateInput.style.display = focusMethod === 'pomodoro' ? 'inline-block' : 'none';
                 newTaskEstimateLabel.style.display = focusMethod === 'pomodoro' ? 'inline-block' : 'none';
-                newTaskEstimateLabel.textContent = '#';
                 helpContentPomodoro.style.display = focusMethod === 'pomodoro' ? 'block' : 'none';
                 helpContentAdaptativo.style.display = focusMethod === 'adaptativo' ? 'block' : 'none';
                 if (!isRunning) resetTimer('focus');
@@ -444,7 +436,7 @@
             const hideModal = (modalOverlay) => {
                 clearBadge();
                 modalOverlay.classList.remove('visible');
-            }
+            };
             const startTimer = () => {
                 if (isRunning) return;
                 if (!selectedTaskId && mode === 'focus') {
@@ -468,62 +460,38 @@
                 if (!isRunning) return;
                 isRunning = false;
                 clearInterval(timerInterval);
-                if (focusMethod === 'pomodoro' || mode !== 'focus') {
-                    timeRemaining = Math.round((endTime - Date.now()) / 1000);
-                }
+                if (focusMethod === 'pomodoro' || mode !== 'focus') timeRemaining = Math.round((endTime - Date.now()) / 1000);
                 saveState();
                 updateUI();
             };
-            
-            // ===================================================================
-            // MODIFICAÇÃO: updateTimerDisplay() atualizada
-            // ===================================================================
             const updateTimerDisplay = () => {
-                // Lógica de exibição de tempo com horas
                 const totalSecondsAbs = Math.abs(timeRemaining);
                 const hours = Math.floor(totalSecondsAbs / 3600);
                 const minutes = Math.floor((totalSecondsAbs % 3600) / 60);
                 const seconds = totalSecondsAbs % 60;
-
-                let display;
-                if (hours > 0) {
-                    display = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                } else {
-                    display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                }
+                let display = (hours > 0)
+                    ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+                    : `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
                 timerDisplay.textContent = display;
                 document.title = `${display} - Foco Total`;
                 
-                // Lógica do anel de progresso
                 const circumference = 2 * Math.PI * 45;
                 let progress = 0;
-
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
-                    if (totalTime > 0) {
-                        progress = (totalTime - timeRemaining) / totalTime;
-                    }
-                } else { // Modo Adaptativo
-                    // O anel fica totalmente visível quando o timer está rodando para a animação "breathing" funcionar
+                    if (totalTime > 0) progress = (totalTime - timeRemaining) / totalTime;
+                } else {
                     progress = isRunning ? 1 : 0;
                 }
-                
-                const offset = circumference * (1 - progress);
                 progressRing.style.strokeDasharray = circumference;
-                progressRing.style.strokeDashoffset = offset;
+                progressRing.style.strokeDashoffset = circumference * (1 - progress);
             };
-            // ===================================================================
-            // FIM DA MODIFICAÇÃO
-            // ===================================================================
-
             const updateTimer = () => {
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     const remaining = Math.round((endTime - Date.now()) / 1000);
                     if (remaining >= 0) {
                         timeRemaining = remaining;
                         updateTimerDisplay();
-                        if (mode === 'focus' && focusMethod === 'pomodoro' && timeRemaining <= 10 && timeRemaining > 0) {
-                            playTickSound();
-                        }
+                        if (mode === 'focus' && focusMethod === 'pomodoro' && timeRemaining <= 10 && timeRemaining > 0) playTickSound();
                     } else {
                         clearInterval(timerInterval);
                         switchMode();
@@ -534,15 +502,16 @@
                 }
             };
 
-            const generateICS = (startTime, endTime, title, description) => {
+            const generateICS = (durationMinutes, title, description) => {
+                const startTime = new Date();
+                const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
                 const formatDT = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-                const icsContent = [
+                return [
                     'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FocoTotal//PWA//PT',
                     'BEGIN:VEVENT', 'UID:' + Date.now() + '@focototal.app', 'DTSTAMP:' + formatDT(new Date()),
                     'DTSTART:' + formatDT(startTime), 'DTEND:' + formatDT(endTime),
                     'SUMMARY:' + title, 'DESCRIPTION:' + description, 'END:VEVENT', 'END:VCALENDAR'
                 ].join('\r\n');
-                return icsContent;
             };
 
             const downloadICS = (icsContent, filename) => {
@@ -561,57 +530,30 @@
                 endTime = null;
                 playFinishSound();
                 setBadge();
-
-                if ('vibrate' in navigator) {
-                    navigator.vibrate([200, 100, 200]);
-                }
+                if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
 
                 if ('Notification' in window && Notification.permission === 'granted') {
                     const notificationTitle = mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!';
                     const notificationBody = mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?';
-                    navigator.serviceWorker.ready.then(registration => {
-                        registration.showNotification(notificationTitle, { body: notificationBody, icon: '/icon-192x192.png', renotify: true, tag: 'foco-total-notification' });
-                    });
+                    navigator.serviceWorker.ready.then(reg => reg.showNotification(notificationTitle, { body: notificationBody, icon: '/icon-192x192.png', renotify: true, tag: 'foco-total-notification' }));
                 }
                 
                 if (mode === 'focus') {
-                    if (focusMethod === 'pomodoro') {
-                        pomodoroSessionCount++;
-                        const task = tasks.find(t => t.id === selectedTaskId);
-                        if(task) {
+                    const task = tasks.find(t => t.id === selectedTaskId);
+                    if (task) {
+                        if (focusMethod === 'pomodoro') {
+                            pomodoroSessionCount++;
                             task.pomodorosCompleted++;
                             task.focusTime += settings.focusDuration * 60;
+                        } else {
+                            task.focusTime += timeRemaining;
                         }
-                    } else {
-                        const task = tasks.find(t => t.id === selectedTaskId);
-                        if(task) task.focusTime += timeRemaining;
                     }
                     mode = (focusMethod === 'pomodoro' && pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
                     showModal(sessionEndModalOverlay, `Você ${focusMethod === 'pomodoro' ? 'completou um Pomodoro!' : 'finalizou seu foco.'} Hora de fazer uma pausa.`);
                 } else {
                     mode = 'focus';
                     showModal(sessionEndModalOverlay, 'Pausa finalizada! Vamos voltar ao trabalho?');
-                }
-
-                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-                if (isIOS) {
-                    const nextSessionDuration = (settings[`${mode}Duration`] || 25) * 60 * 1000;
-                    const startTime = new Date();
-                    const endTime = new Date(startTime.getTime() + nextSessionDuration);
-                    const eventTitle = mode === 'focus' ? 'Sessão de Foco' : (mode === 'shortBreak' ? 'Pausa Curta' : 'Pausa Longa');
-                    const taskName = (mode === 'focus' && selectedTaskId) ? tasks.find(t => t.id === selectedTaskId)?.name : 'Foco Total';
-                    const eventDescription = `Próxima sessão: ${eventTitle} para a tarefa '${taskName}'.`;
-                    const icsData = generateICS(startTime, endTime, eventTitle, eventDescription);
-                    iosCalendarPrompt.innerHTML = `<button id="add-to-calendar-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Adicionar ao Calendário</button>`;
-                    iosCalendarPrompt.style.display = 'block';
-                    document.getElementById('add-to-calendar-btn').onclick = () => {
-                        downloadICS(icsData, 'lembrete-foco.ics');
-                        e.target.textContent = 'Adicionado!';
-                        e.target.disabled = true;
-                    };
-                } else {
-                    iosCalendarPrompt.style.display = 'none';
-                    iosCalendarPrompt.innerHTML = '';
                 }
                 
                 resetTimer(); 
@@ -644,25 +586,16 @@
                 showModal(alertModalOverlay, 'O dia foi zerado com sucesso!');
             };
             
-            // ===================================================================
-            // MODIFICAÇÃO: updateUI() atualizada
-            // ===================================================================
             const updateUI = () => {
                 updateTimerDisplay(); 
-                
-                let modeColorClass = '';
-                if (mode === 'focus') modeColorClass = 'text-blue-500';
-                else if (mode === 'shortBreak') modeColorClass = 'text-green-500';
+                let modeColorClass = 'text-blue-500';
+                if (mode === 'shortBreak') modeColorClass = 'text-green-500';
                 else if (mode === 'longBreak') modeColorClass = 'text-purple-500';
                 
-                // Gerencia classes do anel de progresso
-                progressRing.className = 'transition-colors duration-500'; // Reseta as classes para evitar acúmulo
-                progressRing.classList.add(modeColorClass); // Adiciona a cor do modo atual
-                if (focusMethod === 'adaptativo' && mode === 'focus' && isRunning) {
-                    progressRing.classList.add('breathing');
-                }
+                progressRing.className = 'transition-colors duration-500';
+                progressRing.classList.add(modeColorClass);
+                if (focusMethod === 'adaptativo' && mode === 'focus' && isRunning) progressRing.classList.add('breathing');
 
-                // Restante da lógica da UI (botões, etc.)
                 let btnIcon, btnBgClass, ariaLabelText;
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
                     btnIcon = isRunning ? 'pause' : 'play';
@@ -688,9 +621,6 @@
                 updateStatsDisplay();
                 lucide.createIcons();
             };
-            // ===================================================================
-            // FIM DA MODIFICAÇÃO
-            // ===================================================================
 
             const formatTime = (totalSeconds) => {
                 if (!totalSeconds || totalSeconds < 1) return `0m`;
@@ -706,8 +636,7 @@
                     return;
                 }
                 let statsHTML = '<div class="space-y-3">';
-                const sortedTasks = [...tasks].sort((a, b) => a.completed - b.completed);
-                sortedTasks.forEach(task => {
+                [...tasks].sort((a, b) => a.completed - b.completed).forEach(task => {
                     statsHTML += `
                         <div class="bg-gray-900 p-3 rounded-lg ${task.completed ? 'opacity-60' : ''}">
                             <p class="font-bold text-white truncate ${task.completed ? 'line-through' : ''}">${task.name}</p>
@@ -737,18 +666,17 @@
                             saveState();
                         }, { once: true });
                     }
-                    const isEditing = task.isEditing;
                     taskEl.innerHTML = `
                         <div class="flex justify-between items-center">
                             <div class="flex items-center min-w-0 flex-grow">
                                 <button data-complete-id="${task.id}" class="complete-btn text-gray-400 hover:text-green-500 mr-3 flex-shrink-0" aria-label="Marcar tarefa ${task.name} como concluída"><i data-lucide="${task.completed ? 'check-square' : 'square'}" class="w-5 h-5"></i></button>
-                                ${isEditing 
+                                ${task.isEditing 
                                     ? `<input type="text" value="${task.name}" class="task-edit-input bg-gray-800 text-white rounded px-2 py-1 text-sm flex-grow mx-2 border-2 border-blue-500 focus:outline-none" data-edit-input-id="${task.id}" aria-label="Editar nome da tarefa ${task.name}">`
                                     : `<span class="task-name truncate text-sm ${task.completed ? 'line-through' : ''}">${task.name}</span>`
                                 }
                             </div>
                             <div class="flex items-center space-x-1 flex-shrink-0">
-                                <button data-edit-id="${task.id}" class="edit-btn text-gray-500 hover:text-blue-500 transition-colors p-1 rounded-md" aria-label="${isEditing ? 'Salvar edição' : 'Editar tarefa'}"><i data-lucide="${isEditing ? 'save' : 'pencil'}" class="w-4 h-4"></i></button>
+                                <button data-edit-id="${task.id}" class="edit-btn text-gray-500 hover:text-blue-500 transition-colors p-1 rounded-md" aria-label="${task.isEditing ? 'Salvar edição' : 'Editar tarefa'}"><i data-lucide="${task.isEditing ? 'save' : 'pencil'}" class="w-4 h-4"></i></button>
                                 <button data-delete-id="${task.id}" class="delete-btn text-gray-500 hover:text-red-500 transition-colors p-1 rounded-md" aria-label="Excluir tarefa"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </div>
                         </div>
@@ -794,14 +722,10 @@
                 if (task) {
                     task.completed = !task.completed;
                     if (task.completed && selectedTaskId === id) {
-                        if(isRunning) {
-                            pauseTimer();
-                        }
+                        if(isRunning) pauseTimer();
                         const firstIncompleteTask = tasks.find(t => !t.completed);
                         selectTask(firstIncompleteTask ? firstIncompleteTask.id : null);
-                        if (!isRunning && mode === 'focus') { 
-                            resetTimer('focus'); 
-                        }
+                        if (!isRunning && mode === 'focus') resetTimer('focus'); 
                     } 
                     renderTasks();
                 }
@@ -810,10 +734,7 @@
                 tasks.forEach(task => task.isEditing = task.id === id ? !task.isEditing : false);
                 renderTasks();
                 const input = document.querySelector(`[data-edit-input-id="${id}"]`);
-                if (input) {
-                    input.focus();
-                    input.select();
-                }
+                if (input) { input.focus(); input.select(); }
             };
             const updateTaskName = (id, newName) => {
                 const task = tasks.find(t => t.id === id);
@@ -825,8 +746,7 @@
             };
             const selectTask = (id) => {
                 const task = tasks.find(t => t.id === id);
-                const isAnyTaskEditing = tasks.some(t => t.isEditing);
-                if ((task || id === null) && !isAnyTaskEditing) {
+                if ((task || id === null) && !tasks.some(t => t.isEditing)) {
                     selectedTaskId = id;
                     renderTasks();
                     if (!isRunning) resetTimer('focus');
@@ -895,9 +815,8 @@
                 shortBreakDurationInput.value = settings.shortBreakDuration;
                 longBreakDurationInput.value = settings.longBreakDuration;
                 longBreakIntervalInput.value = settings.longBreakInterval;
-                if (selectedTaskId) {
-                    const task = tasks.find(t => t.id === selectedTaskId);
-                    if (!task || task.completed) selectedTaskId = null;
+                if (selectedTaskId && (!tasks.find(t => t.id === selectedTaskId) || tasks.find(t => t.id === selectedTaskId).completed)) {
+                    selectedTaskId = null;
                 }
                 if (!selectedTaskId) {
                     const firstIncompleteTask = tasks.find(t => !t.completed);
@@ -905,9 +824,9 @@
                 }
             };
             
-            // --- EVENT LISTENERS (sem alterações significativas) ---
-            startPauseBtn.addEventListener('click', () => {
-                if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
+            // --- EVENT LISTENERS ---
+
+            const handleStartPauseClick = () => {
                 startPauseBtn.classList.add('start-pause-btn-clicked');
                 startPauseBtn.addEventListener('animationend', () => startPauseBtn.classList.remove('start-pause-btn-clicked'), { once: true });
                 if (focusMethod === 'pomodoro' || mode !== 'focus') {
@@ -924,7 +843,65 @@
                         startTimer();
                     }
                 }
+            };
+
+            // MODIFICADO: Listener do botão de start principal
+            startPauseBtn.addEventListener('click', () => {
+                if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
+
+                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                // Exibe o prompt se for iOS, se um timer Pomodoro estiver para começar e não estiver no modo adaptativo
+                if (isIOS && !isRunning && focusMethod === 'pomodoro') {
+                    // Personaliza o texto do modal com base no modo atual (foco ou pausa)
+                    if (mode === 'focus') {
+                        iosPromptTitle.textContent = 'Lembrete de Foco';
+                        iosPromptMessage.textContent = 'Para garantir o alarme no final do foco, recomendamos criar um lembrete. Deseja fazer isso agora?';
+                    } else {
+                        iosPromptTitle.textContent = 'Lembrete de Pausa';
+                        iosPromptMessage.textContent = 'Para garantir o alarme no final da pausa, recomendamos criar um lembrete. Deseja fazer isso agora?';
+                    }
+                    showModal(iosStartPromptModalOverlay);
+                } else {
+                    handleStartPauseClick(); // Ação direta para todos os outros casos.
+                }
             });
+            
+            // MODIFICADO: Listener de confirmação do prompt do iOS
+            iosPromptConfirmBtn.addEventListener('click', () => {
+                let duration, eventTitle, eventDescription, fileName;
+
+                if (mode === 'focus') {
+                    const task = tasks.find(t => t.id === selectedTaskId);
+                    const taskName = task ? task.name : 'Foco';
+                    eventTitle = `Fim do Foco: ${taskName}`;
+                    eventDescription = `Sua sessão de foco na tarefa "${taskName}" terminou. Hora de fazer uma pausa!`;
+                    duration = settings.focusDuration;
+                    fileName = 'lembrete_foco.ics';
+                } else if (mode === 'shortBreak') {
+                    eventTitle = `Fim da Pausa Curta`;
+                    eventDescription = `Sua pausa curta acabou. Hora de voltar ao foco!`;
+                    duration = settings.shortBreakDuration;
+                    fileName = 'lembrete_pausa_curta.ics';
+                } else { // longBreak
+                    eventTitle = `Fim da Pausa Longa`;
+                    eventDescription = `Sua pausa longa acabou. Hora de voltar ao foco!`;
+                    duration = settings.longBreakDuration;
+                    fileName = 'lembrete_pausa_longa.ics';
+                }
+                
+                const icsContent = generateICS(duration, eventTitle, eventDescription);
+                downloadICS(icsContent, fileName);
+                
+                handleStartPauseClick(); // Inicia o timer
+                hideModal(iosStartPromptModalOverlay);
+            });
+
+            iosPromptCancelBtn.addEventListener('click', () => {
+                handleStartPauseClick(); // Inicia o timer sem o lembrete
+                hideModal(iosStartPromptModalOverlay);
+            });
+
+            // Outros listeners (sem alterações)
             resetBtn.addEventListener('click', () => showModal(resetConfirmModalOverlay));
             resetConfirmBtn.addEventListener('click', resetDay);
             resetCancelBtn.addEventListener('click', () => hideModal(resetConfirmModalOverlay));
@@ -964,7 +941,7 @@
                 toggleCompletedTasksBtn.textContent = showCompletedTasks ? 'Esconder Concluídas' : 'Mostrar Concluídas';
                 renderTasks();
             });
-            [alertModalOverlay, settingsModalOverlay, statsModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay].forEach(overlay => {
+            [alertModalOverlay, settingsModalOverlay, statsModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay, iosStartPromptModalOverlay].forEach(overlay => {
                 overlay.addEventListener('click', (e) => { if (e.target === overlay) hideModal(overlay); });
             });
             taskListEl.addEventListener('click', (e) => {
@@ -1011,9 +988,7 @@
             updateUI(); 
             lucide.createIcons();
             document.addEventListener('click', () => {
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume().then(() => audioInitialized = true);
-                }
+                if (audioContext.state === 'suspended') audioContext.resume().then(() => audioInitialized = true);
                 clearBadge();
             }, { once: true });
         });
