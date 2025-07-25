@@ -60,7 +60,7 @@
             box-shadow: 0 0 12px rgba(59, 130, 246, 0.7);
         }
         #timer-display { text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
-        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; } 
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }  
         input[type=number] { -moz-appearance: textfield; }
         .modal-overlay {
             position: fixed;
@@ -411,7 +411,7 @@
             };
             
             enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
-           
+            
             // --- LÓGICA DE ÁUDIO (sem alterações) ---
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             let audioInitialized = false;
@@ -534,6 +534,7 @@
                     if (focusMethod === 'pomodoro' || mode !== 'focus') {
                         progress = (totalTime - timeRemaining) / totalTime;
                     } else {
+                        // Para o modo adaptativo, o círculo se preenche a cada minuto.
                         progress = (timeRemaining % 60) / 60;
                     }
                 }
@@ -555,13 +556,14 @@
                         switchMode();
                     }
                 } else {
+                    // Lógica para o modo adaptativo (contagem crescente)
                     timeRemaining++;
                     updateTimerDisplay();
                 }
             };
 
             // ===================================================================
-            // MODIFICAÇÃO PRINCIPAL: Função switchMode() atualizada
+            // MODIFICAÇÃO PRINCIPAL: Função switchMode() atualizada para consolidação de lógica OneSignal
             // ===================================================================
             const switchMode = () => {
                 isRunning = false;
@@ -577,75 +579,47 @@
                     });
                 }
 
-                // --- INÍCIO DA ADIÇÃO DE CÓDIGO: Envio de Tags para OneSignal ---
+                // Lógica para enviar tags OneSignal (SE OneSignal estiver definido)
                 if (typeof OneSignal !== 'undefined') {
+                    let tagsToSend = {};
                     if (mode === 'focus') {
-                        // Fim do ciclo de Foco: Envia tag 'foco_finalizado'
-                        OneSignal.sendTags({
-                            'ciclo_status': 'foco_finalizado',
-                            'proximo_passo': 'pausa'
-                        }).then(function(tagsSent) {
-                            console.log('Tags de fim de foco enviadas para OneSignal:', tagsSent);
-                        }).catch(function(error) {
-                            console.error('Erro ao enviar tags de foco para OneSignal:', error);
-                        });
-
-                        // Lógica original do fim do foco
-                        if (focusMethod === 'pomodoro') {
-                            pomodoroSessionCount++;
-                            const task = tasks.find(t => t.id === selectedTaskId);
-                            if(task) {
-                                task.pomodorosCompleted++;
-                                task.focusTime += settings.focusDuration * 60;
-                            }
-                        } else {
-                            const task = tasks.find(t => t.id === selectedTaskId);
-                            if(task) task.focusTime += timeRemaining;
-                        }
-                        renderTasks();
-                        mode = (focusMethod === 'pomodoro' && pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
-                        showModal(sessionEndModalOverlay, `Você ${focusMethod === 'pomodoro' ? 'completou um Pomodoro!' : 'finalizou seu foco.'} Hora de fazer uma pausa.`);
+                        tagsToSend = { 'ciclo_status': 'foco_finalizado', 'proximo_passo': 'pausa' };
                     } else { // Se o modo atual é de pausa (shortBreak ou longBreak)
-                        // Fim do ciclo de Pausa: Envia tag 'pausa_finalizada'
-                        OneSignal.sendTags({
-                            'ciclo_status': 'pausa_finalizada',
-                            'proximo_passo': 'foco'
-                        }).then(function(tagsSent) {
-                            console.log('Tags de fim de pausa enviadas para OneSignal:', tagsSent);
-                        }).catch(function(error) {
-                            console.error('Erro ao enviar tags de pausa para OneSignal:', error);
-                        });
-                        
-                        // Lógica original do fim da pausa
-                        mode = 'focus';
-                        showModal(sessionEndModalOverlay, 'Pausa finalizada! Vamos voltar ao trabalho?');
+                        tagsToSend = { 'ciclo_status': 'pausa_finalizada', 'proximo_passo': 'foco' };
                     }
+                    OneSignal.sendTags(tagsToSend)
+                        .then(function(tagsSent) {
+                            console.log('Tags enviadas para OneSignal:', tagsSent);
+                        }).catch(function(error) {
+                            console.error('Erro ao enviar tags para OneSignal:', error);
+                        });
                 } else {
-                     // Caso OneSignal não esteja definido (fallback para o comportamento original)
-                     console.warn('OneSignal SDK não carregado, tags não enviadas.');
-                     if (mode === 'focus') {
-                         if (focusMethod === 'pomodoro') {
-                            pomodoroSessionCount++;
-                            const task = tasks.find(t => t.id === selectedTaskId);
-                            if(task) {
-                                task.pomodorosCompleted++;
-                                task.focusTime += settings.focusDuration * 60;
-                            }
-                         } else {
-                            const task = tasks.find(t => t.id === selectedTaskId);
-                            if(task) task.focusTime += timeRemaining;
-                         }
-                         renderTasks();
-                         mode = (focusMethod === 'pomodoro' && pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
-                         showModal(sessionEndModalOverlay, `Você ${focusMethod === 'pomodoro' ? 'completou um Pomodoro!' : 'finalizou seu foco.'} Hora de fazer uma pausa.`);
-                     } else {
-                         mode = 'focus';
-                         showModal(sessionEndModalOverlay, 'Pausa finalizada! Vamos voltar ao trabalho?');
-                     }
+                    console.warn('OneSignal SDK não carregado, tags não enviadas.');
                 }
-                // --- FIM DA ADIÇÃO DE CÓDIGO ---
 
-                resetTimer();
+                // Lógica comum após o fim do ciclo
+                if (mode === 'focus') {
+                    if (focusMethod === 'pomodoro') {
+                        pomodoroSessionCount++;
+                        const task = tasks.find(t => t.id === selectedTaskId);
+                        if(task) {
+                            task.pomodorosCompleted++;
+                            task.focusTime += settings.focusDuration * 60;
+                        }
+                    } else { // Modo Adaptativo
+                        const task = tasks.find(t => t.id === selectedTaskId);
+                        if(task) task.focusTime += timeRemaining; // timeRemaining já é o tempo decorrido
+                    }
+                    mode = (focusMethod === 'pomodoro' && pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
+                    showModal(sessionEndModalOverlay, `Você ${focusMethod === 'pomodoro' ? 'completou um Pomodoro!' : 'finalizou seu foco.'} Hora de fazer uma pausa.`);
+                } else { // Se o modo atual é de pausa (shortBreak ou longBreak)
+                    mode = 'focus';
+                    showModal(sessionEndModalOverlay, 'Pausa finalizada! Vamos voltar ao trabalho?');
+                }
+                
+                // Garante que o timer seja resetado e a interface atualizada após a troca de modo
+                resetTimer(); 
+                renderTasks(); 
             };
             // ===================================================================
             // FIM DA MODIFICAÇÃO PRINCIPAL
@@ -661,8 +635,9 @@
                     timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
                     totalTime = timeRemaining;
                 } else {
+                    // Para o modo adaptativo, reinicia a contagem do tempo decorrido
                     timeRemaining = 0;
-                    totalTime = 1;
+                    totalTime = 1; // Mantido para o cálculo de progresso do círculo (preenche a cada minuto)
                 }
                 saveState();
                 updateUI();
@@ -806,19 +781,33 @@
                     renderTasks();
                 }
             };
+
+            // ===================================================================
+            // MODIFICAÇÃO: Função toggleTaskCompleted() para pausar timer e resetar no foco
+            // ===================================================================
             const toggleTaskCompleted = (id) => {
                 const task = tasks.find(t => t.id === id);
                 if (task) {
                     task.completed = !task.completed;
                     if (task.completed && selectedTaskId === id) {
-                        if(isRunning && mode === 'focus') pauseTimer();
+                        if(isRunning) { // Se o timer está rodando (em qualquer modo)
+                            pauseTimer(); // Pausa o timer
+                        }
                         const firstIncompleteTask = tasks.find(t => !t.completed);
                         selectTask(firstIncompleteTask ? firstIncompleteTask.id : null);
-                    } else {
-                        renderTasks();
-                    }
+                        // Se o timer estava em foco e foi pausado por completar a tarefa,
+                        // e não há outra tarefa selecionada, resetar o timer para o modo foco inicial.
+                        if (!isRunning && mode === 'focus') { 
+                            resetTimer('focus'); 
+                        }
+                    } 
+                    renderTasks(); // Sempre renderiza para atualizar o estado da tarefa visualmente
                 }
             };
+            // ===================================================================
+            // FIM DA MODIFICAÇÃO
+            // ===================================================================
+
             const toggleEditState = (id) => {
                 tasks.forEach(task => task.isEditing = task.id === id ? !task.isEditing : false);
                 renderTasks();
