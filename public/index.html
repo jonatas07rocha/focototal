@@ -13,11 +13,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link id="favicon" rel="icon" href="icon-192x192.png" type="image/png">
-    
     <style>
-        /* --- PASSO 1: Estrutura com Variáveis CSS --- */
+        /* --- ESTRUTURA COM VARIÁVEIS CSS --- */
         :root {
-            /* "Funções" das cores, que serão definidas pelas paletas */
             --color-card-bg: #1F2937;
             --color-panel-bg: rgba(0, 0, 0, 0.15);
             --color-input-bg: rgba(0, 0, 0, 0.2);
@@ -28,107 +26,114 @@
             --color-accent-secondary: #2563EB;
             --color-text-on-accent: #FFFFFF;
             --color-shadow: rgba(0,0,0,0.4);
+            --color-page-bg: #111827;
         }
 
-        /* --- PASSO 2: Definição das Paletas --- */
-        .palette-graphite {
-            --color-card-bg: #1F2937; --color-panel-bg: #111827; --color-input-bg: #374151; --color-text-primary: #E5E7EB; --color-text-secondary: #9CA3AF; --color-border: rgba(255, 255, 255, 0.1); --color-accent-primary: #3B82F6; --color-accent-secondary: #2563EB; --color-text-on-accent: #FFFFFF; --color-shadow: rgba(0,0,0,0.4);
+        /* --- PALETAS DE CORES --- */
+        body.palette-graphite {
+            --color-card-bg: #1F2937; --color-panel-bg: #111827; --color-input-bg: #374151; --color-text-primary: #E5E7EB; --color-text-secondary: #9CA3AF; --color-border: rgba(255, 255, 255, 0.1); --color-accent-primary: #3B82F6; --color-accent-secondary: #2563EB; --color-text-on-accent: #FFFFFF; --color-shadow: rgba(0,0,0,0.4); --color-page-bg: #111827;
         }
-        .palette-rose {
-            --color-card-bg: #BE185D; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #FBCFE8; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #FBCFE8; --color-accent-secondary: #F9A8D4; --color-text-on-accent: #831843; --color-shadow: rgba(190,24,93,0.3);
+        body.palette-rose {
+            --color-card-bg: #BE185D; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #FBCFE8; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #FBCFE8; --color-accent-secondary: #F9A8D4; --color-text-on-accent: #831843; --color-shadow: rgba(190,24,93,0.3); --color-page-bg: #4A0426;
         }
-        .palette-violet {
-            --color-card-bg: #7C3AED; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #DDD6FE; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #C4B5FD; --color-accent-secondary: #A78BFA; --color-text-on-accent: #581C87; --color-shadow: rgba(124,58,237,0.3);
+        body.palette-violet {
+            --color-card-bg: #7C3AED; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #DDD6FE; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #C4B5FD; --color-accent-secondary: #A78BFA; --color-text-on-accent: #581C87; --color-shadow: rgba(124,58,237,0.3); --color-page-bg: #2C0B5A;
         }
-        .palette-mustard {
-            --color-card-bg: #D97706; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #FEF3C7; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #FBBF24; --color-accent-secondary: #F59E0B; --color-text-on-accent: #78350F; --color-shadow: rgba(217,119,6,0.3);
+        body.palette-mustard {
+            --color-card-bg: #D97706; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #FEF3C7; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #FBBF24; --color-accent-secondary: #F59E0B; --color-text-on-accent: #78350F; --color-shadow: rgba(217,119,6,0.3); --color-page-bg: #422006;
         }
-        .palette-emerald {
-            --color-card-bg: #047857; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #A7F3D0; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #6EE7B7; --color-accent-secondary: #34D399; --color-text-on-accent: #064E3B; --color-shadow: rgba(4,120,87,0.3);
+        body.palette-emerald {
+            --color-card-bg: #047857; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #A7F3D0; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #6EE7B7; --color-accent-secondary: #34D399; --color-text-on-accent: #064E3B; --color-shadow: rgba(4,120,87,0.3); --color-page-bg: #022C20;
         }
-        .palette-sky {
-            --color-card-bg: #0284C7; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #E0F2FE; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #7DD3FC; --color-accent-secondary: #38BDF8; --color-text-on-accent: #075985; --color-shadow: rgba(2,132,199,0.3);
+        body.palette-sky {
+            --color-card-bg: #0284C7; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #E0F2FE; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #7DD3FC; --color-accent-secondary: #38BDF8; --color-text-on-accent: #075985; --color-shadow: rgba(2,132,199,0.3); --color-page-bg: #043653;
         }
-        .palette-crimson {
-            --color-card-bg: #DC2626; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #FEE2E2; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #FCA5A5; --color-accent-secondary: #F87171; --color-text-on-accent: #991B1B; --color-shadow: rgba(220,38,38,0.3);
+        body.palette-crimson {
+            --color-card-bg: #DC2626; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #FEE2E2; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #FCA5A5; --color-accent-secondary: #F87171; --color-text-on-accent: #991B1B; --color-shadow: rgba(220,38,38,0.3); --color-page-bg: #530909;
         }
-        .palette-slate {
-            --color-card-bg: #475569; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #CBD5E1; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #94A3B8; --color-accent-secondary: #64748B; --color-text-on-accent: #1E293B; --color-shadow: rgba(71,85,105,0.3);
+        body.palette-slate {
+            --color-card-bg: #475569; --color-panel-bg: rgba(0,0,0,0.15); --color-input-bg: rgba(0,0,0,0.1); --color-text-primary: #FFFFFF; --color-text-secondary: #CBD5E1; --color-border: rgba(255,255,255,0.2); --color-accent-primary: #94A3B8; --color-accent-secondary: #64748B; --color-text-on-accent: #1E293B; --color-shadow: rgba(71,85,105,0.3); --color-page-bg: #1E293B;
         }
 
-        /* --- PASSO 3: Aplicação das Variáveis no CSS --- */
+        /* --- APLICAÇÃO DAS VARIÁVEIS --- */
         html { scroll-behavior: smooth; }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #111827; /* Fundo sempre neutro */
-            display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 1rem; box-sizing: border-box; -webkit-tap-highlight-color: transparent; scrollbar-width: none; -ms-overflow-style: none;
+            background-color: var(--color-page-bg);
+            transition: background-color 0.4s ease;
+            display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 1rem; box-sizing: border-box; -webkit-tap-highlight-color: transparent;
         }
-        body::-webkit-scrollbar { display: none; }
         .device-shell {
             background-color: var(--color-card-bg);
             color: var(--color-text-primary);
-            box-shadow: 0 10px 30px var(--color-shadow);
-            transition: background-color 0.4s ease, color 0.4s ease;
+            box-shadow: 0 10px 40px var(--color-shadow);
+            transition: background-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
             border-radius: 2.5rem; border: 1px solid var(--color-border); padding: 1.5rem; display: flex; flex-direction: column; width: 100%; max-width: 420px; margin: auto;
         }
-        .timer-panel {
-            background-color: var(--color-panel-bg);
-            border-radius: 1.25rem; padding: 1rem; margin-bottom: 1rem; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);  
-        }
+        .timer-panel { background-color: var(--color-panel-bg); border-radius: 1.25rem; padding: 1rem; margin-bottom: 1rem; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2); }
         #progress-ring { color: var(--color-accent-primary); transition: stroke-dashoffset 1s linear, color 0.4s; }
         .progress-ring-bg { color: var(--color-panel-bg); }
-        .task-item { transition: background-color 0.2s, border-color 0.2s, box-shadow 0.3s ease, opacity 0.3s, transform 0.3s ease; }
-        .task-item.selected {
-            background-color: var(--color-input-bg);
-            border-color: var(--color-accent-primary);
-            box-shadow: 0 0 12px var(--color-accent-primary);
-        }
-        #timer-display { text-shadow: 0 0 10px rgba(0, 0, 0, 0.2); }
-
-        /* Modals */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s;
-        }
+        .task-item { background-color: var(--color-panel-bg); transition: all 0.2s; }
+        .task-item.selected { background-color: var(--color-input-bg); border-color: var(--color-accent-primary) !important; box-shadow: 0 0 12px var(--color-accent-primary); }
+        #timer-display { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s, backdrop-filter 0.3s; }
         .modal-overlay.visible { display: flex; opacity: 1; }
         .modal-content {
-            background-color: var(--color-card-bg);
-            padding: 2rem; border-radius: 1.5rem;
-            border: 1px solid var(--color-border);
-            box-shadow: 0 0 20px var(--color-accent-primary);
-            color: var(--color-text-primary);
-            transform: scale(0.9); transition: transform 0.3s; width: 90%; max-width: 500px;
+            background-color: var(--color-card-bg); color: var(--color-text-primary);
+            border: 1px solid var(--color-border); box-shadow: 0 0 25px var(--color-accent-primary);
+            border-radius: 1.5rem; padding: 2rem; transform: scale(0.9); transition: all 0.3s; width: 90%; max-width: 500px;
         }
         .modal-overlay.visible .modal-content { transform: scale(1); }
         .modal-content h3 { color: var(--color-accent-primary); }
         
-        /* Botões e Inputs */
+        /* Classes utilitárias */
         .text-secondary { color: var(--color-text-secondary); }
         .bg-accent { background-color: var(--color-accent-primary); }
         .bg-accent-hover:hover { background-color: var(--color-accent-secondary); }
         .text-on-accent { color: var(--color-text-on-accent); }
-        .border-accent-focus:focus { border-color: var(--color-accent-primary); }
+        .border-accent-focus:focus { border-color: var(--color-accent-primary) !important; }
         .input-bg { background-color: var(--color-input-bg); }
         .panel-bg { background-color: var(--color-panel-bg); }
+        .text-accent { color: var(--color-accent-primary); }
+        .placeholder-secondary::placeholder { color: var(--color-text-secondary); opacity: 0.7; }
+        .border-theme { border-color: var(--color-border); }
 
         .palette-swatch { width: 2.5rem; height: 2.5rem; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.2s; }
         .palette-swatch.active { border-color: var(--color-accent-primary); transform: scale(1.15); }
         
-        /* Animações (sem alterações) */
-        .start-pause-btn-clicked { animation: pulse-small 0.3s ease-out; }
-        @keyframes pulse-small { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
-        .task-item.added-feedback { animation: new-task-pop 0.3s ease-out; }
-        @keyframes new-task-pop { 0% { transform: scale(0.98); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes breathe-animation { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
-        .breathing { animation: breathe-animation 2.5s ease-in-out infinite; }
+        /* --- NOVO FUNDO BLUR --- */
+        #background-blur {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; overflow: hidden;
+            background-color: var(--color-page-bg);
+            transition: background-color 0.4s ease;
+        }
+        #background-blur .shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.5;
+        }
+        .shape1 { width: 400px; height: 400px; background: var(--color-accent-primary); bottom: -150px; left: -150px; animation: move 20s infinite alternate; }
+        .shape2 { width: 300px; height: 300px; background: var(--color-card-bg); top: -100px; right: -100px; animation: move 25s infinite alternate-reverse; }
+        @keyframes move {
+            from { transform: translate(0, 0) rotate(0deg); }
+            to { transform: translate(100px, 50px) rotate(180deg); }
+        }
     </style>
 </head>
 <body>
+    <div id="background-blur">
+        <div class="shape shape1"></div>
+        <div class="shape shape2"></div>
+    </div>
+
     <div id="device-shell" class="device-shell">
         <header class="flex justify-between items-center mb-4 flex-shrink-0">
             <h1 class="text-xl font-bold">Foco Total</h1>
             <div id="focus-method-toggle" class="flex panel-bg rounded-lg p-1 text-xs font-semibold">
-                <button data-method="pomodoro" class="method-btn px-3 py-1 rounded-md transition-colors" aria-label="Selecionar modo Pomodoro">Pomodoro</button>
-                <button data-method="adaptativo" class="method-btn px-3 py-1 rounded-md transition-colors" aria-label="Selecionar modo Adaptativo">Adaptativo</button>
+                <button data-method="pomodoro" class="method-btn px-3 py-1 rounded-md text-secondary" aria-label="Selecionar modo Pomodoro">Pomodoro</button>
+                <button data-method="adaptativo" class="method-btn px-3 py-1 rounded-md text-secondary" aria-label="Selecionar modo Adaptativo">Adaptativo</button>
             </div>
             <button id="help-btn" class="text-secondary hover:text-primary p-2 rounded-full transition-colors" title="Ajuda" aria-label="Ajuda">
                 <i data-lucide="help-circle" class="w-6 h-6"></i>
@@ -141,9 +146,7 @@
                     <circle class="progress-ring-bg" stroke-width="7" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
                     <circle id="progress-ring" stroke-width="7" stroke-linecap="round" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" style="transform: rotate(-90deg); transform-origin: center;" />
                 </svg>
-                <div id="timer-display" class="absolute inset-0 flex items-center justify-center text-5xl font-bold">
-                    25:00
-                </div>
+                <div id="timer-display" class="absolute inset-0 flex items-center justify-center text-5xl font-bold">25:00</div>
             </div>
         </div>
 
@@ -157,21 +160,20 @@
             <button id="internal-interrupt-btn" class="panel-bg text-secondary hover:text-primary p-4 rounded-full transition-colors transform hover:scale-110" title="Interrupção Interna">
                 <i data-lucide="zap-off" class="w-6 h-6"></i>
             </button>
-            <button id="start-pause-btn" class="w-20 h-20 font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center" aria-label="Iniciar/Pausar Timer">
-            </button>
+            <button id="start-pause-btn" class="w-20 h-20 font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center" aria-label="Iniciar/Pausar Timer"></button>
             <button id="external-interrupt-btn" class="panel-bg text-secondary hover:text-primary p-4 rounded-full transition-colors transform hover:scale-110" title="Interrupção Externa">
                 <i data-lucide="user-x" class="w-6 h-6"></i>
             </button>
         </div>
 
-        <div class="flex-grow flex flex-col"> <div class="flex justify-between items-center mb-2 flex-shrink-0">
+        <div class="flex-grow flex flex-col">
+            <div class="flex justify-between items-center mb-2 flex-shrink-0">
                 <h2 class="text-base font-semibold">Lista de Tarefas do Dia</h2>
                 <button id="toggle-completed-tasks-btn" class="panel-bg text-secondary hover:text-primary text-xs px-3 py-1 rounded-md transition-colors" aria-label="Mostrar/esconder tarefas concluídas">Mostrar Concluídas</button>
             </div>
-            <div id="task-list" class="flex-grow space-y-2 pr-2">
-            </div>
+            <div id="task-list" class="flex-grow space-y-2 pr-2 overflow-y-auto max-h-40"></div>
             <div class="flex mt-3 space-x-2 items-center panel-bg p-2 rounded-lg flex-shrink-0">
-                <input type="text" id="new-task-input" class="flex-grow input-bg placeholder-text-secondary rounded-lg px-3 py-2 text-sm border-2 border-transparent border-accent-focus focus:outline-none" placeholder="Adicionar nova tarefa...">
+                <input type="text" id="new-task-input" class="flex-grow input-bg placeholder-secondary rounded-lg px-3 py-2 text-sm border-2 border-transparent border-accent-focus focus:outline-none" placeholder="Adicionar nova tarefa...">
                 <div class="flex items-center">
                     <label for="new-task-estimate" id="new-task-estimate-label" class="text-sm text-secondary mr-1 font-bold">#</label>
                     <input type="number" id="new-task-estimate" class="w-12 input-bg rounded-lg p-2 text-center font-bold border-2 border-transparent border-accent-focus focus:outline-none" value="1" min="1">
@@ -181,31 +183,14 @@
         </div>
         
         <div id="secondary-controls" class="flex items-center justify-center space-x-6 mt-4 flex-shrink-0">
-                <button id="reset-btn" class="text-secondary hover:text-primary p-2 rounded-full transition-colors" title="Zerar o dia">
-                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
-                </button>
-                <button id="stats-btn" class="text-secondary hover:text-primary p-2 rounded-full transition-colors" title="Estatísticas">
-                    <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
-                </button>
-                <button id="settings-btn" class="text-secondary hover:text-primary p-2 rounded-full transition-colors" title="Configurações">
-                    <i data-lucide="settings-2" class="w-5 h-5"></i>
-                </button>
+            <button id="reset-btn" class="text-secondary hover:text-primary p-2 rounded-full transition-colors" title="Zerar o dia"><i data-lucide="refresh-cw" class="w-5 h-5"></i></button>
+            <button id="stats-btn" class="text-secondary hover:text-primary p-2 rounded-full transition-colors" title="Estatísticas"><i data-lucide="bar-chart-2" class="w-5 h-5"></i></button>
+            <button id="settings-btn" class="text-secondary hover:text-primary p-2 rounded-full transition-colors" title="Configurações"><i data-lucide="settings-2" class="w-5 h-5"></i></button>
         </div>
     </div>
 
-    <div id="alert-modal-overlay" class="modal-overlay">
-        <div class="modal-content text-center">
-            <p id="alert-modal-message" class="mb-4"></p>
-            <button id="alert-modal-close-btn" class="w-full bg-accent bg-accent-hover text-on-accent font-bold py-2 px-6 rounded-lg transition-colors">OK</button>
-        </div>
-    </div>
-    <div id="session-end-modal-overlay" class="modal-overlay">
-        <div class="modal-content text-center">
-            <h2 class="text-xl font-bold mb-2">Sessão Finalizada!</h2>
-            <p id="session-end-message" class="mb-4 text-secondary"></p>
-            <button id="session-end-close-btn" class="w-full bg-accent bg-accent-hover text-on-accent font-bold py-2 px-6 rounded-lg transition-colors">Ótimo!</button>
-        </div>
-    </div>
+    <div id="alert-modal-overlay" class="modal-overlay"><div class="modal-content text-center"><p id="alert-modal-message" class="mb-4"></p><button class="w-full bg-accent bg-accent-hover text-on-accent font-bold py-2 px-6 rounded-lg transition-colors">OK</button></div></div>
+    <div id="session-end-modal-overlay" class="modal-overlay"><div class="modal-content text-center"><h2 class="text-xl font-bold mb-2">Sessão Finalizada!</h2><p id="session-end-message" class="mb-4 text-secondary"></p><button class="w-full bg-accent bg-accent-hover text-on-accent font-bold py-2 px-6 rounded-lg transition-colors">Ótimo!</button></div></div>
     <div id="settings-modal-overlay" class="modal-overlay">
         <div class="modal-content">
             <h2 class="text-xl font-bold text-center mb-4">Configurações</h2>
@@ -233,7 +218,6 @@
                     <input type="number" id="long-break-interval" class="mt-1 w-full input-bg rounded-lg p-2 text-center font-bold border-2 border-transparent border-accent-focus focus:outline-none">
                </div>
             </div>
-            
             <h3 class="text-base font-semibold mb-3 mt-6">Paleta de Cores</h3>
              <div id="palette-selector" class="flex justify-around items-center panel-bg p-2 rounded-full">
                 <button class="palette-swatch" data-palette="graphite" title="Grafite" style="background-color: #1F2937;"></button>
@@ -245,136 +229,144 @@
                 <button class="palette-swatch" data-palette="crimson" title="Carmesim" style="background-color: #DC2626;"></button>
                 <button class="palette-swatch" data-palette="slate" title="Ardósia" style="background-color: #475569;"></button>
             </div>
-
-            <button id="settings-save-btn" class="w-full bg-accent bg-accent-hover text-on-accent font-bold py-3 rounded-xl mt-6 transition-colors text-sm" aria-label="Salvar e Fechar">
-                Salvar e Fechar
-            </button>
+            <button id="settings-save-btn" class="w-full bg-accent bg-accent-hover text-on-accent font-bold py-3 rounded-xl mt-6 transition-colors text-sm" aria-label="Salvar e Fechar"></button>
         </div>
     </div>
-    <div id="stats-modal-overlay" class="modal-overlay">
-        </div>
-    <div id="help-modal-overlay" class="modal-overlay">
-        </div>
-    <div id="reset-confirm-modal-overlay" class="modal-overlay">
-        </div>
-    <div id="ios-start-prompt-modal-overlay" class="modal-overlay">
-        </div>
-    <div id="install-banner" class="bg-accent text-on-accent">
-        </div>
+    <div id="install-banner" class="bg-accent text-on-accent"></div>
+    <div id="stats-modal-overlay" class="modal-overlay"></div>
+    <div id="help-modal-overlay" class="modal-overlay"></div>
+    <div id="reset-confirm-modal-overlay" class="modal-overlay"></div>
+    <div id="ios-start-prompt-modal-overlay" class="modal-overlay"></div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- CÓDIGO DO APLICATIVO ORIGINAL (SEM ALTERAÇÕES) ---
+            const deviceShell = document.getElementById('device-shell');
+            const paletteSelector = document.getElementById('palette-selector');
+            const settingsModalOverlay = document.getElementById('settings-modal-overlay');
+            const settingsBtn = document.getElementById('settings-btn');
+            const settingsSaveBtn = document.getElementById('settings-save-btn');
+            const allModals = document.querySelectorAll('.modal-overlay');
+
+            // --- LÓGICA DE PALETAS ---
+            const availablePalettes = ['graphite', 'rose', 'violet', 'mustard', 'emerald', 'sky', 'crimson', 'slate'];
+            function applyPalette(palette) {
+                const body = document.body;
+                availablePalettes.forEach(p => body.classList.remove(`palette-${p}`));
+                body.classList.add(`palette-${palette}`);
+                localStorage.setItem('user-palette', palette);
+                document.querySelectorAll('.palette-swatch').forEach(b => {
+                    b.classList.toggle('active', b.dataset.palette === palette);
+                });
+                const newThemeColor = getComputedStyle(deviceShell).getPropertyValue('--color-card-bg');
+                document.querySelector('meta[name="theme-color"]').setAttribute('content', newThemeColor.trim());
+            }
+
+            if (paletteSelector) {
+                paletteSelector.addEventListener('click', (e) => {
+                    const swatch = e.target.closest('.palette-swatch');
+                    if (swatch) applyPalette(swatch.dataset.palette);
+                });
+            }
+
+            // --- CÓDIGO DO APLICATIVO ORIGINAL (COM AJUSTES PARA OS TEMAS) ---
             const timerDisplay = document.getElementById('timer-display');
             const startPauseBtn = document.getElementById('start-pause-btn');
             const internalInterruptBtn = document.getElementById('internal-interrupt-btn');
             const externalInterruptBtn = document.getElementById('external-interrupt-btn');
-            const resetBtn = document.getElementById('reset-btn');
-            const settingsBtn = document.getElementById('settings-btn');
-            const statsBtn = document.getElementById('stats-btn');
-            const helpBtn = document.getElementById('help-btn');
             const progressRing = document.getElementById('progress-ring');
-            const newTaskInput = document.getElementById('new-task-input');
-            const newTaskEstimateInput = document.getElementById('new-task-estimate'); 
-            const newTaskEstimateLabel = document.getElementById('new-task-estimate-label'); 
             const addTaskBtn = document.getElementById('add-task-btn');
             const taskListEl = document.getElementById('task-list');
             const currentTaskDisplay = document.getElementById('current-task-display');
             const pomodoroCyclesEl = document.getElementById('pomodoro-cycles');
             const focusMethodToggle = document.getElementById('focus-method-toggle');
-            const toggleCompletedTasksBtn = document.getElementById('toggle-completed-tasks-btn');
-            const settingsModalOverlay = document.getElementById('settings-modal-overlay');
-            const settingsSaveBtn = document.getElementById('settings-save-btn');
             const focusDurationInput = document.getElementById('focus-duration');
             const shortBreakDurationInput = document.getElementById('short-break-duration');
             const longBreakDurationInput = document.getElementById('long-break-duration');
             const longBreakIntervalInput = document.getElementById('long-break-interval');
-            const allModals = document.querySelectorAll('.modal-overlay');
-
+            
             let timerInterval, isRunning = false, mode = 'focus', timeRemaining, totalTime, endTime;
             let tasks = [], selectedTaskId = null, pomodoroSessionCount = 0;
             let settings = { focusDuration: 25, shortBreakDuration: 5, longBreakDuration: 15, longBreakInterval: 4 };
             let focusMethod = 'pomodoro';
             let showCompletedTasks = false;
 
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            let audioInitialized = false;
-            const playBeep = (frequency=800, duration=200, vol=0.3) => { /* ...código de áudio... */ };
-            const playFinishSound = () => { /* ...código de áudio... */ };
-            const playTickSound = () => { /* ...código de áudio... */ };
-            const showModal = (modal, msg) => { modal.querySelector('p')?.(msg||''); modal.classList.add('visible'); };
+            // --- Funções de UI ---
+            const showModal = (modal, msg) => { 
+                const p = modal.querySelector('p');
+                if (p && msg) p.textContent = msg;
+                modal.classList.add('visible'); 
+            };
             const hideModal = (modal) => { modal.classList.remove('visible'); };
             
             allModals.forEach(modal => {
                 modal.querySelector('button[id$="-btn"]')?.addEventListener('click', () => hideModal(modal));
-                 modal.addEventListener('click', (e) => { if(e.target === modal) hideModal(modal); });
+                modal.addEventListener('click', (e) => { if(e.target === modal) hideModal(modal); });
             });
-            
-            const updateUI = () => {
-                const isFocus = mode === 'focus';
-                startPauseBtn.innerHTML = `<i data-lucide="${isRunning ? 'pause' : 'play'}" class="w-8 h-8 ${!isRunning ? 'pl-1' : ''}"></i>`;
-                startPauseBtn.className = `w-20 h-20 font-bold rounded-full text-base transition-all ... flex items-center justify-center ${isRunning ? 'bg-yellow-500' : 'bg-accent text-on-accent'}`;
-                internalInterruptBtn.style.display = (isRunning && isFocus) ? 'flex' : 'none';
-                externalInterruptBtn.style.display = (isRunning && isFocus) ? 'flex' : 'none';
 
-                let accentColorClass = 'text-accent';
-                if (!isFocus) accentColorClass = mode === 'shortBreak' ? 'text-green-500' : 'text-purple-500';
+            const updateUI = () => {
+                // CORREÇÃO DO BUG: Lógica de botões e cores agora respeita os temas
+                if(isRunning) {
+                    startPauseBtn.innerHTML = `<i data-lucide="pause" class="w-8 h-8"></i>`;
+                    startPauseBtn.className = 'w-20 h-20 font-bold rounded-full text-base transition-all ... flex items-center justify-center bg-yellow-500 text-black'; // Pause sempre amarelo
+                } else {
+                    startPauseBtn.innerHTML = `<i data-lucide="play" class="w-8 h-8 pl-1"></i>`;
+                    startPauseBtn.className = 'w-20 h-20 font-bold rounded-full text-base transition-all ... flex items-center justify-center bg-accent text-on-accent bg-accent-hover';
+                }
                 
-                const progressRingEl = document.getElementById('progress-ring');
-                progressRingEl.className = 'transition-colors duration-500';
-                progressRingEl.classList.add(accentColorClass.replace('text-','color-'));
+                internalInterruptBtn.style.display = (isRunning && mode === 'focus') ? 'flex' : 'none';
+                externalInterruptBtn.style.display = (isRunning && mode === 'focus') ? 'flex' : 'none';
+
+                let progressRingColorClass;
+                if(mode === 'focus') progressRingColorClass = 'text-accent';
+                else if (mode === 'shortBreak') progressRingColorClass = 'text-green-400';
+                else progressRingColorClass = 'text-purple-400';
                 
+                progressRing.classList.remove('text-accent', 'text-green-400', 'text-purple-400');
+                progressRing.classList.add(progressRingColorClass);
+                if (focusMethod === 'adaptativo' && mode === 'focus' && isRunning) progressRing.classList.add('breathing');
+                else progressRing.classList.remove('breathing');
+
+                renderTasks();
                 lucide.createIcons();
-                // ... mais lógica de UI
             };
 
-            // ... TODO O RESTO DA SUA LÓGICA DE TIMER, TAREFAS, ETC. VAI AQUI ...
-            // O CÓDIGO ABAIXO É ADICIONAL E NÃO INTERFERE COM O SEU.
-
-
-            // --- PASSO 4: LÓGICA DO SELETOR DE PALETAS ---
-            const deviceShell = document.getElementById('device-shell');
-            const paletteSelector = document.getElementById('palette-selector');
-
-            const availablePalettes = ['graphite', 'rose', 'violet', 'mustard', 'emerald', 'sky', 'crimson', 'slate'];
-
-            function applyPalette(palette) {
-                // 1. Remove classes de paleta antigas
-                availablePalettes.forEach(p => deviceShell.classList.remove(`palette-${p}`));
-                // 2. Adiciona a nova classe de paleta
-                deviceShell.classList.add(`palette-${palette}`);
-                // 3. Salva no localStorage
-                localStorage.setItem('user-palette', palette);
-                
-                // 4. Atualiza o botão ativo
-                document.querySelectorAll('.palette-swatch').forEach(b => {
-                    b.classList.toggle('active', b.dataset.palette === palette);
+            const renderTasks = () => {
+                const tasksToRender = showCompletedTasks ? tasks : tasks.filter(task => !task.completed);
+                taskListEl.innerHTML = tasksToRender.length === 0 ? '<p class="text-secondary text-center text-sm">Adicione sua primeira tarefa!</p>' : '';
+                tasksToRender.forEach(task => {
+                    const taskEl = document.createElement('div');
+                    taskEl.className = `task-item panel-bg p-3 rounded-lg border-2 border-transparent cursor-pointer flex justify-between items-center ${task.id === selectedTaskId ? 'selected' : ''} ${task.completed ? 'opacity-60' : ''}`;
+                    taskEl.dataset.id = task.id;
+                    
+                    taskEl.innerHTML = `
+                        <div class="flex items-center min-w-0 flex-grow">
+                            <button class="complete-btn text-secondary hover:text-primary mr-3 flex-shrink-0"><i data-lucide="${task.completed ? 'check-square' : 'square'}" class="w-5 h-5"></i></button>
+                            <span class="task-name truncate text-sm">${task.name}</span>
+                        </div>
+                        <div class="flex items-center space-x-1 flex-shrink-0">
+                             <span class="text-xs text-secondary font-semibold">${task.pomodorosCompleted || 0}/${task.pomodoroEstimate || 1}</span>
+                            <button class="edit-btn text-secondary hover:text-primary p-1 rounded-md"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                            <button class="delete-btn text-secondary hover:text-primary p-1 rounded-md"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>`;
+                    taskListEl.appendChild(taskEl);
                 });
-            }
-
-            // Lidar com o clique
-            if (paletteSelector) {
-                paletteSelector.addEventListener('click', (e) => {
-                    const swatch = e.target.closest('.palette-swatch');
-                    if (swatch) {
-                        applyPalette(swatch.dataset.palette);
-                    }
-                });
-            }
+                lucide.createIcons();
+            };
             
             // --- INICIALIZAÇÃO ---
-            settingsBtn.addEventListener('click', () => settingsModalOverlay.classList.add('visible'));
-            settingsSaveBtn.addEventListener('click', () => settingsModalOverlay.classList.remove('visible'));
+            settingsBtn.addEventListener('click', () => showModal(settingsModalOverlay));
+            settingsSaveBtn.addEventListener('click', () => {
+                // Lógica de salvar configurações...
+                hideModal(settingsModalOverlay);
+            });
             
-            // Carregar a paleta salva ao iniciar o app
             const savedPalette = localStorage.getItem('user-palette') || 'graphite';
             applyPalette(savedPalette);
 
-            // Carregar o estado do app (sua função original)
-            // loadState(); // Descomente quando integrar sua lógica completa
-            updateUI(); 
-            lucide.createIcons();
+            // TODO: Integrar o resto de suas funções (loadState, etc) aqui para carregar os dados.
+            
+            updateUI(); // Chamada inicial para configurar a UI
         });
     </script>
 </body>
