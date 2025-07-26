@@ -501,30 +501,52 @@
                     updateTimerDisplay();
                 }
             };
-
+            
+            // ===================================================================
+            // CORREÇÃO PRINCIPAL: Função generateICS() atualizada
+            // A função foi modificada para incluir um alarme (VALARM) no evento .ics,
+            // garantindo que o aplicativo de calendário gere uma notificação.
+            // ===================================================================
             const generateICS = (durationMinutes, title, description) => {
-                const startTime = new Date();
-                const endTime = new Date(startTime.getTime() + durationMinutes * 60 * 1000);
+                // Calcula a hora exata em que a sessão terminará (e o alarme deve tocar)
+                const eventStartTime = new Date(new Date().getTime() + durationMinutes * 60 * 1000);
+                // O evento do calendário pode ter uma duração curta, por exemplo, 1 minuto.
+                const eventEndTime = new Date(eventStartTime.getTime() + 1 * 60 * 1000);
+
                 const formatDT = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
                 return [
-                    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FocoTotal//PWA//PT',
-                    'BEGIN:VEVENT', 'UID:' + Date.now() + '@focototal.app', 'DTSTAMP:' + formatDT(new Date()),
-                    'DTSTART:' + formatDT(startTime), 'DTEND:' + formatDT(endTime),
-                    'SUMMARY:' + title, 'DESCRIPTION:' + description, 'END:VEVENT', 'END:VCALENDAR'
+                    'BEGIN:VCALENDAR',
+                    'VERSION:2.0',
+                    'PRODID:-//FocoTotal//PWA//PT',
+                    'BEGIN:VEVENT',
+                    'UID:' + Date.now() + '@focototal.app',
+                    'DTSTAMP:' + formatDT(new Date()),
+                    'DTSTART:' + formatDT(eventStartTime), // O evento começa quando a sessão termina
+                    'DTEND:' + formatDT(eventEndTime),     // O evento termina 1 min depois
+                    'SUMMARY:' + title,
+                    'DESCRIPTION:' + description,
+                    // --- Início da Seção do Alarme ---
+                    'BEGIN:VALARM',
+                    'ACTION:DISPLAY', // Ação para mostrar uma notificação na tela
+                    'DESCRIPTION:' + description, // O texto que aparece na notificação
+                    // TRIGGER define quando o alarme deve disparar.
+                    // -PT0S significa "0 segundos antes do início do evento (DTSTART)".
+                    'TRIGGER:-PT0S',
+                    'END:VALARM',
+                    // --- Fim da Seção do Alarme ---
+                    'END:VEVENT',
+                    'END:VCALENDAR'
                 ].join('\r\n');
             };
             
-            // ===================================================================
-            // MODIFICAÇÃO PRINCIPAL: Função downloadICS() atualizada para iOS
-            // ===================================================================
             const downloadICS = (icsContent) => {
                 const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
                 if (isIOS) {
                     // Para iOS, a abordagem mais confiável é usar um data URI com codificação Base64
                     // para forçar o Safari a abrir a tela de adicionar evento.
-                    // O btoa() codifica a string para Base64.
-                    const base64Content = btoa(icsContent);
+                    const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
                     window.location.href = `data:text/calendar;base64,${base64Content}`;
                 } else {
                     // O método padrão com Blob e download funciona bem em outras plataformas.
@@ -538,10 +560,7 @@
                     URL.revokeObjectURL(link.href);
                 }
             };
-            // ===================================================================
-            // FIM DA MODIFICAÇÃO
-            // ===================================================================
-
+            
             const switchMode = () => {
                 isRunning = false;
                 endTime = null;
