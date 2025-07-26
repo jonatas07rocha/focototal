@@ -890,15 +890,15 @@
                 if (mode === 'focus') {
                     const task = tasks.find(t => t.id === selectedTaskId);
                     const taskName = task ? task.name : 'Foco';
-                    eventTitle = `Fim do Foco: ${taskName}`;
+                    eventTitle = `🎉 Fim do Foco: ${taskName}`;
                     eventDescription = `Sua sessão de foco na tarefa "${taskName}" terminou. Hora de fazer uma pausa!`;
                     duration = settings.focusDuration;
                 } else if (mode === 'shortBreak') {
-                    eventTitle = `Fim da Pausa Curta`;
+                    eventTitle = `🚀 Fim da Pausa Curta`;
                     eventDescription = `Sua pausa curta acabou. Hora de voltar ao foco!`;
                     duration = settings.shortBreakDuration;
                 } else { // longBreak
-                    eventTitle = `Fim da Pausa Longa`;
+                    eventTitle = `🏆 Fim da Pausa Longa`;
                     eventDescription = `Sua pausa longa acabou. Hora de voltar ao foco!`;
                     duration = settings.longBreakDuration;
                 }
