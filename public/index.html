@@ -138,6 +138,8 @@ input[type=number] { -moz-appearance: textfield; }
     background-color: var(--color-bg-shell); padding: 2rem; border-radius: 1rem; border: 1px solid;
     transform: scale(0.9); transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
     width: 90%; max-width: 500px;
+    max-height: 90vh; /* Adiciona uma altura máxima ao modal */
+    overflow-y: auto; /* Permite rolagem dentro do modal se o conteúdo exceder */
 }
 .modal-overlay.visible .modal-content { transform: scale(1); }
 #install-banner {
@@ -150,6 +152,26 @@ input[type=number] { -moz-appearance: textfield; }
 @keyframes new-task-pop { 0% { transform: scale(0.98); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 @keyframes breathe-animation { 0% { stroke-opacity: 0.5; } 50% { stroke-opacity: 1; } 100% { stroke-opacity: 0.5; } }
 .breathing { animation: breathe-animation 2.5s ease-in-out infinite; }
+
+/* Adicionado: Estilos para o seletor de paleta de cores para rolagem em telas pequenas */
+#color-palette-selector {
+    max-height: 250px; /* Define uma altura máxima para a seção de temas */
+    overflow-y: auto;  /* Habilita rolagem vertical se o conteúdo exceder a altura */
+    /* Estilos para a barra de rolagem (compatibilidade webkit) */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-text-muted) var(--color-bg-panel);
+}
+#color-palette-selector::-webkit-scrollbar {
+    width: 8px;
+}
+#color-palette-selector::-webkit-scrollbar-track {
+    background: var(--color-bg-panel);
+    border-radius: 10px;
+}
+#color-palette-selector::-webkit-scrollbar-thumb {
+    background: var(--color-text-muted);
+    border-radius: 10px;
+}
 </style>
 </head>
 <body>
