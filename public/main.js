@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         shortBreakDuration: 5, 
         longBreakDuration: 15, 
         longBreakInterval: 4,
-        theme: 'dark_blue' // Tema padrão
+        theme: 'brasil_dark' // ALTERADO: Novo tema padrão, um que existe no themes.js
     };
     let focusMethod = 'pomodoro';
     let deferredInstallPrompt = null;
@@ -118,8 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- FUNÇÕES DE GESTÃO DE TEMA E MODO ---
     // A função applyTheme agora usa o objeto 'themes' importado
     const applyTheme = (themeName) => {
-        // Fallback para 'dark_blue' se o tema não for encontrado
-        const theme = themes[themeName] || themes.dark_blue; 
+        // Fallback para 'brasil_dark' se o tema não for encontrado
+        const theme = themes[themeName] || themes.brasil_dark; 
         const root = document.documentElement;
         Object.keys(theme).forEach(key => {
             if (key !== 'name') {
@@ -134,11 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderPaletteSelector = () => {
         colorPaletteSelector.innerHTML = '';
         // Converte o objeto themes em um array de chaves para iterar
-        Object.keys(themes).forEach(key => {
+        // ORDENAÇÃO: Garante que os temas sejam renderizados na ordem alfabética das chaves
+        const sortedThemeKeys = Object.keys(themes).sort(); 
+
+        sortedThemeKeys.forEach(key => {
             const theme = themes[key];
             const button = document.createElement('button');
             button.dataset.theme = key;
-            button.title = theme.name;
+            button.title = theme.name; // Usa o 'name' para o título, que já é a sigla + claro/escuro
             button.className = `h-12 rounded-lg border-2 transition-all transform flex flex-col items-center justify-center p-1 text-xs font-semibold ${settings.theme === key ? 'border-white scale-105' : 'border-transparent'}`;
             button.style.backgroundColor = theme['--color-bg-shell'];
             button.style.color = theme['--color-text-muted'];
@@ -146,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Exibe uma pequena amostra das cores primárias e de texto
             button.innerHTML = `
                 <div class="w-full h-4 rounded" style="background-color: rgb(${theme['--color-primary-rgb']})"></div>
-                <span class="mt-1">${theme.name.split(' ')[0]}</span>
+                <span class="mt-1">${theme.name.split(' ')[0]}</span> <!-- Usa apenas a sigla para exibir -->
             `;
             colorPaletteSelector.appendChild(button);
         });
@@ -157,8 +160,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const isSelected = btn.dataset.method === focusMethod;
             btn.classList.toggle('bg-primary-focus', isSelected);
             btn.classList.toggle('text-white', isSelected);
-            // Verifica se o tema atual é um tema escuro para ajustar a cor do texto quando não selecionado
-            const isDarkTheme = (settings.theme.includes('dark') || settings.theme.includes('onyx') || settings.theme.includes('slate') || settings.theme.includes('brasil_dark') || settings.theme.includes('saopaulo_dark') || settings.theme.includes('bahia_dark') || settings.theme.includes('ceara_dark') || settings.theme.includes('maranhao_dark') || settings.theme.includes('paraiba_dark') || settings.theme.includes('acre_dark') || settings.theme.includes('amapa_dark') || settings.theme.includes('para_dark') || settings.theme.includes('rondonia_dark') || settings.theme.includes('parana_dark') || settings.theme.includes('riograndedosul_dark') || settings.theme.includes('matogrosso_dark') || settings.theme.includes('distritofederal_dark') || settings.theme.includes('sergipe_dark'));
+            // Lógica para verificar se o tema atual é um tema escuro usando as novas chaves
+            const currentThemeKey = settings.theme;
+            const isDarkTheme = currentThemeKey.includes('_dark'); 
+
             btn.classList.toggle(isDarkTheme ? 'text-gray-400' : 'text-gray-500', !isSelected);
         });
         pomodoroCyclesEl.style.display = focusMethod === 'pomodoro' ? 'flex' : 'none';
@@ -334,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateUI = () => {
         updateTimerDisplay();
         // Usa o tema atualmente salvo nas configurações
-        const currentTheme = themes[settings.theme] || themes.dark_blue; 
+        const currentTheme = themes[settings.theme] || themes.brasil_dark; // Fallback para o novo tema padrão
 
         if (mode === 'shortBreak') progressRing.style.stroke = currentTheme['--color-break-short'];
         else if (mode === 'longBreak') progressRing.style.stroke = currentTheme['--color-break-long'];
