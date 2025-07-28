@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+<meta id="theme-color-meta" name="theme-color" content="#1F2937"/>
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180x180.png">
+<link rel="apple-touch-icon" href="icon-192x192.png">
+<link rel="manifest" href="manifest.json">
+<title>Foco Total</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link id="favicon" rel="icon" href="icon-192x192.png" type="image/png">
+<style>
+/* --- Configuração das Variáveis de Tema ---
+    Estas variáveis serão preenchidas e atualizadas pelo JavaScript
+    a partir do themes.js e main.js.
+    A definição inicial aqui é para garantir um fallback visual antes do JS carregar.
+*/
+:root {
+    /* Cores do Tema Padrão (Azul Noturno) - Valores iniciais, serão sobrescritos pelo JS */
+    --color-primary-rgb: 59, 130, 246;
+    --color-primary-focus-rgb: 37, 99, 235;
+    --color-primary-darker-rgb: 29, 78, 216;
+    --color-primary-light-rgb: 96, 165, 250;
+    
+    --color-bg-main: radial-gradient(circle at center, #1a202c 0%, #000000 70%);
+    --color-bg-shell: #1F2937;
+    --color-bg-panel: #111827;
+    --color-bg-input: #374151;
+    --color-bg-input-light: #4B5563;
+
+    --color-text-base: #D1D5DB;
+    --color-text-header: #FFFFFF;
+    --color-text-muted: #9CA3AF;
+    --color-text-placeholder: #6B7280;
+    --color-text-timer: #FFFFFF;
+    
+    --color-border-subtle-rgb: 255, 255, 255; /* Usado com opacidade */
+
+    --color-break-short: #34D399;
+    --color-break-long: #A78BFA;
+}
+
+html { scroll-behavior: smooth; }
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--color-bg-main); /* Usando variável */
+    color: var(--color-text-base); /* Usando variável */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 1rem;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.3s, color 0.3s;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+body::-webkit-scrollbar { display: none; }
+
+/* --- Componentes com Cores Dinâmicas --- */
+/* Estas classes usam as variáveis CSS definidas acima e no JS */
+.device-shell {
+    background-color: var(--color-bg-shell);
+    border: 1px solid rgba(var(--color-border-subtle-rgb), 0.05);
+    color: var(--color-text-base);
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+.timer-panel, .task-input-panel, #focus-method-toggle, #color-palette-selector {
+    background-color: var(--color-bg-panel);
+    transition: background-color 0.3s;
+}
+.task-item, .stats-item {
+    background-color: var(--color-bg-input);
+    transition: background-color 0.3s, border-color 0.2s, box-shadow 0.3s ease, opacity 0.3s, transform 0.3s ease;
+}
+h1, h2, h3 { color: var(--color-text-header); transition: color 0.3s; }
+p, span, label, div { color: inherit; }
+.text-muted { color: var(--color-text-muted); transition: color 0.3s; }
+
+input[type="text"], input[type="number"] {
+    background-color: var(--color-bg-input-light);
+    color: var(--color-text-header);
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+input::placeholder { color: var(--color-text-placeholder); }
+
+#timer-display {
+    color: var(--color-text-timer);
+    text-shadow: 0 0 10px rgba(var(--color-border-subtle-rgb), 0.15);
+    transition: color 0.3s;
+}
+
+/* Classes de Acento */
+.text-primary-light { color: rgb(var(--color-primary-light-rgb)); }
+.text-primary { color: rgb(var(--color-primary-rgb)); }
+.bg-primary-focus { background-color: rgb(var(--color-primary-focus-rgb)); }
+.hover\:bg-primary-darker:hover { background-color: rgb(var(--color-primary-darker-rgb)); }
+.border-primary { border-color: rgb(var(--color-primary-rgb)); }
+.focus\:border-primary:focus { border-color: rgb(var(--color-primary-rgb)); }
+.task-item.selected {
+    background-color: var(--color-bg-input-light);
+    border-color: rgb(var(--color-primary-rgb));
+    box-shadow: 0 0 12px rgba(var(--color-primary-rgb), 0.7);
+}
+.modal-border-primary { 
+    border-color: rgb(var(--color-primary-rgb)); 
+    box-shadow: 0 0 20px rgba(var(--color-primary-rgb), 0.5);
+}
+.install-banner-theme {
+    background-color: rgb(var(--color-primary-focus-rgb));
+    color: var(--color-text-header);
+}
+.install-banner-theme button:first-of-type {
+    background-color: var(--color-bg-shell);
+    color: rgb(var(--color-primary-focus-rgb));
+}
+
+/* Estilos Fixos e Animações */
+.device-shell {
+    border-radius: 2.5rem; padding: 1.5rem; display: flex; flex-direction: column;
+    width: 100%; max-width: 420px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    margin-top: auto; margin-bottom: auto;
+}
+.timer-panel { border-radius: 1.25rem; padding: 1rem; margin-bottom: 1rem; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5); }
+#progress-ring { transition: stroke-dashoffset 1s linear, stroke 0.5s; }
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center;
+    z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s;
+}
+.modal-overlay.visible { opacity: 1; visibility: visible; }
+.modal-content {
+    background-color: var(--color-bg-shell); padding: 2rem; border-radius: 1rem; border: 1px solid;
+    transform: scale(0.9); transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
+    width: 90%; max-width: 500px;
+}
+.modal-overlay.visible .modal-content { transform: scale(1); }
+#install-banner {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0;
+    padding: 1rem; text-align: center; z-index: 2000; box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+}
+.start-pause-btn-clicked { animation: pulse-small 0.3s ease-out; }
+@keyframes pulse-small { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+.task-item.added-feedback { animation: new-task-pop 0.3s ease-out; }
+@keyframes new-task-pop { 0% { transform: scale(0.98); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes breathe-animation { 0% { stroke-opacity: 0.5; } 50% { stroke-opacity: 1; } 100% { stroke-opacity: 0.5; } }
+.breathing { animation: breathe-animation 2.5s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div id="device-shell" class="device-shell">
+<header class="flex justify-between items-center mb-4 flex-shrink-0">
+<h1 class="text-xl font-bold">Foco Total</h1>
+<div id="focus-method-toggle" class="flex rounded-lg p-1 text-xs font-semibold">
+<button data-method="pomodoro" class="method-btn px-3 py-1 rounded-md transition-colors" aria-label="Selecionar modo Pomodoro">Pomodoro</button>
+<button data-method="adaptativo" class="method-btn px-3 py-1 rounded-md transition-colors" aria-label="Selecionar modo Adaptativo">Adaptativo</button>
+</div>
+<button id="help-btn" class="text-muted hover:text-white p-2 rounded-full transition-colors" title="Ajuda" aria-label="Ajuda">
+<i data-lucide="help-circle" class="w-6 h-6"></i>
+</button>
+</header>
+
+<div class="timer-panel flex-shrink-0">
+<div class="relative w-56 h-56 mx-auto">
+<svg class="w-full h-full" viewBox="0 0 100 100">
+<circle class="text-gray-800" stroke-width="7" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
+<circle id="progress-ring" class-name="text-primary" stroke-width="7" stroke-linecap="round" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" style="transform: rotate(-90deg); transform-origin: center;" />
+</svg>
+<div id="timer-display" class="absolute inset-0 flex items-center justify-center text-5xl font-bold">
+25:00
+</div>
+</div>
+</div>
+
+<div class="text-center mb-2 flex-shrink-0">
+<p class="text-muted text-sm">Foco em:</p>
+<p id="current-task-display" class="font-semibold text-base truncate">Nenhuma tarefa selecionada</p>
+<div id="pomodoro-cycles" class="flex justify-center items-center space-x-2 mt-1 h-6"></div>
+</div>
+
+<div id="player-controls" class="flex items-center justify-center space-x-4 mb-4 flex-shrink-0">
+<button id="internal-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Interna" aria-label="Registrar Interrupção Interna">
+<i data-lucide="zap-off" class="w-6 h-6"></i>
+</button>
+<button id="start-pause-btn" class="w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center" aria-label="Iniciar/Pausar Timer">
+</button>
+<button id="external-interrupt-btn" class="bg-gray-600 hover:bg-gray-700 text-white p-4 rounded-full transition-colors transform hover:scale-110" title="Registrar Interrupção Externa" aria-label="Registrar Interrupção Externa">
+<i data-lucide="user-x" class="w-6 h-6"></i>
+</button>
+</div>
+
+<div class="flex-grow flex flex-col">
+<div class="flex justify-between items-center mb-2 flex-shrink-0">
+<h2 class="text-base font-semibold">Lista de Tarefas do Dia</h2>
+<button id="toggle-completed-tasks-btn" class="bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1 rounded-md transition-colors" aria-label="Mostrar ou esconder tarefas concluídas">Mostrar Concluídas</button>
+</div>
+<div id="task-list" class="flex-grow space-y-2 pr-2">
+</div>
+<div class="task-input-panel flex mt-3 space-x-2 items-center p-2 rounded-lg flex-shrink-0">
+<input type="text" id="new-task-input" class="flex-grow rounded-lg px-3 py-2 text-sm border-2 border-transparent focus:border-primary focus:outline-none" placeholder="Adicionar nova tarefa..." aria-label="Nome da nova tarefa">
+<div class="flex items-center">
+<label for="new-task-estimate" id="new-task-estimate-label" class="text-sm text-muted mr-1 font-bold">#</label>
+<input type="number" id="new-task-estimate" class="w-12 rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-primary focus:outline-none" value="1" min="1" aria-label="Estimativa de pomodoros ou minutos">
+</div>
+<button id="add-task-btn" class="bg-primary-focus hover:bg-primary-darker text-white font-bold w-10 h-10 rounded-lg transition-colors text-2xl flex-shrink-0 flex items-center justify-center" aria-label="Adicionar tarefa">+</button>
+</div>
+</div>
+<div id="secondary-controls" class="flex items-center justify-center space-x-6 mt-4 flex-shrink-0">
+<button id="reset-btn" class="text-muted hover:text-white p-2 rounded-full transition-colors" title="Zerar o dia" aria-label="Zerar o dia">
+<i data-lucide="refresh-cw" class="w-5 h-5"></i>
+</button>
+<button id="stats-btn" class="text-muted hover:text-white p-2 rounded-full transition-colors" title="Ver Estatísticas" aria-label="Ver Estatísticas">
+<i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+</button>
+<button id="settings-btn" class="text-muted hover:text-white p-2 rounded-full transition-colors" title="Configurações" aria-label="Configurações">
+<i data-lucide="settings-2" class="w-5 h-5"></i>
+</button>
+</div>
+</div>
+
+<!-- Modals -->
+<div id="alert-modal-overlay" class="modal-overlay">
+<div class="modal-content text-center modal-border-primary">
+<p id="alert-modal-message" class="mb-4"></p>
+<button id="alert-modal-close-btn" class="bg-primary-focus hover:bg-primary-darker text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Fechar alerta">OK</button>
+</div>
+</div>
+<div id="session-end-modal-overlay" class="modal-overlay">
+<div class="modal-content text-center modal-border-primary">
+<h2 class="text-xl font-bold mb-2">Sessão Finalizada!</h2>
+<p id="session-end-message" class="mb-4 text-muted"></p>
+<button id="session-end-close-btn" class="bg-primary-focus hover:bg-primary-darker text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Fechar modal de fim de sessão">Ótimo!</button>
+</div>
+</div>
+<div id="settings-modal-overlay" class="modal-overlay">
+<div class="modal-content modal-border-primary">
+<h2 class="text-xl font-bold mb-4 text-center">Configurações</h2>
+<div class="mb-6">
+    <h3 class="text-base font-semibold text-primary-light mb-3">Tema da Interface</h3>
+    <div id="color-palette-selector" class="grid grid-cols-3 sm:grid-cols-5 gap-3 p-2 rounded-lg">
+        <!-- Botões de cores serão gerados pelo JS -->
+    </div>
+</div>
+<div class="mb-4">
+<h3 class="text-base font-semibold text-primary-light mb-3">Duração (minutos)</h3>
+<div class="grid grid-cols-3 gap-2 text-center">
+<div>
+<label for="focus-duration" class="block text-xs font-medium text-muted">Foco</label>
+<input type="number" id="focus-duration" class="mt-1 w-full rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-primary focus:outline-none" value="25" aria-label="Duração do foco em minutos">
+</div>
+<div>
+<label for="short-break-duration" class="block text-xs font-medium text-muted">Pausa Curta</label>
+<input type="number" id="short-break-duration" class="mt-1 w-full rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-primary focus:outline-none" value="5" aria-label="Duração da pausa curta em minutos">
+</div>
+<div>
+<label for="long-break-duration" class="block text-xs font-medium text-muted">Pausa Longa</label>
+<input type="number" id="long-break-duration" class="mt-1 w-full rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-primary focus:outline-none" value="15" aria-label="Duração da pausa longa em minutos">
+</div>
+</div>
+</div>
+<div class="mb-4">
+<h3 class="text-base font-semibold text-primary-light mb-3">Outros Ajustes</h3>
+<div>
+<label for="long-break-interval" class="block text-xs font-medium text-muted">Pomodoros para pausa longa</label>
+<input type="number" id="long-break-interval" class="mt-1 w-full rounded-lg p-2 text-center font-bold border-2 border-transparent focus:border-primary focus:outline-none" value="4" aria-label="Número de pomodoros antes de uma pausa longa">
+</div>
+</div>
+<button id="settings-save-btn" class="w-full bg-primary-focus hover:bg-primary-darker text-white font-bold py-3 rounded-xl mt-6 transition-colors text-sm" aria-label="Salvar configurações e fechar">
+Salvar e Fechar
+</button>
+</div>
+</div>
+<div id="stats-modal-overlay" class="modal-overlay">
+<div class="modal-content modal-border-primary">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-xl font-bold">Relatório do Dia</h2>
+</div>
+<div id="stats-content" class="p-4 rounded-lg max-h-80 overflow-y-auto"></div>
+<button id="stats-modal-close-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors" aria-label="Fechar relatório de estatísticas">Fechar</button>
+</div>
+</div>
+<div id="help-modal-overlay" class="modal-overlay">
+<div class="modal-content text-sm modal-border-primary">
+<h2 class="text-xl font-bold mb-4 text-center">Ajuda</h2>
+<div id="help-content-pomodoro" class="space-y-4">
+<h3 class="text-lg font-semibold text-primary-light">O que é a Técnica Pomodoro?</h3>
+<p>É um método que usa um cronômetro para dividir o trabalho em períodos de foco intenso (geralmente 25 min), separados por pausas curtas.</p>
+<ol class="list-decimal list-inside space-y-2 p-4 rounded-lg">
+<li>Escolha uma tarefa e inicie o timer.</li>
+<li>Trabalhe na tarefa sem interrupções.</li>
+<li>Ao final, faça uma pausa curta.</li>
+<li>Após 4 ciclos, faça uma pausa longa.</li>
+</ol>
+</div>
+<div id="help-content-adaptativo" class="space-y-4 hidden">
+<h3 class="text-lg font-semibold text-primary-light">O que é o Método Adaptativo?</h3>
+<p>É um método flexível onde você trabalha pelo tempo que conseguir se manter focado, sem um alarme para te interromper. É ideal para trabalho criativo e profundo.</p>
+<ol class="list-decimal list-inside space-y-2 p-4 rounded-lg">
+<li>Escolha uma tarefa e inicie o cronômetro (ele contará para cima).</li>
+<li>Mergulhe na tarefa, mantendo o foco.</li>
+<li>Quando sentir que sua concentração está diminuindo, pare o cronômetro.</li>
+<li>Faça uma pausa e analise por quanto tempo conseguiu focar.</li>
+</ol>
+</div>
+<button id="help-modal-close-btn" class="w-full bg-primary-focus hover:bg-primary-darker text-white font-bold py-2 rounded-xl mt-6 transition-colors" aria-label="Entendi, fechar ajuda">Entendi!</button>
+</div>
+</div>
+<div id="reset-confirm-modal-overlay" class="modal-overlay">
+<div class="modal-content text-center">
+<h2 class="text-xl font-bold mb-2">Zerar o Dia?</h2>
+<p id="alert-modal-message-reset" class="mb-6 text-muted">Todas as tarefas e o progresso serão apagados. As configurações e o modo de foco serão mantidos. Deseja continuar?</p>
+<div class="flex justify-center space-x-4">
+<button id="reset-cancel-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Cancelar zerar o dia">Cancelar</button>
+<button id="reset-confirm-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Confirmar zerar o dia">Sim, Zerar</button>
+</div>
+</div>
+</div>
+
+<div id="ios-start-prompt-modal-overlay" class="modal-overlay">
+<div class="modal-content text-center">
+<h2 id="ios-prompt-title" class="text-xl font-bold mb-2">Notificação no iOS</h2>
+<p id="ios-prompt-message" class="mb-6 text-muted">Para garantir o alarme no final desta sessão, recomendamos criar um lembrete. Deseja fazer isso agora?</p>
+<div class="flex justify-center space-x-4">
+<button id="ios-prompt-cancel-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Não, iniciar sem lembrete">Não, Iniciar Direto</button>
+<button id="ios-prompt-confirm-btn" class="bg-primary-focus hover:bg-primary-darker text-white font-bold py-2 px-6 rounded-lg transition-colors" aria-label="Sim, criar lembrete">Sim, Criar Lembrete</button>
+</div>
+</div>
+</div>
+<div id="install-banner" class="install-banner-theme">
+<div class="max-w-md mx-auto">
+<p class="font-semibold mb-2">Tenha a melhor experiência!</p>
+<p class="text-sm mb-3">Adicione o Foco Total à sua tela de início para acesso rápido e notificações confiáveis.</p>
+<button id="install-btn" class="font-bold py-2 px-5 rounded-lg mr-2" aria-label="Instalar aplicativo">Instalar</button>
+<button id="install-dismiss-btn" class="bg-transparent border border-white text-white font-bold py-2 px-5 rounded-lg" aria-label="Agora não, dispensar instalação">Agora não</button>
+</div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<!-- Importa o seu arquivo JavaScript principal como um módulo -->
+<script type="module" src="main.js"></script>
+</body>
+</html>
