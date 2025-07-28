@@ -2,6 +2,43 @@
 // Este arquivo contém a definição de todos os temas da aplicação.
 // Cada tema é um objeto com propriedades CSS personalizadas (variáveis).
 export const themes = {
+    // Temas Padrão
+    dark_blue: {
+        name: 'Azul Noturno',
+        '--color-primary-rgb': '59, 130, 246', '--color-primary-focus-rgb': '37, 99, 235', '--color-primary-darker-rgb': '29, 78, 216', '--color-primary-light-rgb': '96, 165, 250',
+        '--color-bg-main': 'radial-gradient(circle at center, #1a202c 0%, #000000 70%)', '--color-bg-shell': '#1F2937', '--color-bg-panel': '#111827', '--color-bg-input': '#374151', '--color-bg-input-light': '#4B5563',
+        '--color-text-base': '#D1D5DB', '--color-text-header': '#FFFFFF', '--color-text-muted': '#9CA3AF', '--color-text-placeholder': '#6B7280', '--color-text-timer': '#FFFFFF',
+        '--color-border-subtle-rgb': '255, 255, 255', '--color-break-short': '#34D399', '--color-break-long': '#A78BFA',
+    },
+    light_mustard: {
+        name: 'Mostarda Claro',
+        '--color-primary-rgb': '217, 119, 6', '--color-primary-focus-rgb': '202, 138, 4', '--color-primary-darker-rgb': '161, 98, 7', '--color-primary-light-rgb': '234, 179, 8',
+        '--color-bg-main': '#FEFCE8', '--color-bg-shell': '#FFFFFF', '--color-bg-panel': '#FFFBEB', '--color-bg-input': '#F7FAFC', '--color-bg-input-light': '#EDF2F7',
+        '--color-text-base': '#4A5568', '--color-text-header': '#1A202C', '--color-text-muted': '#718096', '--color-text-placeholder': '#A0AEC0', '--color-text-timer': '#1A202C',
+        '--color-border-subtle-rgb': '0, 0, 0', '--color-break-short': '#48BB78', '--color-break-long': '#805AD5',
+    },
+    onyx_amber: {
+        name: 'Ônix e Âmbar',
+        '--color-primary-rgb': '245, 158, 11', '--color-primary-focus-rgb': '217, 119, 6', '--color-primary-darker-rgb': '180, 83, 9', '--color-primary-light-rgb': '251, 191, 36',
+        '--color-bg-main': '#000000', '--color-bg-shell': '#171717', '--color-bg-panel': '#0A0A0A', '--color-bg-input': '#262626', '--color-bg-input-light': '#404040',
+        '--color-text-base': '#A3A3A3', '--color-text-header': '#F5F5F5', '--color-text-muted': '#737373', '--color-text-placeholder': '#525252', '--color-text-timer': '#F5F5F5',
+        '--color-border-subtle-rgb': '255, 255, 255', '--color-break-short': '#F472B6', '--color-break-long': '#60A5FA',
+    },
+    slate_rose: {
+        name: 'Ardósia e Rosa',
+        '--color-primary-rgb': '244, 63, 94', '--color-primary-focus-rgb': '225, 29, 72', '--color-primary-darker-rgb': '190, 18, 60', '--color-primary-light-rgb': '251, 113, 133',
+        '--color-bg-main': 'radial-gradient(circle at center, #334155 0%, #0F172A 80%)', '--color-bg-shell': '#1E293B', '--color-bg-panel': '#0F172A', '--color-bg-input': '#334155', '--color-bg-input-light': '#475569',
+        '--color-text-base': '#CBD5E1', '--color-text-header': '#F8FAFC', '--color-text-muted': '#94A3B8', '--color-text-placeholder': '#64748B', '--color-text-timer': '#F8FAFC',
+        '--color-border-subtle-rgb': '255, 255, 255', '--color-break-short': '#34D399', '--color-break-long': '#A78BFA',
+    },
+    paper_white: {
+        name: 'Papel Branco',
+        '--color-primary-rgb': '107, 114, 128', '--color-primary-focus-rgb': '75, 85, 99', '--color-primary-darker-rgb': '55, 65, 81', '--color-primary-light-rgb': '156, 163, 175',
+        '--color-bg-main': '#F9FAFB', '--color-bg-shell': '#FFFFFF', '--color-bg-panel': '#F3F4F6', '--color-bg-input': '#FFFFFF', '--color-bg-input-light': '#E5E7EB',
+        '--color-text-base': '#374151', '--color-text-header': '#111827', '--color-text-muted': '#6B7280', '--color-text-placeholder': '#9CA3AF', '--color-text-timer': '#111827',
+        '--color-border-subtle-rgb': '0, 0, 0', '--color-break-short': '#10B981', '--color-break-long': '#8B5CF6',
+    },
+
     // Temas Nacionais
     brasil_dark: {
         name: 'Brasil Escuro',
@@ -20,7 +57,7 @@ export const themes = {
         '--color-text-placeholder': '#6B7280', /* Cinza mais escuro */
         '--color-text-timer': '#FFFFFF', /* Branco */
         '--color-border-subtle-rgb': '255, 255, 255',
-        '--color-break-short': '#FFDD00', /* Amarelo da bandeira */
+        '--color-break-short': '255, 221, 0', /* Amarelo da bandeira */
         '--color-break-long': '0, 39, 118', /* Azul da bandeira */
     },
     brasil_light: {
