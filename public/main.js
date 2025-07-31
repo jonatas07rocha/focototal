@@ -42,6 +42,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const installBtn = document.getElementById('install-btn');
     const installDismissBtn = document.getElementById('install-dismiss-btn');
     const colorPaletteSelector = document.getElementById('color-palette-selector');
+    // CORREÇÃO: Adicionando os elementos do modal do iOS que faltavam
+    const iosStartPromptModalOverlay = document.getElementById('ios-start-prompt-modal-overlay');
+    const iosPromptConfirmBtn = document.getElementById('ios-prompt-confirm-btn');
+    const iosPromptCancelBtn = document.getElementById('ios-prompt-cancel-btn');
+    const iosPromptTitle = document.getElementById('ios-prompt-title');
+    const iosPromptMessage = document.getElementById('ios-prompt-message');
 
     // --- ELEMENTOS DE GAMIFICATION ---
     const levelDisplay = document.getElementById('level-display');
@@ -128,8 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type === 'achievement') {
             toastEl = achievementToast;
             nameEl = achievementToastName;
-            emojiEl = null; // Achievement toast has its emoji in HTML
-        } else { // mission
+            emojiEl = null;
+        } else { 
             toastEl = missionToast;
             nameEl = missionToastName;
             emojiEl = missionToastEmoji;
@@ -256,17 +262,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const generateDailyMissions = () => {
         const today = new Date().toISOString().slice(0, 10);
-        if (gamification.lastMissionDate === today) return; // Já gerou missões hoje
+        if (gamification.lastMissionDate === today) return; 
 
         const allDailyMissions = Object.values(missionsData).filter(m => m.type === 'daily');
-        // Embaralha e pega 3 missões
         const shuffled = allDailyMissions.sort(() => 0.5 - Math.random());
         gamification.dailyMissions = shuffled.slice(0, 3);
         
-        // Reseta as missões completadas (exceto as secretas que são permanentes)
         gamification.completedMissions = gamification.completedMissions.filter(id => missionsData[id]?.type === 'secret');
         gamification.lastMissionDate = today;
-        changedThemesCount.clear(); // Reseta a contagem de temas
+        changedThemesCount.clear();
         saveState();
     };
 
@@ -326,18 +330,33 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const renderDashboard = () => {
+        // Renderiza estatísticas gerais
         dashboardCurrentStreak.textContent = gamification.currentStreak;
         dashboardLongestStreak.textContent = gamification.longestStreak;
-        const stats = getDailyStats();
-        dashboardDailyReport.innerHTML = `
-            <div class="flex justify-between items-center text-sm"><span class="text-muted">Tempo Total de Foco:</span><span class="font-bold">${formatTime(stats.focusTimeToday)}</span></div>
-            <div class="flex justify-between items-center text-sm"><span class="text-muted">Tarefas Concluídas:</span><span class="font-bold">${stats.tasksCompletedToday} / ${tasks.length}</span></div>
-            <div class="flex justify-between items-center text-sm"><span class="text-muted">Pomodoros Completos:</span><span class="font-bold">${stats.pomodorosCompletedToday}</span></div>
-        `;
+        
+        // CORREÇÃO: Renderiza o relatório detalhado por tarefa
+        if (tasks.length === 0) {
+            dashboardDailyReport.innerHTML = '<p class="text-muted text-center text-sm">Nenhuma tarefa para exibir.</p>';
+        } else {
+            let statsHTML = '';
+            [...tasks].sort((a, b) => a.completed - b.completed).forEach(task => {
+                statsHTML += `
+                <div class="stats-item p-3 rounded-lg ${task.completed ? 'opacity-60' : ''}">
+                    <p class="font-bold truncate ${task.completed ? 'line-through' : ''}">${task.name}</p>
+                    <div class="grid grid-cols-4 gap-2 mt-2 text-center text-xs">
+                        <div><p class="text-xs text-muted">Foco</p><p class="font-semibold">${formatTime(task.focusTime)}</p></div>
+                        <div><p class="text-xs text-muted">Ciclos</p><p class="font-semibold">${task.pomodorosCompleted}/${task.pomodoroEstimate}</p></div>
+                        <div><p class="text-xs text-muted">Int. Interna</p><p class="font-semibold">${task.internalInterruptions}</p></div>
+                        <div><p class="text-xs text-muted">Int. Externa</p><p class="font-semibold">${task.externalInterruptions}</p></div>
+                    </div>
+                </div>`;
+            });
+            dashboardDailyReport.innerHTML = statsHTML;
+        }
+
         renderMissions();
         renderAchievements();
     };
-
 
     // --- LÓGICA DE BADGING E ÁUDIO ---
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -427,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showModal(alertModalOverlay, 'Por favor, selecione uma tarefa para iniciar o foco.');
             return;
         }
-        if (mode === 'focus') checkMissionsProgress(); // Verifica missões secretas no início do foco
+        if (mode === 'focus') checkMissionsProgress(); 
         
         if (focusMethod === 'pomodoro' || mode !== 'focus') {
             timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
@@ -482,6 +501,13 @@ document.addEventListener('DOMContentLoaded', () => {
         xpGainDisplay.textContent = ''; 
         coinGainDisplay.textContent = '';
         if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
+
+        // CORREÇÃO: Restaurando a lógica de notificação Push
+        if ('Notification' in window && Notification.permission === 'granted') {
+            const notificationTitle = mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!';
+            const notificationBody = mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?';
+            navigator.serviceWorker.ready.then(reg => reg.showNotification(notificationTitle, { body: notificationBody, icon: '/icon-192x192.png', renotify: true, tag: 'foco-total-notification' }));
+        }
 
         if (mode === 'focus') {
             checkStreak();
@@ -586,15 +612,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const taskEl = document.createElement('div');
             taskEl.className = `task-item p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''} ${task.completed ? 'opacity-60' : ''}`;
             taskEl.dataset.id = task.id;
+            
+            // CORREÇÃO: Restaurando o template detalhado do card de tarefa
             taskEl.innerHTML = `
             <div class="flex justify-between items-center">
                 <div class="flex items-center min-w-0 flex-grow">
-                    <button data-complete-id="${task.id}" class="complete-btn text-muted hover:text-green-500 mr-3 flex-shrink-0"><i data-lucide="${task.completed ? 'check-square' : 'square'}" class="w-5 h-5"></i></button>
-                    <span class="task-name truncate text-sm ${task.completed ? 'line-through' : ''}">${task.name}</span>
+                    <button data-complete-id="${task.id}" class="complete-btn text-muted hover:text-green-500 mr-3 flex-shrink-0" aria-label="Marcar tarefa ${task.name} como concluída"><i data-lucide="${task.completed ? 'check-square' : 'square'}" class="w-5 h-5"></i></button>
+                    ${task.isEditing
+                        ? `<input type="text" value="${task.name}" class="task-edit-input rounded px-2 py-1 text-sm flex-grow mx-2 border-2 border-primary focus:outline-none" data-edit-input-id="${task.id}" aria-label="Editar nome da tarefa ${task.name}">`
+                        : `<span class="task-name truncate text-sm ${task.completed ? 'line-through' : ''}">${task.name}</span>`
+                    }
                 </div>
                 <div class="flex items-center space-x-1 flex-shrink-0">
-                    <button data-delete-id="${task.id}" class="delete-btn text-muted hover:text-red-500 transition-colors p-1 rounded-md"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <button data-edit-id="${task.id}" class="edit-btn text-muted hover:text-primary transition-colors p-1 rounded-md" aria-label="${task.isEditing ? 'Salvar edição' : 'Editar tarefa'}"><i data-lucide="${task.isEditing ? 'save' : 'pencil'}" class="w-4 h-4"></i></button>
+                    <button data-delete-id="${task.id}" class="delete-btn text-muted hover:text-red-500 transition-colors p-1 rounded-md" aria-label="Excluir tarefa"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>
+            </div>
+            <div class="grid grid-cols-4 gap-1 items-center mt-2 pl-8 text-xs text-center">
+                ${focusMethod === 'pomodoro' ? `<span class="text-muted font-bold flex items-center justify-center" title="Pomodoros"><i data-lucide="check-circle-2" class="w-4 h-4 mr-1 text-green-500"></i>${task.pomodorosCompleted}/${task.pomodoroEstimate}</span>` : ''}
+                <span class="text-muted font-bold flex items-center justify-center" title="Tempo de Foco"><i data-lucide="clock" class="w-4 h-4 mr-1 text-primary-light"></i>${formatTime(task.focusTime)}</span>
+                <span class="text-muted font-bold flex items-center justify-center" title="Interrupções Internas"><i data-lucide="zap-off" class="w-4 h-4 mr-1"></i>${task.internalInterruptions}</span>
+                <span class="text-muted font-bold flex items-center justify-center" title="Interrupções Externas"><i data-lucide="user-x" class="w-4 h-4 mr-1"></i>${task.externalInterruptions}</span>
             </div>`;
             taskListEl.appendChild(taskEl);
         });
@@ -607,7 +645,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
         const taskName = newTaskInput.value.trim();
         if (taskName) {
-            const newTask = { id: Date.now(), name: taskName, pomodoroEstimate: (parseInt(newTaskEstimateInput.value) || 1), pomodorosCompleted: 0, internalInterruptions: 0, externalInterruptions: 0, focusTime: 0, completed: false };
+            const newTask = { id: Date.now(), name: taskName, pomodoroEstimate: (parseInt(newTaskEstimateInput.value) || 1), pomodorosCompleted: 0, internalInterruptions: 0, externalInterruptions: 0, focusTime: 0, completed: false, isEditing: false };
             tasks.push(newTask);
             newTaskInput.value = '';
             newTaskEstimateInput.value = '1';
@@ -645,10 +683,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const selectTask = (id) => {
-        selectedTaskId = id;
+    // CORREÇÃO: Restaurando a lógica de edição de tarefas
+    const toggleEditState = (id) => {
+        tasks.forEach(task => task.isEditing = task.id === id ? !task.isEditing : false);
         renderTasks();
-        if (!isRunning) resetTimer('focus');
+        const input = document.querySelector(`[data-edit-input-id="${id}"]`);
+        if (input) { input.focus(); input.select(); }
+    };
+
+    const updateTaskName = (id, newName) => {
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+            if (newName) task.name = newName;
+            task.isEditing = false;
+            renderTasks();
+        }
+    };
+
+    const selectTask = (id) => {
+        const task = tasks.find(t => t.id === id);
+        if ((task || id === null) && !tasks.some(t => t.isEditing)) {
+            selectedTaskId = id;
+            renderTasks();
+            if (!isRunning) resetTimer('focus');
+        }
     };
 
     const logInterruption = (type) => {
@@ -657,7 +715,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (task) {
                 if (type === 'internal') task.internalInterruptions++;
                 else if (type === 'external') task.externalInterruptions++;
-                uninterruptedSessionsToday = 0; // Reseta a contagem de sessões ininterruptas
+                uninterruptedSessionsToday = 0;
                 renderTasks();
                 showModal(alertModalOverlay, `Interrupção registrada!`);
             }
@@ -707,6 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+        tasks.forEach(task => task.isEditing = false); // Garante que nenhuma tarefa carregue em modo de edição
         focusDurationInput.value = settings.focusDuration;
         shortBreakDurationInput.value = settings.shortBreakDuration;
         longBreakDurationInput.value = settings.longBreakDuration;
@@ -721,13 +780,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- EVENT LISTENERS ---
-    startPauseBtn.addEventListener('click', () => {
-        if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
-        xpGainDisplay.textContent = '';
-        coinGainDisplay.textContent = '';
-        handleStartPauseClick();
-    });
-
     const handleStartPauseClick = () => {
         startPauseBtn.classList.add('start-pause-btn-clicked');
         startPauseBtn.addEventListener('animationend', () => startPauseBtn.classList.remove('start-pause-btn-clicked'), { once: true });
@@ -751,6 +803,64 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
+    
+    // CORREÇÃO: Restaurando a lógica de notificação do iOS
+    startPauseBtn.addEventListener('click', () => {
+        if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
+        xpGainDisplay.textContent = '';
+        coinGainDisplay.textContent = '';
+        
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isIOS && !isRunning && focusMethod === 'pomodoro') {
+            if (mode === 'focus') {
+                iosPromptTitle.textContent = 'Lembrete de Foco';
+                iosPromptMessage.textContent = 'Para garantir o alarme no final do foco, recomendamos criar um lembrete. Deseja fazer isso agora?';
+            } else {
+                iosPromptTitle.textContent = 'Lembrete de Pausa';
+                iosPromptMessage.textContent = 'Para garantir o alarme no final da pausa, recomendamos criar um lembrete. Deseja fazer isso agora?';
+            }
+            showModal(iosStartPromptModalOverlay);
+        } else {
+            handleStartPauseClick();
+        }
+    });
+
+    iosPromptConfirmBtn.addEventListener('click', () => {
+        let duration, eventTitle, eventDescription;
+        if (mode === 'focus') {
+            const task = tasks.find(t => t.id === selectedTaskId);
+            eventTitle = `🎉 Fim do Foco: ${task ? task.name : 'Foco'}`;
+            eventDescription = `Sua sessão de foco terminou. Hora de fazer uma pausa!`;
+            duration = settings.focusDuration;
+        } else {
+            eventTitle = mode === 'shortBreak' ? `🚀 Fim da Pausa Curta` : `🏆 Fim da Pausa Longa`;
+            eventDescription = `Sua pausa acabou. Hora de voltar ao foco!`;
+            duration = mode === 'shortBreak' ? settings.shortBreakDuration : settings.longBreakDuration;
+        }
+        // Lógica para gerar e baixar o arquivo .ics
+        const formatDT = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        const eventStartTime = new Date(Date.now() + duration * 60 * 1000);
+        const eventEndTime = new Date(eventStartTime.getTime() + 1 * 60 * 1000);
+        const icsContent = [
+            'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FocoTotal//PWA//PT',
+            'BEGIN:VEVENT', 'UID:' + Date.now() + '@focototal.app', 'DTSTAMP:' + formatDT(new Date()),
+            'DTSTART:' + formatDT(eventStartTime), 'DTEND:' + formatDT(eventEndTime),
+            'SUMMARY:' + eventTitle, 'DESCRIPTION:' + eventDescription,
+            'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + eventDescription, 'TRIGGER:-PT0S', 'END:VALARM',
+            'END:VEVENT', 'END:VCALENDAR'
+        ].join('\r\n');
+        
+        const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
+        window.location.href = `data:text/calendar;base64,${base64Content}`;
+
+        handleStartPauseClick();
+        hideModal(iosStartPromptModalOverlay);
+    });
+
+    iosPromptCancelBtn.addEventListener('click', () => {
+        handleStartPauseClick();
+        hideModal(iosStartPromptModalOverlay);
+    });
     
     resetBtn.addEventListener('click', () => showModal(resetConfirmModalOverlay));
     resetConfirmBtn.addEventListener('click', resetDay);
@@ -821,17 +931,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    [alertModalOverlay, settingsModalOverlay, dashboardModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay].forEach(overlay => {
+    [alertModalOverlay, settingsModalOverlay, dashboardModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay, iosStartPromptModalOverlay].forEach(overlay => {
         overlay.addEventListener('click', (e) => { if (e.target === overlay) hideModal(overlay); });
     });
 
+    // CORREÇÃO: Restaurando os listeners para edição de tarefas
     taskListEl.addEventListener('click', (e) => {
         const deleteBtn = e.target.closest('[data-delete-id]');
         const completeBtn = e.target.closest('[data-complete-id]');
+        const editBtn = e.target.closest('[data-edit-id]');
         const taskItem = e.target.closest('.task-item');
         if (deleteBtn) { deleteTask(parseInt(deleteBtn.dataset.deleteId)); return; }
         if (completeBtn) { toggleTaskCompleted(parseInt(completeBtn.dataset.completeId)); return; }
+        if (editBtn) {
+            const id = parseInt(editBtn.dataset.editId);
+            const task = tasks.find(t => t.id === id);
+            if (task && task.isEditing) {
+                const input = taskListEl.querySelector(`[data-edit-input-id="${id}"]`);
+                if (input) updateTaskName(id, input.value.trim());
+            } else {
+                toggleEditState(id);
+            }
+            return;
+        }
         if (taskItem) { selectTask(parseInt(taskItem.dataset.id)); }
+    });
+
+    taskListEl.addEventListener('keyup', (e) => {
+        if (e.target.matches('.task-edit-input')) {
+            const id = parseInt(e.target.dataset.editInputId);
+            if (e.key === 'Enter') updateTaskName(id, e.target.value.trim());
+            else if (e.key === 'Escape') toggleEditState(null);
+        }
+    });
+
+    taskListEl.addEventListener('focusout', (e) => {
+        if (e.target.matches('.task-edit-input')) {
+            const id = parseInt(e.target.dataset.editInputId);
+            setTimeout(() => {
+                const task = tasks.find(t => t.id === id);
+                if (task && task.isEditing) updateTaskName(id, e.target.value.trim());
+            }, 150);
+        }
     });
 
     // --- INICIALIZAÇÃO DA APLICAÇÃO ---
