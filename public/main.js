@@ -1,5 +1,6 @@
-// Importa a definição de temas do arquivo themes.js
+// Importa a definição de temas e missões
 import { themes } from './themes.js';
+import { missionsData } from './missions.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMENTOS DO DOM ---
@@ -10,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const externalInterruptBtn = document.getElementById('external-interrupt-btn');
     const resetBtn = document.getElementById('reset-btn');
     const settingsBtn = document.getElementById('settings-btn');
-    const statsBtn = document.getElementById('stats-btn');
+    const dashboardBtn = document.getElementById('dashboard-btn');
     const helpBtn = document.getElementById('help-btn');
     const progressRing = document.getElementById('progress-ring');
     const newTaskInput = document.getElementById('new-task-input');
@@ -22,9 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const pomodoroCyclesEl = document.getElementById('pomodoro-cycles');
     const focusMethodToggle = document.getElementById('focus-method-toggle');
     const toggleCompletedTasksBtn = document.getElementById('toggle-completed-tasks-btn');
-    const statsModalOverlay = document.getElementById('stats-modal-overlay');
-    const statsModalCloseBtn = document.getElementById('stats-modal-close-btn');
-    const statsContentEl = document.getElementById('stats-content');
     const alertModalOverlay = document.getElementById('alert-modal-overlay');
     const alertModalCloseBtn = document.getElementById('alert-modal-close-btn');
     const sessionEndModalOverlay = document.getElementById('session-end-modal-overlay');
@@ -33,8 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsSaveBtn = document.getElementById('settings-save-btn');
     const helpModalOverlay = document.getElementById('help-modal-overlay');
     const helpModalCloseBtn = document.getElementById('help-modal-close-btn');
-    const helpContentPomodoro = document.getElementById('help-content-pomodoro');
-    const helpContentAdaptativo = document.getElementById('help-content-adaptativo');
     const resetConfirmModalOverlay = document.getElementById('reset-confirm-modal-overlay');
     const resetConfirmBtn = document.getElementById('reset-confirm-btn');
     const resetCancelBtn = document.getElementById('reset-cancel-btn');
@@ -45,30 +41,305 @@ document.addEventListener('DOMContentLoaded', () => {
     const installBanner = document.getElementById('install-banner');
     const installBtn = document.getElementById('install-btn');
     const installDismissBtn = document.getElementById('install-dismiss-btn');
-    const iosStartPromptModalOverlay = document.getElementById('ios-start-prompt-modal-overlay');
-    const iosPromptConfirmBtn = document.getElementById('ios-prompt-confirm-btn');
-    const iosPromptCancelBtn = document.getElementById('ios-prompt-cancel-btn');
-    const iosPromptTitle = document.getElementById('ios-prompt-title');
-    const iosPromptMessage = document.getElementById('ios-prompt-message');
     const colorPaletteSelector = document.getElementById('color-palette-selector');
+
+    // --- ELEMENTOS DE GAMIFICATION ---
+    const levelDisplay = document.getElementById('level-display');
+    const xpDisplay = document.getElementById('xp-display');
+    const xpNextLevelDisplay = document.getElementById('xp-next-level-display');
+    const xpBarFill = document.getElementById('xp-bar-fill');
+    const xpGainDisplay = document.getElementById('xp-gain-display');
+    const coinGainDisplay = document.getElementById('coin-gain-display');
+    const achievementToast = document.getElementById('achievement-toast');
+    const achievementToastName = document.getElementById('achievement-toast-name');
+    const missionToast = document.getElementById('mission-toast');
+    const missionToastName = document.getElementById('mission-toast-name');
+    const missionToastEmoji = document.getElementById('mission-toast-emoji');
+    const coinsDisplay = document.getElementById('coins-display');
+    const streakDisplay = document.getElementById('streak-display');
+    
+    // --- ELEMENTOS DO DASHBOARD ---
+    const dashboardModalOverlay = document.getElementById('dashboard-modal-overlay');
+    const dashboardModalCloseBtn = document.getElementById('dashboard-modal-close-btn');
+    const dashboardStatsContent = document.getElementById('dashboard-stats-content');
+    const dashboardMissionsContent = document.getElementById('dashboard-missions-content');
+    const dashboardAchievementsContent = document.getElementById('dashboard-achievements-content');
+    const dashboardCurrentStreak = document.getElementById('dashboard-current-streak');
+    const dashboardLongestStreak = document.getElementById('dashboard-longest-streak');
+    const dashboardDailyReport = document.getElementById('dashboard-daily-report');
 
     // --- ESTADO DA APLICAÇÃO ---
     let timerInterval, isRunning = false, mode = 'focus', timeRemaining, totalTime, endTime;
-    let tasks = [], selectedTaskId = null, pomodoroSessionCount = 0;
+    let tasks = [], selectedTaskId = null, pomodoroSessionCount = 0, uninterruptedSessionsToday = 0;
     let settings = { 
         focusDuration: 25, 
         shortBreakDuration: 5, 
         longBreakDuration: 15, 
         longBreakInterval: 4,
-        theme: 'brasil_dark' // ALTERADO: Novo tema padrão, um que existe no themes.js
+        theme: 'brasil_dark'
     };
     let focusMethod = 'pomodoro';
     let deferredInstallPrompt = null;
     let showCompletedTasks = false;
+    let changedThemesCount = new Set();
+
+    // --- ESTADO DE GAMIFICATION ---
+    let gamification = {
+        level: 1,
+        xp: 0,
+        coins: 0,
+        currentStreak: 0,
+        longestStreak: 0,
+        lastSessionDate: null,
+        unlockedAchievements: [],
+        dailyMissions: [],
+        completedMissions: [],
+        lastMissionDate: null,
+    };
+
+    const achievements = {
+        FIRST_STEP: { name: 'Primeiro Passo', description: 'Complete sua primeira sessão de foco.', emoji: '🚀' },
+        FOCUSED_BEGINNER: { name: 'Iniciante Focado', description: 'Complete 5 sessões de foco.', emoji: '🎯' },
+        TASK_MASTER: { name: 'Mestre das Tarefas', description: 'Complete 10 tarefas em um dia.', emoji: '✔️' },
+        MARATHONER: { name: 'Maratonista', description: 'Foque por um total de 4 horas em um dia.', emoji: '🏃' },
+        STREAK_STARTER: { name: 'Começando a Pegar Fogo', description: 'Alcance uma sequência de 3 dias.', emoji: '🔥' },
+        ON_FIRE: { name: 'Em Chamas!', description: 'Alcance uma sequência de 7 dias.', emoji: '🔥🔥' },
+        COIN_COLLECTOR: { name: 'Colecionador de Moedas', description: 'Acumule 500 moedas.', emoji: '💰' },
+        LEVEL_5: { name: 'Nível 5', description: 'Alcance o nível 5.', emoji: '⭐' },
+        LEVEL_10: { name: 'Nível 10', description: 'Alcance o nível 10.', emoji: '🌟' }
+    };
+
+    // --- LÓGICA DE GAMIFICATION ---
+    const xpForNextLevel = () => Math.floor(100 * Math.pow(1.5, gamification.level - 1));
+
+    const updateGamificationUI = () => {
+        const nextLevelXP = xpForNextLevel();
+        levelDisplay.textContent = gamification.level;
+        xpDisplay.textContent = gamification.xp;
+        xpNextLevelDisplay.textContent = nextLevelXP;
+        xpBarFill.style.width = `${(gamification.xp / nextLevelXP) * 100}%`;
+        coinsDisplay.textContent = gamification.coins;
+        streakDisplay.textContent = gamification.currentStreak;
+    };
+    
+    const showToast = (type, data) => {
+        let toastEl, nameEl, emojiEl;
+
+        if (type === 'achievement') {
+            toastEl = achievementToast;
+            nameEl = achievementToastName;
+            emojiEl = null; // Achievement toast has its emoji in HTML
+        } else { // mission
+            toastEl = missionToast;
+            nameEl = missionToastName;
+            emojiEl = missionToastEmoji;
+        }
+
+        nameEl.textContent = data.name || data.title;
+        if (emojiEl && data.emoji) emojiEl.textContent = data.emoji;
+
+        toastEl.classList.add('show');
+        setTimeout(() => {
+            toastEl.classList.remove('show');
+        }, 4000);
+    };
+
+    const unlockAchievement = (key) => {
+        if (!gamification.unlockedAchievements.includes(key)) {
+            gamification.unlockedAchievements.push(key);
+            showToast('achievement', achievements[key]);
+            playBeep(880, 200, 0.5);
+            renderAchievements();
+            saveState();
+        }
+    };
+    
+    const getDailyStats = () => ({
+        focusTimeToday: tasks.reduce((acc, task) => acc + task.focusTime, 0),
+        tasksCompletedToday: tasks.filter(t => t.completed).length,
+        pomodorosCompletedToday: tasks.reduce((acc, task) => acc + task.pomodorosCompleted, 0),
+        uninterruptedSessionsToday: uninterruptedSessionsToday,
+    });
+
+    const checkMissionsProgress = () => {
+        const stats = getDailyStats();
+        const allMissions = [...gamification.dailyMissions, ...Object.values(missionsData).filter(m => m.type === 'secret')];
+
+        allMissions.forEach(mission => {
+            if (gamification.completedMissions.includes(mission.id)) return;
+
+            let completed = false;
+            if (mission.type === 'daily') {
+                const currentProgress = stats[mission.metric] || 0;
+                if (currentProgress >= mission.goal) {
+                    completed = true;
+                }
+            } else if (mission.type === 'secret') {
+                const hour = new Date().getHours();
+                if (mission.id === 'SECRET_NIGHT_OWL' && isRunning && hour >= 22) completed = true;
+                if (mission.id === 'SECRET_EARLY_BIRD' && isRunning && hour < 6) completed = true;
+                if (mission.id === 'SECRET_THEME_EXPLORER' && changedThemesCount.size >= 3) completed = true;
+            }
+
+            if (completed) {
+                gamification.completedMissions.push(mission.id);
+                addXP(mission.rewards.xp);
+                addCoins(mission.rewards.coins);
+                showToast('mission', mission);
+                playBeep(700, 150, 0.4);
+                renderMissions();
+            }
+        });
+        saveState();
+    };
+
+    const checkForAchievements = () => {
+        const stats = getDailyStats();
+        if (stats.pomodorosCompletedToday >= 1) unlockAchievement('FIRST_STEP');
+        if (stats.pomodorosCompletedToday >= 5) unlockAchievement('FOCUSED_BEGINNER');
+        if (stats.tasksCompletedToday >= 10) unlockAchievement('TASK_MASTER');
+        if (stats.focusTimeToday >= 14400) unlockAchievement('MARATHONER');
+        if (gamification.currentStreak >= 3) unlockAchievement('STREAK_STARTER');
+        if (gamification.currentStreak >= 7) unlockAchievement('ON_FIRE');
+        if (gamification.coins >= 500) unlockAchievement('COIN_COLLECTOR');
+        if (gamification.level >= 5) unlockAchievement('LEVEL_5');
+        if (gamification.level >= 10) unlockAchievement('LEVEL_10');
+    };
+
+    const addXP = (amount) => {
+        if (!amount) return;
+        gamification.xp += amount;
+        xpGainDisplay.textContent = `+${amount} XP`;
+        let nextLevelXP = xpForNextLevel();
+        while (gamification.xp >= nextLevelXP) {
+            gamification.xp -= nextLevelXP;
+            gamification.level++;
+            playBeep(659, 150, 0.4);
+            setTimeout(() => playBeep(784, 300, 0.5), 200);
+            showModal(alertModalOverlay, `Parabéns! Você alcançou o Nível ${gamification.level}!`);
+            nextLevelXP = xpForNextLevel();
+        }
+        updateGamificationUI();
+        checkForAchievements();
+    };
+    
+    const addCoins = (amount) => {
+        if (!amount) return;
+        gamification.coins += amount;
+        coinGainDisplay.textContent = `+${amount} Moedas`;
+        updateGamificationUI();
+        checkForAchievements();
+    };
+
+    const checkStreak = () => {
+        const today = new Date().toISOString().slice(0, 10);
+        if (gamification.lastSessionDate === today) return;
+        
+        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+        if (gamification.lastSessionDate === yesterday) {
+            gamification.currentStreak++;
+            const bonusCoins = gamification.currentStreak * 2;
+            addCoins(bonusCoins);
+            showModal(alertModalOverlay, `Sequência de ${gamification.currentStreak} dias! Você ganhou ${bonusCoins} moedas de bônus!`);
+        } else {
+            gamification.currentStreak = 1;
+        }
+
+        if (gamification.currentStreak > gamification.longestStreak) {
+            gamification.longestStreak = gamification.currentStreak;
+        }
+        
+        gamification.lastSessionDate = today;
+        updateGamificationUI();
+    };
+
+    const generateDailyMissions = () => {
+        const today = new Date().toISOString().slice(0, 10);
+        if (gamification.lastMissionDate === today) return; // Já gerou missões hoje
+
+        const allDailyMissions = Object.values(missionsData).filter(m => m.type === 'daily');
+        // Embaralha e pega 3 missões
+        const shuffled = allDailyMissions.sort(() => 0.5 - Math.random());
+        gamification.dailyMissions = shuffled.slice(0, 3);
+        
+        // Reseta as missões completadas (exceto as secretas que são permanentes)
+        gamification.completedMissions = gamification.completedMissions.filter(id => missionsData[id]?.type === 'secret');
+        gamification.lastMissionDate = today;
+        changedThemesCount.clear(); // Reseta a contagem de temas
+        saveState();
+    };
+
+    const renderMissions = () => {
+        dashboardMissionsContent.innerHTML = '';
+        if (gamification.dailyMissions.length === 0) {
+            dashboardMissionsContent.innerHTML = '<p class="text-muted text-center">Nenhuma missão para hoje. Volte amanhã!</p>';
+            return;
+        }
+        const stats = getDailyStats();
+        gamification.dailyMissions.forEach(mission => {
+            const isCompleted = gamification.completedMissions.includes(mission.id);
+            const currentProgress = Math.min(stats[mission.metric] || 0, mission.goal);
+            const progressPercent = (currentProgress / mission.goal) * 100;
+
+            const el = document.createElement('div');
+            el.className = `mission-item p-4 rounded-lg ${isCompleted ? 'completed' : ''}`;
+            el.innerHTML = `
+                <div class="flex items-start space-x-4">
+                    <span class="text-3xl">${mission.emoji}</span>
+                    <div class="flex-grow">
+                        <p class="font-bold">${mission.title}</p>
+                        <p class="text-sm text-muted">${mission.description}</p>
+                        <div class="flex items-center text-xs mt-2 space-x-4">
+                            <span style="color: rgb(var(--color-xp-bar));"><strong>+${mission.rewards.xp}</strong> XP</span>
+                            <span class="text-coin"><strong>+${mission.rewards.coins}</strong> Moedas</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="w-full bg-gray-700 rounded-full h-2.5">
+                        <div class="mission-progress-bar h-2.5 rounded-full" style="width: ${progressPercent}%"></div>
+                    </div>
+                    <p class="text-right text-xs mt-1 text-muted">${Math.floor(currentProgress)} / ${mission.goal}</p>
+                </div>
+            `;
+            dashboardMissionsContent.appendChild(el);
+        });
+    };
+
+    const renderAchievements = () => {
+        dashboardAchievementsContent.innerHTML = '';
+        Object.keys(achievements).forEach(key => {
+            const achievement = achievements[key];
+            const isUnlocked = gamification.unlockedAchievements.includes(key);
+            const el = document.createElement('div');
+            el.className = `achievement-item p-4 rounded-lg flex items-center space-x-4 ${isUnlocked ? 'unlocked' : 'opacity-60'}`;
+            el.innerHTML = `
+                <span class="text-5xl">${achievement.emoji}</span>
+                <div>
+                    <p class="font-bold">${achievement.name}</p>
+                    <p class="text-sm text-muted">${achievement.description}</p>
+                </div>
+            `;
+            dashboardAchievementsContent.appendChild(el);
+        });
+    };
+    
+    const renderDashboard = () => {
+        dashboardCurrentStreak.textContent = gamification.currentStreak;
+        dashboardLongestStreak.textContent = gamification.longestStreak;
+        const stats = getDailyStats();
+        dashboardDailyReport.innerHTML = `
+            <div class="flex justify-between items-center text-sm"><span class="text-muted">Tempo Total de Foco:</span><span class="font-bold">${formatTime(stats.focusTimeToday)}</span></div>
+            <div class="flex justify-between items-center text-sm"><span class="text-muted">Tarefas Concluídas:</span><span class="font-bold">${stats.tasksCompletedToday} / ${tasks.length}</span></div>
+            <div class="flex justify-between items-center text-sm"><span class="text-muted">Pomodoros Completos:</span><span class="font-bold">${stats.pomodorosCompletedToday}</span></div>
+        `;
+        renderMissions();
+        renderAchievements();
+    };
+
 
     // --- LÓGICA DE BADGING E ÁUDIO ---
-    const clearBadge = () => { if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(console.error); };
-    const setBadge = () => { if ('setAppBadge' in navigator) navigator.setAppBadge(1).catch(console.error); };
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     let audioInitialized = false;
     const _playBeepInternal = (frequency, duration, volume) => {
@@ -93,64 +364,36 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => playBeep(659, 150, 0.4), 200);
         setTimeout(() => playBeep(784, 300, 0.5), 400);
     };
-    const playTickSound = () => playBeep(1000, 50, 0.1);
 
     // --- LÓGICA DE INSTALAÇÃO PWA ---
-    window.addEventListener('beforeinstallprompt', (event) => {
-        event.preventDefault();
-        deferredInstallPrompt = event;
-        if (!localStorage.getItem('installBannerDismissed')) installBanner.style.display = 'block';
-    });
-    installBtn.addEventListener('click', () => {
-        if (deferredInstallPrompt) {
-            deferredInstallPrompt.prompt();
-            deferredInstallPrompt.userChoice.then(() => { deferredInstallPrompt = null; installBanner.style.display = 'none'; });
-        } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            showModal(alertModalOverlay, 'Para instalar no iOS, toque em Compartilhar e "Adicionar à Tela de Início".');
-        }
-    });
-    installDismissBtn.addEventListener('click', () => {
-        localStorage.setItem('installBannerDismissed', 'true');
-        installBanner.style.display = 'none';
-    });
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstallPrompt = e; if (!localStorage.getItem('installBannerDismissed')) installBanner.style.display = 'block'; });
+    installBtn.addEventListener('click', () => { if (deferredInstallPrompt) { deferredInstallPrompt.prompt(); deferredInstallPrompt.userChoice.then(() => { deferredInstallPrompt = null; installBanner.style.display = 'none'; }); } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) { showModal(alertModalOverlay, 'Para instalar no iOS, toque em Compartilhar e "Adicionar à Tela de Início".'); } });
+    installDismissBtn.addEventListener('click', () => { localStorage.setItem('installBannerDismissed', 'true'); installBanner.style.display = 'none'; });
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) installBanner.style.display = 'none';
 
     // --- FUNÇÕES DE GESTÃO DE TEMA E MODO ---
-    // A função applyTheme agora usa o objeto 'themes' importado
     const applyTheme = (themeName) => {
-        // Fallback para 'brasil_dark' se o tema não for encontrado
         const theme = themes[themeName] || themes.brasil_dark; 
         const root = document.documentElement;
-        Object.keys(theme).forEach(key => {
-            if (key !== 'name') {
-                root.style.setProperty(key, theme[key]);
-            }
-        });
-        // Atualiza a cor da barra de endereço do navegador
+        Object.keys(theme).forEach(key => { if (key !== 'name') root.style.setProperty(key, theme[key]); });
         themeColorMeta.setAttribute('content', theme['--color-bg-shell']);
+        if (gamification.lastMissionDate === new Date().toISOString().slice(0, 10)) {
+            changedThemesCount.add(themeName);
+            checkMissionsProgress();
+        }
     };
 
-    // renderPaletteSelector agora itera sobre o objeto 'themes' importado
     const renderPaletteSelector = () => {
         colorPaletteSelector.innerHTML = '';
-        // Converte o objeto themes em um array de chaves para iterar
-        // ORDENAÇÃO: Garante que os temas sejam renderizados na ordem alfabética das chaves
-        const sortedThemeKeys = Object.keys(themes).sort(); 
-
-        sortedThemeKeys.forEach(key => {
+        Object.keys(themes).sort().forEach(key => {
             const theme = themes[key];
             const button = document.createElement('button');
             button.dataset.theme = key;
-            button.title = theme.name; // Usa o 'name' para o título, que já é a sigla + claro/escuro
+            button.title = theme.name;
             button.className = `h-12 rounded-lg border-2 transition-all transform flex flex-col items-center justify-center p-1 text-xs font-semibold ${settings.theme === key ? 'border-white scale-105' : 'border-transparent'}`;
             button.style.backgroundColor = theme['--color-bg-shell'];
             button.style.color = theme['--color-text-muted'];
-            
-            // Exibe uma pequena amostra das cores primárias e de texto
-            button.innerHTML = `
-                <div class="w-full h-4 rounded" style="background-color: rgb(${theme['--color-primary-rgb']})"></div>
-                <span class="mt-1">${theme.name.split(' ')[0]}</span> <!-- Usa apenas a sigla para exibir -->
-            `;
+            button.innerHTML = `<div class="w-full h-4 rounded" style="background-color: rgb(${theme['--color-primary-rgb']})"></div><span class="mt-1">${theme.name.split(' ')[0]}</span>`;
             colorPaletteSelector.appendChild(button);
         });
     };
@@ -160,17 +403,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const isSelected = btn.dataset.method === focusMethod;
             btn.classList.toggle('bg-primary-focus', isSelected);
             btn.classList.toggle('text-white', isSelected);
-            // Lógica para verificar se o tema atual é um tema escuro usando as novas chaves
-            const currentThemeKey = settings.theme;
-            const isDarkTheme = currentThemeKey.includes('_dark'); 
-
+            const isDarkTheme = settings.theme.includes('_dark'); 
             btn.classList.toggle(isDarkTheme ? 'text-gray-400' : 'text-gray-500', !isSelected);
         });
         pomodoroCyclesEl.style.display = focusMethod === 'pomodoro' ? 'flex' : 'none';
         newTaskEstimateInput.style.display = focusMethod === 'pomodoro' ? 'inline-block' : 'none';
         newTaskEstimateLabel.style.display = focusMethod === 'pomodoro' ? 'inline-block' : 'none';
-        helpContentPomodoro.style.display = focusMethod === 'pomodoro' ? 'block' : 'none';
-        helpContentAdaptativo.style.display = focusMethod === 'adaptativo' ? 'block' : 'none';
         if (!isRunning) resetTimer('focus');
     };
 
@@ -181,17 +419,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if(messageEl && message) messageEl.textContent = message;
         modalOverlay.classList.add('visible');
     };
-    const hideModal = (modalOverlay) => {
-        clearBadge();
-        modalOverlay.classList.remove('visible');
-    };
+    const hideModal = (modalOverlay) => modalOverlay.classList.remove('visible');
+    
     const startTimer = () => {
         if (isRunning) return;
         if (!selectedTaskId && mode === 'focus') {
             showModal(alertModalOverlay, 'Por favor, selecione uma tarefa para iniciar o foco.');
             return;
         }
-        clearBadge();
+        if (mode === 'focus') checkMissionsProgress(); // Verifica missões secretas no início do foco
+        
         if (focusMethod === 'pomodoro' || mode !== 'focus') {
             timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
             totalTime = timeRemaining;
@@ -204,6 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUI();
         timerInterval = setInterval(updateTimer, 1000);
     };
+
     const pauseTimer = () => {
         if (!isRunning) return;
         isRunning = false;
@@ -212,95 +450,59 @@ document.addEventListener('DOMContentLoaded', () => {
         saveState();
         updateUI();
     };
+
     const updateTimerDisplay = () => {
         const totalSecondsAbs = Math.abs(timeRemaining);
-        const hours = Math.floor(totalSecondsAbs / 3600);
         const minutes = Math.floor((totalSecondsAbs % 3600) / 60);
         const seconds = totalSecondsAbs % 60;
-        let display = (hours > 0)
-            ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-            : `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         timerDisplay.textContent = display;
         document.title = `${display} - Foco Total`;
         const circumference = 2 * Math.PI * 45;
-        let progress = 0;
-        if (focusMethod === 'pomodoro' || mode !== 'focus') {
-            if (totalTime > 0) progress = (totalTime - timeRemaining) / totalTime;
-        } else {
-            progress = isRunning ? 1 : 0;
-        }
+        let progress = (focusMethod === 'pomodoro' || mode !== 'focus') ? ((totalTime > 0) ? (totalTime - timeRemaining) / totalTime : 0) : (isRunning ? 1 : 0);
         progressRing.style.strokeDasharray = circumference;
         progressRing.style.strokeDashoffset = circumference * (1 - progress);
     };
+
     const updateTimer = () => {
         if (focusMethod === 'pomodoro' || mode !== 'focus') {
             const remaining = Math.round((endTime - Date.now()) / 1000);
-            if (remaining >= 0) {
-                timeRemaining = remaining;
-                updateTimerDisplay();
-                if (mode === 'focus' && focusMethod === 'pomodoro' && timeRemaining <= 10 && timeRemaining > 0) playTickSound();
-            } else {
-                clearInterval(timerInterval);
-                switchMode();
-            }
+            if (remaining >= 0) timeRemaining = remaining;
+            else { clearInterval(timerInterval); switchMode(); }
         } else {
             timeRemaining++;
-            updateTimerDisplay();
         }
+        updateTimerDisplay();
     };
-    // --- LÓGICA DE GERAÇÃO DE .ICS ---
-    const generateICS = (durationMinutes, title, description) => {
-        const eventStartTime = new Date(new Date().getTime() + durationMinutes * 60 * 1000);
-        const eventEndTime = new Date(eventStartTime.getTime() + 1 * 60 * 1000);
-        const formatDT = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-        return [
-            'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FocoTotal//PWA//PT',
-            'BEGIN:VEVENT', 'UID:' + Date.now() + '@focototal.app', 'DTSTAMP:' + formatDT(new Date()),
-            'DTSTART:' + formatDT(eventStartTime), 'DTEND:' + formatDT(eventEndTime),
-            'SUMMARY:' + title, 'DESCRIPTION:' + description,
-            'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + description, 'TRIGGER:-PT0S', 'END:VALARM',
-            'END:VEVENT', 'END:VCALENDAR'
-        ].join('\r\n');
-    };
-    const downloadICS = (icsContent) => {
-        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-        if (isIOS) {
-            const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
-            window.location.href = `data:text/calendar;base64,${base64Content}`;
-        } else {
-            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'lembrete_foco.ics';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-        }
-    };
+
     const switchMode = () => {
         isRunning = false;
         endTime = null;
         playFinishSound();
-        setBadge();
+        xpGainDisplay.textContent = ''; 
+        coinGainDisplay.textContent = '';
         if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
 
-        if ('Notification' in window && Notification.permission === 'granted') {
-            const notificationTitle = mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!';
-            const notificationBody = mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?';
-            navigator.serviceWorker.ready.then(reg => reg.showNotification(notificationTitle, { body: notificationBody, icon: '/icon-192x192.png', renotify: true, tag: 'foco-total-notification' }));
-        }
         if (mode === 'focus') {
+            checkStreak();
+            uninterruptedSessionsToday++;
             const task = tasks.find(t => t.id === selectedTaskId);
+            let focusDuration = 0;
             if (task) {
                 if (focusMethod === 'pomodoro') {
                     pomodoroSessionCount++;
                     task.pomodorosCompleted++;
-                    task.focusTime += settings.focusDuration * 60;
+                    focusDuration = settings.focusDuration * 60;
+                    task.focusTime += focusDuration;
                 } else {
-                    task.focusTime += timeRemaining;
+                    focusDuration = timeRemaining;
+                    task.focusTime += focusDuration;
                 }
             }
+            const xpGained = Math.floor(focusDuration / 60);
+            addXP(xpGained);
+            addCoins(5);
+            checkMissionsProgress();
             mode = (focusMethod === 'pomodoro' && pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
             showModal(sessionEndModalOverlay, `Você ${focusMethod === 'pomodoro' ? 'completou um Pomodoro!' : 'finalizou seu foco.'} Hora de fazer uma pausa.`);
         } else {
@@ -326,27 +528,28 @@ document.addEventListener('DOMContentLoaded', () => {
         saveState();
         updateUI();
     };
+
     const resetDay = () => {
         pauseTimer();
         tasks = [];
         selectedTaskId = null;
         pomodoroSessionCount = 0;
+        uninterruptedSessionsToday = 0;
         resetTimer('focus');
         renderTasks();
         hideModal(resetConfirmModalOverlay);
         showModal(alertModalOverlay, 'O dia foi zerado com sucesso!');
     };
+
     const updateUI = () => {
         updateTimerDisplay();
-        // Usa o tema atualmente salvo nas configurações
-        const currentTheme = themes[settings.theme] || themes.brasil_dark; // Fallback para o novo tema padrão
+        const currentTheme = themes[settings.theme] || themes.brasil_dark;
 
         if (mode === 'shortBreak') progressRing.style.stroke = currentTheme['--color-break-short'];
         else if (mode === 'longBreak') progressRing.style.stroke = currentTheme['--color-break-long'];
         else progressRing.style.stroke = `rgb(${currentTheme['--color-primary-rgb']})`;
         
-        if (focusMethod === 'adaptativo' && mode === 'focus' && isRunning) progressRing.classList.add('breathing');
-        else progressRing.classList.remove('breathing');
+        progressRing.classList.toggle('breathing', focusMethod === 'adaptativo' && mode === 'focus' && isRunning);
 
         let btnIcon, btnBgClass, ariaLabelText;
         if (focusMethod === 'pomodoro' || mode !== 'focus') {
@@ -354,15 +557,9 @@ document.addEventListener('DOMContentLoaded', () => {
             btnBgClass = isRunning ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-primary-focus hover:bg-primary-darker';
             ariaLabelText = isRunning ? 'Pausar Timer' : 'Iniciar Timer';
         } else {
-            if (isRunning) {
-                btnIcon = 'square';
-                btnBgClass = 'bg-red-600 hover:bg-red-700';
-                ariaLabelText = 'Parar Foco Adaptativo';
-            } else {
-                btnIcon = 'play';
-                btnBgClass = 'bg-primary-focus hover:bg-primary-darker';
-                ariaLabelText = 'Iniciar Foco Adaptativo';
-            }
+            btnIcon = isRunning ? 'square' : 'play';
+            btnBgClass = isRunning ? 'bg-red-600 hover:bg-red-700' : 'bg-primary-focus hover:bg-primary-darker';
+            ariaLabelText = isRunning ? 'Parar Foco Adaptativo' : 'Iniciar Foco Adaptativo';
         }
         startPauseBtn.className = `w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center ${btnBgClass}`;
         startPauseBtn.innerHTML = `<i data-lucide="${btnIcon}" class="w-8 h-8 ${btnIcon === 'play' ? 'pl-1' : ''}"></i>`;
@@ -370,7 +567,6 @@ document.addEventListener('DOMContentLoaded', () => {
         internalInterruptBtn.style.display = (isRunning && mode === 'focus') ? 'flex' : 'none';
         externalInterruptBtn.style.display = (isRunning && mode === 'focus') ? 'flex' : 'none';
         updateCurrentTaskDisplay();
-        updateStatsDisplay();
         lucide.createIcons();
     };
 
@@ -382,27 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hours > 0) return `${hours}h ${remainingMinutes}m`;
         return `${minutes}m`;
     };
-    const updateStatsDisplay = () => {
-        if (tasks.length === 0) {
-            statsContentEl.innerHTML = '<p class="text-muted text-center">Nenhuma tarefa para exibir.</p>';
-            return;
-        }
-        let statsHTML = '<div class="space-y-3">';
-        [...tasks].sort((a, b) => a.completed - b.completed).forEach(task => {
-            statsHTML += `
-            <div class="stats-item p-3 rounded-lg ${task.completed ? 'opacity-60' : ''}">
-                <p class="font-bold truncate ${task.completed ? 'line-through' : ''}">${task.name}</p>
-                <div class="grid grid-cols-4 gap-2 mt-2 text-center text-xs">
-                    <div><p class="text-xs text-muted">Foco</p><p class="font-semibold">${formatTime(task.focusTime)}</p></div>
-                    <div><p class="text-xs text-muted">Ciclos</p><p class="font-semibold">${task.pomodorosCompleted}/${task.pomodoroEstimate}</p></div>
-                    <div><p class="text-xs text-muted">Int. Interna</p><p class="font-semibold">${task.internalInterruptions}</p></div>
-                    <div><p class="text-xs text-muted">Int. Externa</p><p class="font-semibold">${task.externalInterruptions}</p></div>
-                </div>
-            </div>`;
-        });
-        statsHTML += '</div>';
-        statsContentEl.innerHTML = statsHTML;
-    };
+
     const renderTasks = () => {
         const tasksToRender = showCompletedTasks ? tasks : tasks.filter(task => !task.completed);
         taskListEl.innerHTML = tasksToRender.length === 0 ? '<p class="text-muted text-center text-sm">Adicione a sua primeira tarefa!</p>' : '';
@@ -410,47 +586,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const taskEl = document.createElement('div');
             taskEl.className = `task-item p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''} ${task.completed ? 'opacity-60' : ''}`;
             taskEl.dataset.id = task.id;
-            if (task.justAdded) {
-                taskEl.classList.add('added-feedback');
-                taskEl.addEventListener('animationend', () => {
-                    taskEl.classList.remove('added-feedback');
-                    task.justAdded = false;
-                    saveState();
-                }, { once: true });
-            }
             taskEl.innerHTML = `
             <div class="flex justify-between items-center">
                 <div class="flex items-center min-w-0 flex-grow">
-                    <button data-complete-id="${task.id}" class="complete-btn text-muted hover:text-green-500 mr-3 flex-shrink-0" aria-label="Marcar tarefa ${task.name} como concluída"><i data-lucide="${task.completed ? 'check-square' : 'square'}" class="w-5 h-5"></i></button>
-                    ${task.isEditing
-                        ? `<input type="text" value="${task.name}" class="task-edit-input rounded px-2 py-1 text-sm flex-grow mx-2 border-2 border-primary focus:outline-none" data-edit-input-id="${task.id}" aria-label="Editar nome da tarefa ${task.name}">`
-                        : `<span class="task-name truncate text-sm ${task.completed ? 'line-through' : ''}">${task.name}</span>`
-                    }
+                    <button data-complete-id="${task.id}" class="complete-btn text-muted hover:text-green-500 mr-3 flex-shrink-0"><i data-lucide="${task.completed ? 'check-square' : 'square'}" class="w-5 h-5"></i></button>
+                    <span class="task-name truncate text-sm ${task.completed ? 'line-through' : ''}">${task.name}</span>
                 </div>
                 <div class="flex items-center space-x-1 flex-shrink-0">
-                    <button data-edit-id="${task.id}" class="edit-btn text-muted hover:text-primary transition-colors p-1 rounded-md" aria-label="${task.isEditing ? 'Salvar edição' : 'Editar tarefa'}"><i data-lucide="${task.isEditing ? 'save' : 'pencil'}" class="w-4 h-4"></i></button>
-                    <button data-delete-id="${task.id}" class="delete-btn text-muted hover:text-red-500 transition-colors p-1 rounded-md" aria-label="Excluir tarefa"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <button data-delete-id="${task.id}" class="delete-btn text-muted hover:text-red-500 transition-colors p-1 rounded-md"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>
-            </div>
-            <div class="grid grid-cols-4 gap-1 items-center mt-2 pl-8 text-xs text-center">
-                ${focusMethod === 'pomodoro' ? `<span class="text-muted font-bold flex items-center justify-center" title="Pomodoros"><i data-lucide="check-circle-2" class="w-4 h-4 mr-1 text-green-500"></i>${task.pomodorosCompleted}/${task.pomodoroEstimate}</span>` : ''}
-                <span class="text-muted font-bold flex items-center justify-center" title="Tempo de Foco"><i data-lucide="clock" class="w-4 h-4 mr-1 text-primary-light"></i>${formatTime(task.focusTime)}</span>
-                <span class="text-muted font-bold flex items-center justify-center" title="Interrupções Internas"><i data-lucide="zap-off" class="w-4 h-4 mr-1"></i>${task.internalInterruptions}</span>
-                <span class="text-muted font-bold flex items-center justify-center" title="Interrupções Externas"><i data-lucide="user-x" class="w-4 h-4 mr-1"></i>${task.externalInterruptions}</span>
             </div>`;
             taskListEl.appendChild(taskEl);
         });
         updateCurrentTaskDisplay();
-        updateStatsDisplay();
         saveState();
         lucide.createIcons();
     };
+
     const addTask = () => {
         if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
         const taskName = newTaskInput.value.trim();
-        const estimate = (focusMethod === 'pomodoro') ? (parseInt(newTaskEstimateInput.value) || 1) : 1;
         if (taskName) {
-            const newTask = { id: Date.now(), name: taskName, pomodoroEstimate: estimate, pomodorosCompleted: 0, internalInterruptions: 0, externalInterruptions: 0, focusTime: 0, completed: false, isEditing: false, justAdded: true };
+            const newTask = { id: Date.now(), name: taskName, pomodoroEstimate: (parseInt(newTaskEstimateInput.value) || 1), pomodorosCompleted: 0, internalInterruptions: 0, externalInterruptions: 0, focusTime: 0, completed: false };
             tasks.push(newTask);
             newTaskInput.value = '';
             newTaskEstimateInput.value = '1';
@@ -460,63 +617,55 @@ document.addEventListener('DOMContentLoaded', () => {
             else renderTasks();
         }
     };
+
     const deleteTask = (id) => {
         tasks = tasks.filter(task => task.id !== id);
         if (selectedTaskId === id) {
-            const firstIncompleteTask = tasks.find(t => !t.completed);
-            selectTask(firstIncompleteTask ? firstIncompleteTask.id : null);
+            selectTask(tasks.find(t => !t.completed)?.id || null);
         } else {
             renderTasks();
         }
     };
+
     const toggleTaskCompleted = (id) => {
         const task = tasks.find(t => t.id === id);
         if (task) {
             task.completed = !task.completed;
+            if (task.completed) {
+                addXP(10); 
+                addCoins(2);
+                checkMissionsProgress();
+            }
             if (task.completed && selectedTaskId === id) {
                 if(isRunning) pauseTimer();
-                const firstIncompleteTask = tasks.find(t => !t.completed);
-                selectTask(firstIncompleteTask ? firstIncompleteTask.id : null);
+                selectTask(tasks.find(t => !t.completed)?.id || null);
                 if (!isRunning && mode === 'focus') resetTimer('focus');
             }
             renderTasks();
         }
     };
-    const toggleEditState = (id) => {
-        tasks.forEach(task => task.isEditing = task.id === id ? !task.isEditing : false);
-        renderTasks();
-        const input = document.querySelector(`[data-edit-input-id="${id}"]`);
-        if (input) { input.focus(); input.select(); }
-    };
-    const updateTaskName = (id, newName) => {
-        const task = tasks.find(t => t.id === id);
-        if (task) {
-            if (newName) task.name = newName;
-            task.isEditing = false;
-            renderTasks();
-        }
-    };
+
     const selectTask = (id) => {
-        const task = tasks.find(t => t.id === id);
-        if ((task || id === null) && !tasks.some(t => t.isEditing)) {
-            selectedTaskId = id;
-            renderTasks();
-            if (!isRunning) resetTimer('focus');
-        }
+        selectedTaskId = id;
+        renderTasks();
+        if (!isRunning) resetTimer('focus');
     };
+
     const logInterruption = (type) => {
         if (isRunning && mode === 'focus' && selectedTaskId) {
             const task = tasks.find(t => t.id === selectedTaskId);
             if (task) {
                 if (type === 'internal') task.internalInterruptions++;
                 else if (type === 'external') task.externalInterruptions++;
+                uninterruptedSessionsToday = 0; // Reseta a contagem de sessões ininterruptas
                 renderTasks();
-                showModal(alertModalOverlay, `Interrupção ${type === 'internal' ? 'interna' : 'externa'} registrada!`);
+                showModal(alertModalOverlay, `Interrupção registrada!`);
             }
         } else {
             showModal(alertModalOverlay, 'Só pode registrar interrupções durante um foco ativo.');
         }
     };
+
     const updateCurrentTaskDisplay = () => {
         const task = tasks.find(t => t.id === selectedTaskId);
         currentTaskDisplay.textContent = task ? task.name : 'Nenhuma tarefa selecionada';
@@ -529,10 +678,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         lucide.createIcons();
     };
+
     const saveState = () => {
-        const state = { settings, tasks, selectedTaskId, pomodoroSessionCount, focusMethod, showCompletedTasks, timerState: { isRunning, mode, endTime, totalTime } };
+        const state = { settings, tasks, selectedTaskId, pomodoroSessionCount, focusMethod, showCompletedTasks, gamification, uninterruptedSessionsToday, timerState: { isRunning, mode, endTime, totalTime } };
         localStorage.setItem('pomodoroAppState', JSON.stringify(state));
     };
+
     const loadState = () => {
         const state = JSON.parse(localStorage.getItem('pomodoroAppState'));
         if (state) {
@@ -542,27 +693,20 @@ document.addEventListener('DOMContentLoaded', () => {
             pomodoroSessionCount = state.pomodoroSessionCount || 0;
             focusMethod = state.focusMethod || 'pomodoro';
             showCompletedTasks = state.showCompletedTasks || false;
+            uninterruptedSessionsToday = state.uninterruptedSessionsToday || 0;
+            
+            const defaultGamification = { level: 1, xp: 0, coins: 0, currentStreak: 0, longestStreak: 0, lastSessionDate: null, unlockedAchievements: [], dailyMissions: [], completedMissions: [], lastMissionDate: null };
+            gamification = { ...defaultGamification, ...state.gamification };
+
             if (state.timerState) {
                 const { isRunning: wasRunning, mode: savedMode, endTime: savedEndTime, totalTime: savedTotalTime } = state.timerState;
-                mode = savedMode;
-                totalTime = savedTotalTime;
                 if (wasRunning && savedEndTime && savedEndTime > Date.now()) {
-                    endTime = savedEndTime;
+                    isRunning = true; mode = savedMode; totalTime = savedTotalTime; endTime = savedEndTime;
                     timeRemaining = Math.round((endTime - Date.now()) / 1000);
-                    isRunning = true;
                     timerInterval = setInterval(updateTimer, 1000);
                 }
             }
         }
-        tasks.forEach(t => {
-            t.isEditing = false;
-            t.justAdded = false;
-            if (t.internalInterruptions === undefined) {
-                t.internalInterruptions = 0;
-                t.externalInterruptions = t.interruptions || 0;
-                delete t.interruptions;
-            }
-        });
         focusDurationInput.value = settings.focusDuration;
         shortBreakDurationInput.value = settings.shortBreakDuration;
         longBreakDurationInput.value = settings.longBreakDuration;
@@ -571,11 +715,18 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedTaskId = null;
         }
         if (!selectedTaskId) {
-            const firstIncompleteTask = tasks.find(t => !t.completed);
-            if (firstIncompleteTask) selectedTaskId = firstIncompleteTask.id;
+            selectTask(tasks.find(t => !t.completed)?.id || null);
         }
+        generateDailyMissions();
     };
+
     // --- EVENT LISTENERS ---
+    startPauseBtn.addEventListener('click', () => {
+        if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
+        xpGainDisplay.textContent = '';
+        coinGainDisplay.textContent = '';
+        handleStartPauseClick();
+    });
 
     const handleStartPauseClick = () => {
         startPauseBtn.classList.add('start-pause-btn-clicked');
@@ -585,74 +736,34 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             if (isRunning) {
                 pauseTimer();
+                const focusDuration = timeRemaining;
                 const task = tasks.find(t => t.id === selectedTaskId);
-                if (task) task.focusTime += timeRemaining;
+                if (task) task.focusTime += focusDuration;
+                const xpGained = Math.floor(focusDuration / 60);
+                addXP(xpGained);
+                addCoins(5);
+                checkStreak();
+                checkMissionsProgress();
                 showModal(sessionEndModalOverlay, `Você se concentrou por ${formatTime(timeRemaining)}.`);
                 resetTimer('focus');
             } else {
-                endTime = null;
                 startTimer();
             }
         }
     };
-
-    startPauseBtn.addEventListener('click', () => {
-        if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
-        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-        if (isIOS && !isRunning && focusMethod === 'pomodoro') {
-            if (mode === 'focus') {
-                iosPromptTitle.textContent = 'Lembrete de Foco';
-                iosPromptMessage.textContent = 'Para garantir o alarme no final do foco, recomendamos criar um lembrete. Deseja fazer isso agora?';
-            } else {
-                iosPromptTitle.textContent = 'Lembrete de Pausa';
-                iosPromptMessage.textContent = 'Para garantir o alarme no final da pausa, recomendamos criar um lembrete. Deseja fazer isso agora?';
-            }
-            showModal(iosStartPromptModalOverlay);
-        } else {
-            handleStartPauseClick();
-        }
-    });
-    iosPromptConfirmBtn.addEventListener('click', () => {
-        let duration, eventTitle, eventDescription;
-        if (mode === 'focus') {
-            const task = tasks.find(t => t.id === selectedTaskId);
-            const taskName = task ? task.name : 'Foco';
-            eventTitle = `🎉 Fim do Foco: ${taskName}`;
-            eventDescription = `Sua sessão de foco na tarefa "${taskName}" terminou. Hora de fazer uma pausa!`;
-            duration = settings.focusDuration;
-        } else if (mode === 'shortBreak') {
-            eventTitle = `🚀 Fim da Pausa Curta`;
-            eventDescription = `Sua pausa curta acabou. Hora de voltar ao foco!`;
-            duration = settings.shortBreakDuration;
-        } else { // longBreak
-            eventTitle = `🏆 Fim da Pausa Longa`;
-            eventDescription = `Sua pausa longa acabou. Hora de voltar ao foco!`;
-            duration = settings.longBreakDuration;
-        }
-        const icsContent = generateICS(duration, eventTitle, eventDescription);
-        downloadICS(icsContent);
-        handleStartPauseClick();
-        hideModal(iosStartPromptModalOverlay);
-    });
-    iosPromptCancelBtn.addEventListener('click', () => {
-        handleStartPauseClick();
-        hideModal(iosStartPromptModalOverlay);
-    });
+    
     resetBtn.addEventListener('click', () => showModal(resetConfirmModalOverlay));
     resetConfirmBtn.addEventListener('click', resetDay);
     resetCancelBtn.addEventListener('click', () => hideModal(resetConfirmModalOverlay));
     internalInterruptBtn.addEventListener('click', () => logInterruption('internal'));
     externalInterruptBtn.addEventListener('click', () => logInterruption('external'));
-    settingsBtn.addEventListener('click', () => {
-        renderPaletteSelector(); // Gera os botões da paleta de cores sempre que o modal de configurações é aberto
-        showModal(settingsModalOverlay);
-    });
-    statsBtn.addEventListener('click', () => showModal(statsModalOverlay));
+    settingsBtn.addEventListener('click', () => { renderPaletteSelector(); showModal(settingsModalOverlay); });
+    dashboardBtn.addEventListener('click', () => { renderDashboard(); showModal(dashboardModalOverlay); });
     helpBtn.addEventListener('click', () => showModal(helpModalOverlay));
-    statsModalCloseBtn.addEventListener('click', () => hideModal(statsModalOverlay));
-    helpModalCloseBtn.addEventListener('click', () => hideModal(helpModalOverlay));
+    dashboardModalCloseBtn.addEventListener('click', () => hideModal(dashboardModalOverlay));
     alertModalCloseBtn.addEventListener('click', () => hideModal(alertModalOverlay));
     sessionEndCloseBtn.addEventListener('click', () => hideModal(sessionEndModalOverlay));
+    
     settingsSaveBtn.addEventListener('click', () => {
         settings.focusDuration = parseInt(focusDurationInput.value) || 25;
         settings.shortBreakDuration = parseInt(shortBreakDurationInput.value) || 5;
@@ -662,20 +773,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isRunning) resetTimer('focus');
         saveState();
     });
-    // Event listener para seleção de tema na paleta de cores
+
     colorPaletteSelector.addEventListener('click', (e) => {
         const target = e.target.closest('button[data-theme]');
         if (target) {
-            settings.theme = target.dataset.theme; // Atualiza o tema nas configurações
-            applyTheme(settings.theme); // Aplica o novo tema imediatamente
-            renderPaletteSelector(); // Re-renderiza a paleta para atualizar o estado selecionado
-            updateMethodToggleUI(); // Atualiza UI de alternância de método (se necessário)
-            updateUI(); // Atualiza a UI para refletir a nova cor do anel de progresso
-            saveState(); // Salva o estado após a mudança de tema
+            settings.theme = target.dataset.theme;
+            applyTheme(settings.theme);
+            renderPaletteSelector();
+            updateMethodToggleUI();
+            updateUI();
+            saveState();
         }
     });
+
     addTaskBtn.addEventListener('click', addTask);
     newTaskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
+    
     focusMethodToggle.addEventListener('click', (e) => {
         const target = e.target.closest('.method-btn');
         if (target && !isRunning) {
@@ -687,61 +800,50 @@ document.addEventListener('DOMContentLoaded', () => {
             showModal(alertModalOverlay, 'Não é possível trocar de modo enquanto o timer está rodando.');
         }
     });
+
     toggleCompletedTasksBtn.addEventListener('click', () => {
         showCompletedTasks = !showCompletedTasks;
         toggleCompletedTasksBtn.textContent = showCompletedTasks ? 'Esconder Concluídas' : 'Mostrar Concluídas';
         renderTasks();
     });
-    [alertModalOverlay, settingsModalOverlay, statsModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay, iosStartPromptModalOverlay].forEach(overlay => {
+    
+    dashboardModalOverlay.addEventListener('click', (e) => {
+        const tabButton = e.target.closest('.dashboard-tab');
+        if (tabButton) {
+            const tabName = tabButton.dataset.tab;
+            ['stats', 'missions', 'achievements'].forEach(tab => {
+                document.getElementById(`dashboard-${tab}-content`).classList.add('hidden');
+            });
+            dashboardModalOverlay.querySelectorAll('.dashboard-tab').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(`dashboard-${tabName}-content`).classList.remove('hidden');
+            tabButton.classList.add('active');
+        }
+    });
+
+    [alertModalOverlay, settingsModalOverlay, dashboardModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay].forEach(overlay => {
         overlay.addEventListener('click', (e) => { if (e.target === overlay) hideModal(overlay); });
     });
+
     taskListEl.addEventListener('click', (e) => {
         const deleteBtn = e.target.closest('[data-delete-id]');
         const completeBtn = e.target.closest('[data-complete-id]');
-        const editBtn = e.target.closest('[data-edit-id]');
         const taskItem = e.target.closest('.task-item');
         if (deleteBtn) { deleteTask(parseInt(deleteBtn.dataset.deleteId)); return; }
         if (completeBtn) { toggleTaskCompleted(parseInt(completeBtn.dataset.completeId)); return; }
-        if (editBtn) {
-            const id = parseInt(editBtn.dataset.editId);
-            const task = tasks.find(t => t.id === id);
-            if (task && task.isEditing) {
-                const input = taskListEl.querySelector(`[data-edit-input-id="${id}"]`);
-                if (input) updateTaskName(id, input.value.trim());
-            } else {
-                toggleEditState(id);
-            }
-            return;
-        }
         if (taskItem) { selectTask(parseInt(taskItem.dataset.id)); }
-    });
-    taskListEl.addEventListener('keyup', (e) => {
-        if (e.target.matches('.task-edit-input')) {
-            const id = parseInt(e.target.dataset.editInputId);
-            if (e.key === 'Enter') updateTaskName(id, e.target.value.trim());
-            else if (e.key === 'Escape') toggleEditState(null);
-        }
-    });
-    taskListEl.addEventListener('focusout', (e) => {
-        if (e.target.matches('.task-edit-input')) {
-            const id = parseInt(e.target.dataset.editInputId);
-            setTimeout(() => {
-                const task = tasks.find(t => t.id === id);
-                if (task && task.isEditing) updateTaskName(id, e.target.value.trim());
-            }, 150);
-        }
     });
 
     // --- INICIALIZAÇÃO DA APLICAÇÃO ---
     loadState();
-    // Aplica o tema salvo (ou o padrão) na inicialização
     applyTheme(settings.theme); 
     updateMethodToggleUI();
     renderTasks();
     updateUI();
+    updateGamificationUI();
+    checkForAchievements();
     lucide.createIcons();
     document.addEventListener('click', () => {
         if (audioContext.state === 'suspended') audioContext.resume().then(() => audioInitialized = true);
-        clearBadge();
     }, { once: true });
 });
