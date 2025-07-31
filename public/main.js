@@ -1,6 +1,7 @@
-// Importa a definição de temas e missões
+// Importa a definição de temas, missões e conquistas
 import { themes } from './themes.js';
 import { missionsData } from './missions.js';
+import { achievements } from './achievements.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMENTOS DO DOM ---
@@ -42,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const installBtn = document.getElementById('install-btn');
     const installDismissBtn = document.getElementById('install-dismiss-btn');
     const colorPaletteSelector = document.getElementById('color-palette-selector');
-    // CORREÇÃO: Adicionando os elementos do modal do iOS que faltavam
     const iosStartPromptModalOverlay = document.getElementById('ios-start-prompt-modal-overlay');
     const iosPromptConfirmBtn = document.getElementById('ios-prompt-confirm-btn');
     const iosPromptCancelBtn = document.getElementById('ios-prompt-cancel-btn');
@@ -101,18 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyMissions: [],
         completedMissions: [],
         lastMissionDate: null,
-    };
-
-    const achievements = {
-        FIRST_STEP: { name: 'Primeiro Passo', description: 'Complete sua primeira sessão de foco.', emoji: '🚀' },
-        FOCUSED_BEGINNER: { name: 'Iniciante Focado', description: 'Complete 5 sessões de foco.', emoji: '🎯' },
-        TASK_MASTER: { name: 'Mestre das Tarefas', description: 'Complete 10 tarefas em um dia.', emoji: '✔️' },
-        MARATHONER: { name: 'Maratonista', description: 'Foque por um total de 4 horas em um dia.', emoji: '🏃' },
-        STREAK_STARTER: { name: 'Começando a Pegar Fogo', description: 'Alcance uma sequência de 3 dias.', emoji: '🔥' },
-        ON_FIRE: { name: 'Em Chamas!', description: 'Alcance uma sequência de 7 dias.', emoji: '🔥🔥' },
-        COIN_COLLECTOR: { name: 'Colecionador de Moedas', description: 'Acumule 500 moedas.', emoji: '💰' },
-        LEVEL_5: { name: 'Nível 5', description: 'Alcance o nível 5.', emoji: '⭐' },
-        LEVEL_10: { name: 'Nível 10', description: 'Alcance o nível 10.', emoji: '🌟' }
     };
 
     // --- LÓGICA DE GAMIFICATION ---
@@ -201,15 +189,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const checkForAchievements = () => {
         const stats = getDailyStats();
+        // Ações
         if (stats.pomodorosCompletedToday >= 1) unlockAchievement('FIRST_STEP');
         if (stats.pomodorosCompletedToday >= 5) unlockAchievement('FOCUSED_BEGINNER');
         if (stats.tasksCompletedToday >= 10) unlockAchievement('TASK_MASTER');
         if (stats.focusTimeToday >= 14400) unlockAchievement('MARATHONER');
+        // Consistência
         if (gamification.currentStreak >= 3) unlockAchievement('STREAK_STARTER');
         if (gamification.currentStreak >= 7) unlockAchievement('ON_FIRE');
+        // Recursos
         if (gamification.coins >= 500) unlockAchievement('COIN_COLLECTOR');
+        // Níveis
         if (gamification.level >= 5) unlockAchievement('LEVEL_5');
         if (gamification.level >= 10) unlockAchievement('LEVEL_10');
+        if (gamification.level >= 15) unlockAchievement('LEVEL_15');
+        if (gamification.level >= 20) unlockAchievement('LEVEL_20');
+        if (gamification.level >= 25) unlockAchievement('LEVEL_25');
+        if (gamification.level >= 30) unlockAchievement('LEVEL_30');
+        if (gamification.level >= 35) unlockAchievement('LEVEL_35');
+        if (gamification.level >= 40) unlockAchievement('LEVEL_40');
+        if (gamification.level >= 45) unlockAchievement('LEVEL_45');
+        if (gamification.level >= 50) unlockAchievement('LEVEL_50');
     };
 
     const addXP = (amount) => {
@@ -330,11 +330,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const renderDashboard = () => {
-        // Renderiza estatísticas gerais
         dashboardCurrentStreak.textContent = gamification.currentStreak;
         dashboardLongestStreak.textContent = gamification.longestStreak;
         
-        // CORREÇÃO: Renderiza o relatório detalhado por tarefa
         if (tasks.length === 0) {
             dashboardDailyReport.innerHTML = '<p class="text-muted text-center text-sm">Nenhuma tarefa para exibir.</p>';
         } else {
@@ -358,7 +356,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAchievements();
     };
 
-    // --- LÓGICA DE BADGING E ÁUDIO ---
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     let audioInitialized = false;
     const _playBeepInternal = (frequency, duration, volume) => {
@@ -384,13 +381,11 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => playBeep(784, 300, 0.5), 400);
     };
 
-    // --- LÓGICA DE INSTALAÇÃO PWA ---
     window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstallPrompt = e; if (!localStorage.getItem('installBannerDismissed')) installBanner.style.display = 'block'; });
     installBtn.addEventListener('click', () => { if (deferredInstallPrompt) { deferredInstallPrompt.prompt(); deferredInstallPrompt.userChoice.then(() => { deferredInstallPrompt = null; installBanner.style.display = 'none'; }); } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) { showModal(alertModalOverlay, 'Para instalar no iOS, toque em Compartilhar e "Adicionar à Tela de Início".'); } });
     installDismissBtn.addEventListener('click', () => { localStorage.setItem('installBannerDismissed', 'true'); installBanner.style.display = 'none'; });
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) installBanner.style.display = 'none';
 
-    // --- FUNÇÕES DE GESTÃO DE TEMA E MODO ---
     const applyTheme = (themeName) => {
         const theme = themes[themeName] || themes.brasil_dark; 
         const root = document.documentElement;
@@ -431,7 +426,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isRunning) resetTimer('focus');
     };
 
-    // --- FUNÇÕES DO TIMER ---
     const showModal = (modalOverlay, message) => {
         const messageElId = modalOverlay.id.replace('-overlay', '-message');
         const messageEl = document.getElementById(messageElId);
@@ -502,7 +496,6 @@ document.addEventListener('DOMContentLoaded', () => {
         coinGainDisplay.textContent = '';
         if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
 
-        // CORREÇÃO: Restaurando a lógica de notificação Push
         if ('Notification' in window && Notification.permission === 'granted') {
             const notificationTitle = mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!';
             const notificationBody = mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?';
@@ -613,7 +606,6 @@ document.addEventListener('DOMContentLoaded', () => {
             taskEl.className = `task-item p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''} ${task.completed ? 'opacity-60' : ''}`;
             taskEl.dataset.id = task.id;
             
-            // CORREÇÃO: Restaurando o template detalhado do card de tarefa
             taskEl.innerHTML = `
             <div class="flex justify-between items-center">
                 <div class="flex items-center min-w-0 flex-grow">
@@ -683,7 +675,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // CORREÇÃO: Restaurando a lógica de edição de tarefas
     const toggleEditState = (id) => {
         tasks.forEach(task => task.isEditing = task.id === id ? !task.isEditing : false);
         renderTasks();
@@ -765,7 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        tasks.forEach(task => task.isEditing = false); // Garante que nenhuma tarefa carregue em modo de edição
+        tasks.forEach(task => task.isEditing = false);
         focusDurationInput.value = settings.focusDuration;
         shortBreakDurationInput.value = settings.shortBreakDuration;
         longBreakDurationInput.value = settings.longBreakDuration;
@@ -779,7 +770,6 @@ document.addEventListener('DOMContentLoaded', () => {
         generateDailyMissions();
     };
 
-    // --- EVENT LISTENERS ---
     const handleStartPauseClick = () => {
         startPauseBtn.classList.add('start-pause-btn-clicked');
         startPauseBtn.addEventListener('animationend', () => startPauseBtn.classList.remove('start-pause-btn-clicked'), { once: true });
@@ -804,7 +794,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // CORREÇÃO: Restaurando a lógica de notificação do iOS
     startPauseBtn.addEventListener('click', () => {
         if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
         xpGainDisplay.textContent = '';
@@ -837,7 +826,7 @@ document.addEventListener('DOMContentLoaded', () => {
             eventDescription = `Sua pausa acabou. Hora de voltar ao foco!`;
             duration = mode === 'shortBreak' ? settings.shortBreakDuration : settings.longBreakDuration;
         }
-        // Lógica para gerar e baixar o arquivo .ics
+        
         const formatDT = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
         const eventStartTime = new Date(Date.now() + duration * 60 * 1000);
         const eventEndTime = new Date(eventStartTime.getTime() + 1 * 60 * 1000);
@@ -935,7 +924,6 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.addEventListener('click', (e) => { if (e.target === overlay) hideModal(overlay); });
     });
 
-    // CORREÇÃO: Restaurando os listeners para edição de tarefas
     taskListEl.addEventListener('click', (e) => {
         const deleteBtn = e.target.closest('[data-delete-id]');
         const completeBtn = e.target.closest('[data-complete-id]');
