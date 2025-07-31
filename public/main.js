@@ -1,7 +1,8 @@
-// Importa a definição de temas, missões e conquistas
+// Importa a definição de temas, missões, conquistas e itens da loja
 import { themes } from './themes.js';
 import { missionsData } from './missions.js';
 import { achievements } from './achievements.js';
+import { shopCollections } from './shop.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMENTOS DO DOM ---
@@ -48,6 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const iosPromptCancelBtn = document.getElementById('ios-prompt-cancel-btn');
     const iosPromptTitle = document.getElementById('ios-prompt-title');
     const iosPromptMessage = document.getElementById('ios-prompt-message');
+    const shopBtn = document.getElementById('shop-btn');
+    const shopModalOverlay = document.getElementById('shop-modal-overlay');
+    const shopModalCloseBtn = document.getElementById('shop-modal-close-btn');
+    const shopCoinsDisplay = document.getElementById('shop-coins-display');
+    const shopItemsContainer = document.getElementById('shop-items-container');
 
     // --- ELEMENTOS DE GAMIFICATION ---
     const levelDisplay = document.getElementById('level-display');
@@ -101,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyMissions: [],
         completedMissions: [],
         lastMissionDate: null,
+        purchasedItems: [],
     };
 
     // --- LÓGICA DE GAMIFICATION ---
@@ -153,11 +160,14 @@ document.addEventListener('DOMContentLoaded', () => {
         tasksCompletedToday: tasks.filter(t => t.completed).length,
         pomodorosCompletedToday: tasks.reduce((acc, task) => acc + task.pomodorosCompleted, 0),
         uninterruptedSessionsToday: uninterruptedSessionsToday,
+        tasksAddedToday: tasks.length,
+        longBreaksToday: Math.floor(pomodoroSessionCount / settings.longBreakInterval),
+        startedBefore9AM: tasks.length > 0 && new Date().getHours() < 9 ? 1 : 0,
     });
 
     const checkMissionsProgress = () => {
         const stats = getDailyStats();
-        const allMissions = [...gamification.dailyMissions, ...Object.values(missionsData).filter(m => m.type === 'secret')];
+        const allMissions = [...gamification.dailyMissions, ...Object.values(shopCollections).flatMap(c => Object.values(c.items))];
 
         allMissions.forEach(mission => {
             if (gamification.completedMissions.includes(mission.id)) return;
@@ -189,17 +199,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const checkForAchievements = () => {
         const stats = getDailyStats();
-        // Ações
         if (stats.pomodorosCompletedToday >= 1) unlockAchievement('FIRST_STEP');
         if (stats.pomodorosCompletedToday >= 5) unlockAchievement('FOCUSED_BEGINNER');
         if (stats.tasksCompletedToday >= 10) unlockAchievement('TASK_MASTER');
         if (stats.focusTimeToday >= 14400) unlockAchievement('MARATHONER');
-        // Consistência
         if (gamification.currentStreak >= 3) unlockAchievement('STREAK_STARTER');
         if (gamification.currentStreak >= 7) unlockAchievement('ON_FIRE');
-        // Recursos
         if (gamification.coins >= 500) unlockAchievement('COIN_COLLECTOR');
-        // Níveis
         if (gamification.level >= 5) unlockAchievement('LEVEL_5');
         if (gamification.level >= 10) unlockAchievement('LEVEL_10');
         if (gamification.level >= 15) unlockAchievement('LEVEL_15');
@@ -268,7 +274,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const shuffled = allDailyMissions.sort(() => 0.5 - Math.random());
         gamification.dailyMissions = shuffled.slice(0, 3);
         
-        gamification.completedMissions = gamification.completedMissions.filter(id => missionsData[id]?.type === 'secret');
+        gamification.completedMissions = gamification.completedMissions.filter(id => {
+            const mission = Object.values(shopCollections).flatMap(c => Object.values(c.items)).find(m => m.id === id);
+            return mission?.type === 'secret';
+        });
         gamification.lastMissionDate = today;
         changedThemesCount.clear();
         saveState();
@@ -399,15 +408,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderPaletteSelector = () => {
         colorPaletteSelector.innerHTML = '';
-        Object.keys(themes).sort().forEach(key => {
+        
+        const shopThemeIds = Object.values(shopCollections).flatMap(c => Object.values(c.items).map(i => i.themeId));
+        const freeThemes = Object.keys(themes).filter(themeId => !shopThemeIds.includes(themeId));
+        
+        const purchasedShopItems = gamification.purchasedItems
+            .map(itemId => {
+                for (const collection of Object.values(shopCollections)) {
+                    if (collection.items[itemId]) {
+                        return collection.items[itemId];
+                    }
+                }
+                return null;
+            })
+            .filter(Boolean);
+        
+        const purchasedThemeIds = purchasedShopItems.map(item => item.themeId);
+        const availableThemeIds = [...new Set([...freeThemes, ...purchasedThemeIds])].sort();
+
+        availableThemeIds.forEach(key => {
             const theme = themes[key];
+            if (!theme) return;
             const button = document.createElement('button');
             button.dataset.theme = key;
             button.title = theme.name;
             button.className = `h-12 rounded-lg border-2 transition-all transform flex flex-col items-center justify-center p-1 text-xs font-semibold ${settings.theme === key ? 'border-white scale-105' : 'border-transparent'}`;
             button.style.backgroundColor = theme['--color-bg-shell'];
             button.style.color = theme['--color-text-muted'];
-            button.innerHTML = `<div class="w-full h-4 rounded" style="background-color: rgb(${theme['--color-primary-rgb']})"></div><span class="mt-1">${theme.name.split(' ')[0]}</span>`;
+            button.innerHTML = `
+                <div class="w-full h-4 rounded" style="background-color: rgb(${theme['--color-primary-rgb']})"></div>
+                <span class="mt-1">${theme.name.split(' ')[0]}</span>
+            `;
             colorPaletteSelector.appendChild(button);
         });
     };
@@ -744,7 +775,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showCompletedTasks = state.showCompletedTasks || false;
             uninterruptedSessionsToday = state.uninterruptedSessionsToday || 0;
             
-            const defaultGamification = { level: 1, xp: 0, coins: 0, currentStreak: 0, longestStreak: 0, lastSessionDate: null, unlockedAchievements: [], dailyMissions: [], completedMissions: [], lastMissionDate: null };
+            const defaultGamification = { level: 1, xp: 0, coins: 0, currentStreak: 0, longestStreak: 0, lastSessionDate: null, unlockedAchievements: [], dailyMissions: [], completedMissions: [], lastMissionDate: null, purchasedItems: [] };
             gamification = { ...defaultGamification, ...state.gamification };
 
             if (state.timerState) {
