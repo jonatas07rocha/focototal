@@ -45,9 +45,19 @@ export function toggleTaskCompleted(id) {
 
 // Ativa/desativa o modo de edição de uma tarefa.
 export function toggleEditState(id) {
+    let inputToFocus = null;
     state.tasks.forEach(task => {
-        task.isEditing = task.id === id ? !task.isEditing : false;
+        if (task.id === id) {
+            task.isEditing = !task.isEditing;
+            if (task.isEditing) {
+                // Prepara para focar no input que será renderizado
+                inputToFocus = `[data-edit-input-id="${id}"]`;
+            }
+        } else {
+            task.isEditing = false;
+        }
     });
+    return inputToFocus; // Retorna o seletor do input para focar
 }
 
 // Atualiza o nome de uma tarefa.
