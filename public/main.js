@@ -45,7 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 ui.showModal(dom.alertModalOverlay, `Parabéns! Você alcançou o Nível ${state.gamification.level}!`);
             }
             
-            ui.showModal(dom.sessionEndModalOverlay, `Você ${state.settings.focusMethod === 'pomodoro' ? 'completou um Pomodoro!' : 'finalizou seu foco.'} Hora de fazer uma pausa.`);
+            // CORREÇÃO: A mensagem de fim de sessão agora é diferente para cada modo.
+            const endMessage = state.settings.focusMethod === 'pomodoro'
+                ? 'Você completou um Pomodoro! Hora de fazer uma pausa.'
+                : 'Sessão de foco finalizada!';
+            ui.showModal(dom.sessionEndModalOverlay, endMessage);
+
             dom.xpGainDisplay.textContent = `+${xpGained} XP`;
             dom.coinGainDisplay.textContent = `+5 Moedas`;
 
@@ -88,13 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.coinGainDisplay.textContent = '';
         
         if (state.isRunning) {
-            // CORREÇÃO: Verifica se está no modo adaptativo para finalizar a sessão em vez de pausar.
             if (state.settings.focusMethod === 'adaptativo' && state.mode === 'focus') {
                 clearInterval(state.timerInterval);
                 state.timerInterval = null;
                 handleSessionEnd();
             } else {
-                // Comportamento original de pausa para Pomodoro e pausas.
                 timer.pauseTimer();
             }
         } else {
