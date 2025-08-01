@@ -145,10 +145,18 @@ document.addEventListener('DOMContentLoaded', () => {
             handleAddTask();
         }
     });
+
+    // CORREÇÃO: Adiciona listener para o botão de mostrar/ocultar concluídas.
+    if (dom.toggleCompletedBtn) {
+        dom.toggleCompletedBtn.addEventListener('click', () => {
+            tasks.toggleShowCompleted();
+            ui.updateShowCompletedBtn();
+            ui.renderTasks();
+            saveState();
+        });
+    }
     
     dom.taskListEl.addEventListener('click', (e) => {
-        // CORREÇÃO: Impede que o listener de clique da lista interfira com a edição.
-        // Se o clique for no campo de input, não faz nada e deixa o navegador agir.
         if (e.target.matches('.task-edit-input')) {
             return;
         }
@@ -266,6 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.updateGamificationUI();
         ui.renderDashboard();
         ui.updateUI();
+        ui.updateShowCompletedBtn(); // CORREÇÃO: Atualiza o estado inicial do botão.
         
         // Reinicia o timer se necessário
         if (state.isRunning) {
