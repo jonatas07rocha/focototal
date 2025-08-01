@@ -215,6 +215,31 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.showModal(dom.settingsModalOverlay);
     });
 
+    // CORREÇÃO: Adiciona o listener para abrir o modal do Dashboard.
+    dom.dashboardBtn.addEventListener('click', () => {
+        ui.renderDashboard(); // Garante que os dados estão atualizados
+        ui.showModal(dom.dashboardModalOverlay);
+    });
+
+    // CORREÇÃO: Adiciona a lógica de controle das abas do Dashboard.
+    dom.dashboardModalOverlay.addEventListener('click', (e) => {
+        const tabButton = e.target.closest('.dashboard-tab');
+        if (!tabButton) return;
+
+        const tabName = tabButton.dataset.tab;
+        
+        // Atualiza os botões
+        dom.dashboardModalOverlay.querySelectorAll('.dashboard-tab').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+
+        // Atualiza os painéis de conteúdo
+        dom.dashboardModalOverlay.querySelectorAll('.dashboard-tab-content').forEach(content => {
+            content.classList.toggle('hidden', content.id !== `dashboard-${tabName}-content`);
+        });
+    });
+
+
     dom.settingsSaveBtn.addEventListener('click', () => {
         state.settings.focusDuration = parseInt(dom.focusDurationInput.value) || 25;
         state.settings.shortBreakDuration = parseInt(dom.shortBreakDurationInput.value) || 5;
@@ -273,7 +298,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.updateGamificationUI();
         ui.renderDashboard();
         ui.updateUI();
-        // CORREÇÃO: Garante que o texto do botão seja atualizado ao carregar a página.
         ui.updateShowCompletedBtn();
         
         // Reinicia o timer se necessário
