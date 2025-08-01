@@ -167,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const checkMissionsProgress = () => {
         const stats = getDailyStats();
-        // CORREÇÃO: A lista de missões deve vir de `missionsData`, não da loja.
         const allMissions = [...gamification.dailyMissions, ...Object.values(missionsData).filter(m => m.type === 'secret')];
 
         allMissions.forEach(mission => {
@@ -275,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const shuffled = allDailyMissions.sort(() => 0.5 - Math.random());
         gamification.dailyMissions = shuffled.slice(0, 3);
         
-        // CORREÇÃO: O filtro deve usar `missionsData` para encontrar missões secretas.
         gamification.completedMissions = gamification.completedMissions.filter(id => missionsData[id]?.type === 'secret');
         gamification.lastMissionDate = today;
         changedThemesCount.clear();
@@ -889,6 +887,11 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsBtn.addEventListener('click', () => { renderPaletteSelector(); showModal(settingsModalOverlay); });
     dashboardBtn.addEventListener('click', () => { renderDashboard(); showModal(dashboardModalOverlay); });
     helpBtn.addEventListener('click', () => showModal(helpModalOverlay));
+    shopBtn.addEventListener('click', () => {
+        renderShop();
+        showModal(shopModalOverlay);
+    });
+    shopModalCloseBtn.addEventListener('click', () => hideModal(shopModalOverlay));
     dashboardModalCloseBtn.addEventListener('click', () => hideModal(dashboardModalOverlay));
     alertModalCloseBtn.addEventListener('click', () => hideModal(alertModalOverlay));
     sessionEndCloseBtn.addEventListener('click', () => hideModal(sessionEndModalOverlay));
@@ -950,7 +953,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    [alertModalOverlay, settingsModalOverlay, dashboardModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay, iosStartPromptModalOverlay].forEach(overlay => {
+    shopItemsContainer.addEventListener('click', (e) => {
+        const buyButton = e.target.closest('button[data-item-id]');
+        if (buyButton && !buyButton.disabled) {
+            buyItem(buyButton.dataset.itemId);
+        }
+    });
+
+    [alertModalOverlay, settingsModalOverlay, dashboardModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay, iosStartPromptModalOverlay, shopModalOverlay].forEach(overlay => {
         overlay.addEventListener('click', (e) => { if (e.target === overlay) hideModal(overlay); });
     });
 
