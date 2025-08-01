@@ -4,6 +4,7 @@
  */
 
 import { state } from './state.js';
+import { dom } from './ui.js';
 
 // Salva o estado atual no localStorage.
 export function saveState() {
@@ -14,6 +15,7 @@ export function saveState() {
         uninterruptedSessionsToday: state.uninterruptedSessionsToday,
         settings: state.settings,
         gamification: state.gamification,
+        showCompletedTasks: state.showCompletedTasks,
         timerState: {
             isRunning: state.isRunning,
             mode: state.mode,
@@ -40,10 +42,11 @@ export function loadState() {
     state.selectedTaskId = savedState.selectedTaskId;
     state.pomodoroSessionCount = savedState.pomodoroSessionCount || 0;
     state.uninterruptedSessionsToday = savedState.uninterruptedSessionsToday || 0;
+    state.showCompletedTasks = savedState.showCompletedTasks || false;
     Object.assign(state.settings, savedState.settings);
     Object.assign(state.gamification, savedState.gamification);
     
-    // Restaura o timer se ele estava rodando quando o app foi fechado.
+    // Restaura o timer se ele estava a ser executado quando a aplicação foi fechada.
     if (savedState.timerState) {
         const { isRunning: wasRunning, mode: savedMode, endTime: savedEndTime, totalTime: savedTotalTime } = savedState.timerState;
         if (wasRunning && savedEndTime && savedEndTime > Date.now()) {
@@ -52,7 +55,6 @@ export function loadState() {
             state.totalTime = savedTotalTime;
             state.endTime = savedEndTime;
             state.timeRemaining = Math.round((state.endTime - Date.now()) / 1000);
-            // O timer em si será reiniciado na inicialização principal.
         }
     }
     
@@ -61,4 +63,10 @@ export function loadState() {
 
     // Converte o array salvo de volta para um Set.
     state.gamification.changedThemesCount = new Set(savedState.gamification.changedThemesCount || []);
+
+    // Atualiza os inputs de configuração com os valores carregados
+    dom.focusDurationInput.value = state.settings.focusDuration;
+    dom.shortBreakDurationInput.value = state.settings.shortBreakDuration;
+    dom.longBreakDurationInput.value = state.settings.longBreakDuration;
+    dom.longBreakIntervalInput.value = state.settings.longBreakInterval;
 }
