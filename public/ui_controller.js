@@ -133,20 +133,32 @@ export function renderDashboard() {
     renderAchievements();
 }
 
+// CORREÇÃO: Filtra os temas para mostrar apenas os que o usuário possui.
 export function renderPaletteSelector() {
     dom.colorPaletteSelector.innerHTML = '';
-    Object.keys(themes).sort().forEach(key => {
-        const theme = themes[key];
+    
+    // Define quais temas são gratuitos e sempre devem aparecer.
+    const defaultThemes = ['brasil_dark', 'brasil_light'];
+    
+    // Combina os temas padrão com os temas que o usuário desbloqueou.
+    // O 'Set' é usado para evitar duplicatas caso um tema padrão seja comprado.
+    const availableThemeIds = new Set([...defaultThemes, ...state.gamification.unlockedThemes]);
+
+    availableThemeIds.forEach(themeId => {
+        if (!themes[themeId]) return; // Pula se o tema não existir
+
+        const theme = themes[themeId];
         const button = document.createElement('button');
-        button.dataset.theme = key;
+        button.dataset.theme = themeId;
         button.title = theme.name;
-        button.className = `h-12 rounded-lg border-2 transition-all transform flex flex-col items-center justify-center p-1 text-xs font-semibold ${state.settings.theme === key ? 'border-white scale-105' : 'border-transparent'}`;
+        button.className = `h-12 rounded-lg border-2 transition-all transform flex flex-col items-center justify-center p-1 text-xs font-semibold ${state.settings.theme === themeId ? 'border-white scale-105' : 'border-transparent'}`;
         button.style.backgroundColor = theme['--color-bg-shell'];
         button.style.color = theme['--color-text-muted'];
         button.innerHTML = `<div class="w-full h-4 rounded" style="background-color: rgb(${theme['--color-primary-rgb']})"></div><span class="mt-1">${theme.name.split(' ')[0]}</span>`;
         dom.colorPaletteSelector.appendChild(button);
     });
 }
+
 
 // --- Funções de Atualização da UI ---
 
@@ -228,7 +240,6 @@ export function updateMethodToggleUI() {
     dom.newTaskEstimateLabel.style.display = state.settings.focusMethod === 'pomodoro' ? 'inline-block' : 'none';
 }
 
-// CORREÇÃO: Adiciona a lógica para verificar o estado e atualizar o texto do botão.
 export function updateShowCompletedBtn() {
     if (dom.toggleCompletedTasksBtn) {
         dom.toggleCompletedTasksBtn.textContent = state.showCompletedTasks ? 'Ocultar Concluídas' : 'Mostrar Concluídas';
