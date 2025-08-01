@@ -55,9 +55,6 @@ export const dom = {
     resetCancelBtn: document.getElementById('reset-cancel-btn'),
     dashboardModalOverlay: document.getElementById('dashboard-modal-overlay'),
     dashboardModalCloseBtn: document.getElementById('dashboard-modal-close-btn'),
-    iosStartPromptModalOverlay: document.getElementById('ios-start-prompt-modal-overlay'),
-    iosPromptConfirmBtn: document.getElementById('ios-prompt-confirm-btn'),
-    iosPromptCancelBtn: document.getElementById('ios-prompt-cancel-btn'),
     
     // Elementos dentro dos Modais
     xpGainDisplay: document.getElementById('xp-gain-display'),
@@ -67,8 +64,6 @@ export const dom = {
     longBreakDurationInput: document.getElementById('long-break-duration'),
     longBreakIntervalInput: document.getElementById('long-break-interval'),
     colorPaletteSelector: document.getElementById('color-palette-selector'),
-    iosPromptTitle: document.getElementById('ios-prompt-title'),
-    iosPromptMessage: document.getElementById('ios-prompt-message'),
     
     // Conteúdo do Dashboard
     dashboardStatsContent: document.getElementById('dashboard-stats-content'),
@@ -96,4 +91,11 @@ export const dom = {
     shopModalCloseBtn: document.getElementById('shop-modal-close-btn'),
     shopCoinsDisplay: document.getElementById('shop-coins-display'),
     shopCollectionsContainer: document.getElementById('shop-collections-container'),
+
+    // CORREÇÃO: Adiciona os seletores do modal de notificação do iOS
+    iosStartPromptModalOverlay: document.getElementById('ios-start-prompt-modal-overlay'),
+    iosPromptConfirmBtn: document.getElementById('ios-prompt-confirm-btn'),
+    iosPromptCancelBtn: document.getElementById('ios-prompt-cancel-btn'),
+    iosPromptTitle: document.getElementById('ios-prompt-title'),
+    iosPromptMessage: document.getElementById('ios-prompt-message'),
 };
