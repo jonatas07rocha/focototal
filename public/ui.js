@@ -90,7 +90,7 @@ export const dom = {
     installBtn: document.getElementById('install-btn'),
     installDismissBtn: document.getElementById('install-dismiss-btn'),
 
-    // CORREÇÃO: Adiciona os seletores da Loja
+    // Seletores da Loja
     shopBtn: document.getElementById('shop-btn'),
     shopModalOverlay: document.getElementById('shop-modal-overlay'),
     shopModalCloseBtn: document.getElementById('shop-modal-close-btn'),
