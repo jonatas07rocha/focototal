@@ -83,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // CORREÇÃO: Lógica de adicionar tarefa encapsulada para ser reutilizada.
     function handleAddTask() {
         const taskName = dom.newTaskInput.value.trim();
         const estimate = parseInt(dom.newTaskEstimateInput.value);
@@ -141,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Controles de Tarefas
     dom.addTaskBtn.addEventListener('click', handleAddTask);
 
-    // CORREÇÃO: Adiciona listener para a tecla "Enter" no input da tarefa.
     dom.newTaskInput.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') {
             handleAddTask();
@@ -149,6 +147,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     dom.taskListEl.addEventListener('click', (e) => {
+        // CORREÇÃO: Impede que o listener de clique da lista interfira com a edição.
+        // Se o clique for no campo de input, não faz nada e deixa o navegador agir.
+        if (e.target.matches('.task-edit-input')) {
+            return;
+        }
+
         const target = e.target.closest('[data-id], [data-complete-id], [data-edit-id], [data-delete-id]');
         if (!target) return;
 
