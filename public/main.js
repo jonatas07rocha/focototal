@@ -1,8 +1,6 @@
-// Importa a definição de temas, missões, conquistas e itens da loja
+// Importa a definição de temas e missões
 import { themes } from './themes.js';
 import { missionsData } from './missions.js';
-import { achievements } from './achievements.js';
-import { shopCollections } from './shop.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMENTOS DO DOM ---
@@ -44,16 +42,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const installBtn = document.getElementById('install-btn');
     const installDismissBtn = document.getElementById('install-dismiss-btn');
     const colorPaletteSelector = document.getElementById('color-palette-selector');
+    // CORREÇÃO: Adicionando os elementos do modal do iOS que faltavam
     const iosStartPromptModalOverlay = document.getElementById('ios-start-prompt-modal-overlay');
     const iosPromptConfirmBtn = document.getElementById('ios-prompt-confirm-btn');
     const iosPromptCancelBtn = document.getElementById('ios-prompt-cancel-btn');
     const iosPromptTitle = document.getElementById('ios-prompt-title');
     const iosPromptMessage = document.getElementById('ios-prompt-message');
-    const shopBtn = document.getElementById('shop-btn');
-    const shopModalOverlay = document.getElementById('shop-modal-overlay');
-    const shopModalCloseBtn = document.getElementById('shop-modal-close-btn');
-    const shopCoinsDisplay = document.getElementById('shop-coins-display');
-    const shopItemsContainer = document.getElementById('shop-items-container');
 
     // --- ELEMENTOS DE GAMIFICATION ---
     const levelDisplay = document.getElementById('level-display');
@@ -107,7 +101,18 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyMissions: [],
         completedMissions: [],
         lastMissionDate: null,
-        purchasedItems: [],
+    };
+
+    const achievements = {
+        FIRST_STEP: { name: 'Primeiro Passo', description: 'Complete sua primeira sessão de foco.', emoji: '🚀' },
+        FOCUSED_BEGINNER: { name: 'Iniciante Focado', description: 'Complete 5 sessões de foco.', emoji: '🎯' },
+        TASK_MASTER: { name: 'Mestre das Tarefas', description: 'Complete 10 tarefas em um dia.', emoji: '✔️' },
+        MARATHONER: { name: 'Maratonista', description: 'Foque por um total de 4 horas em um dia.', emoji: '🏃' },
+        STREAK_STARTER: { name: 'Começando a Pegar Fogo', description: 'Alcance uma sequência de 3 dias.', emoji: '🔥' },
+        ON_FIRE: { name: 'Em Chamas!', description: 'Alcance uma sequência de 7 dias.', emoji: '🔥🔥' },
+        COIN_COLLECTOR: { name: 'Colecionador de Moedas', description: 'Acumule 500 moedas.', emoji: '💰' },
+        LEVEL_5: { name: 'Nível 5', description: 'Alcance o nível 5.', emoji: '⭐' },
+        LEVEL_10: { name: 'Nível 10', description: 'Alcance o nível 10.', emoji: '🌟' }
     };
 
     // --- LÓGICA DE GAMIFICATION ---
@@ -160,9 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
         tasksCompletedToday: tasks.filter(t => t.completed).length,
         pomodorosCompletedToday: tasks.reduce((acc, task) => acc + task.pomodorosCompleted, 0),
         uninterruptedSessionsToday: uninterruptedSessionsToday,
-        tasksAddedToday: tasks.length,
-        longBreaksToday: Math.floor(pomodoroSessionCount / settings.longBreakInterval),
-        startedBefore9AM: tasks.length > 0 && new Date().getHours() < 9 ? 1 : 0,
     });
 
     const checkMissionsProgress = () => {
@@ -170,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const allMissions = [...gamification.dailyMissions, ...Object.values(missionsData).filter(m => m.type === 'secret')];
 
         allMissions.forEach(mission => {
-            if (gamification.completedMissions.includes(mission.id) || !mission) return;
+            if (gamification.completedMissions.includes(mission.id)) return;
 
             let completed = false;
             if (mission.type === 'daily') {
@@ -208,14 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gamification.coins >= 500) unlockAchievement('COIN_COLLECTOR');
         if (gamification.level >= 5) unlockAchievement('LEVEL_5');
         if (gamification.level >= 10) unlockAchievement('LEVEL_10');
-        if (gamification.level >= 15) unlockAchievement('LEVEL_15');
-        if (gamification.level >= 20) unlockAchievement('LEVEL_20');
-        if (gamification.level >= 25) unlockAchievement('LEVEL_25');
-        if (gamification.level >= 30) unlockAchievement('LEVEL_30');
-        if (gamification.level >= 35) unlockAchievement('LEVEL_35');
-        if (gamification.level >= 40) unlockAchievement('LEVEL_40');
-        if (gamification.level >= 45) unlockAchievement('LEVEL_45');
-        if (gamification.level >= 50) unlockAchievement('LEVEL_50');
     };
 
     const addXP = (amount) => {
@@ -336,9 +330,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const renderDashboard = () => {
+        // Renderiza estatísticas gerais
         dashboardCurrentStreak.textContent = gamification.currentStreak;
         dashboardLongestStreak.textContent = gamification.longestStreak;
         
+        // CORREÇÃO: Renderiza o relatório detalhado por tarefa
         if (tasks.length === 0) {
             dashboardDailyReport.innerHTML = '<p class="text-muted text-center text-sm">Nenhuma tarefa para exibir.</p>';
         } else {
@@ -362,6 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderAchievements();
     };
 
+    // --- LÓGICA DE BADGING E ÁUDIO ---
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     let audioInitialized = false;
     const _playBeepInternal = (frequency, duration, volume) => {
@@ -387,11 +384,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => playBeep(784, 300, 0.5), 400);
     };
 
+    // --- LÓGICA DE INSTALAÇÃO PWA ---
     window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstallPrompt = e; if (!localStorage.getItem('installBannerDismissed')) installBanner.style.display = 'block'; });
     installBtn.addEventListener('click', () => { if (deferredInstallPrompt) { deferredInstallPrompt.prompt(); deferredInstallPrompt.userChoice.then(() => { deferredInstallPrompt = null; installBanner.style.display = 'none'; }); } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) { showModal(alertModalOverlay, 'Para instalar no iOS, toque em Compartilhar e "Adicionar à Tela de Início".'); } });
     installDismissBtn.addEventListener('click', () => { localStorage.setItem('installBannerDismissed', 'true'); installBanner.style.display = 'none'; });
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) installBanner.style.display = 'none';
 
+    // --- FUNÇÕES DE GESTÃO DE TEMA E MODO ---
     const applyTheme = (themeName) => {
         const theme = themes[themeName] || themes.brasil_dark; 
         const root = document.documentElement;
@@ -405,37 +404,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderPaletteSelector = () => {
         colorPaletteSelector.innerHTML = '';
-        
-        const shopThemeIds = Object.values(shopCollections).flatMap(c => Object.values(c.items).map(i => i.themeId));
-        const freeThemes = Object.keys(themes).filter(themeId => !shopThemeIds.includes(themeId));
-        
-        const purchasedShopItems = gamification.purchasedItems
-            .map(itemId => {
-                for (const collection of Object.values(shopCollections)) {
-                    if (collection.items[itemId]) {
-                        return collection.items[itemId];
-                    }
-                }
-                return null;
-            })
-            .filter(Boolean);
-        
-        const purchasedThemeIds = purchasedShopItems.map(item => item.themeId);
-        const availableThemeIds = [...new Set([...freeThemes, ...purchasedThemeIds])].sort();
-
-        availableThemeIds.forEach(key => {
+        Object.keys(themes).sort().forEach(key => {
             const theme = themes[key];
-            if (!theme) return;
             const button = document.createElement('button');
             button.dataset.theme = key;
             button.title = theme.name;
             button.className = `h-12 rounded-lg border-2 transition-all transform flex flex-col items-center justify-center p-1 text-xs font-semibold ${settings.theme === key ? 'border-white scale-105' : 'border-transparent'}`;
             button.style.backgroundColor = theme['--color-bg-shell'];
             button.style.color = theme['--color-text-muted'];
-            button.innerHTML = `
-                <div class="w-full h-4 rounded" style="background-color: rgb(${theme['--color-primary-rgb']})"></div>
-                <span class="mt-1">${theme.name.split(' ')[0]}</span>
-            `;
+            button.innerHTML = `<div class="w-full h-4 rounded" style="background-color: rgb(${theme['--color-primary-rgb']})"></div><span class="mt-1">${theme.name.split(' ')[0]}</span>`;
             colorPaletteSelector.appendChild(button);
         });
     };
@@ -454,6 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isRunning) resetTimer('focus');
     };
 
+    // --- FUNÇÕES DO TIMER ---
     const showModal = (modalOverlay, message) => {
         const messageElId = modalOverlay.id.replace('-overlay', '-message');
         const messageEl = document.getElementById(messageElId);
@@ -524,6 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         coinGainDisplay.textContent = '';
         if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
 
+        // CORREÇÃO: Restaurando a lógica de notificação Push
         if ('Notification' in window && Notification.permission === 'granted') {
             const notificationTitle = mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!';
             const notificationBody = mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?';
@@ -634,6 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
             taskEl.className = `task-item p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''} ${task.completed ? 'opacity-60' : ''}`;
             taskEl.dataset.id = task.id;
             
+            // CORREÇÃO: Restaurando o template detalhado do card de tarefa
             taskEl.innerHTML = `
             <div class="flex justify-between items-center">
                 <div class="flex items-center min-w-0 flex-grow">
@@ -703,6 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // CORREÇÃO: Restaurando a lógica de edição de tarefas
     const toggleEditState = (id) => {
         tasks.forEach(task => task.isEditing = task.id === id ? !task.isEditing : false);
         renderTasks();
@@ -772,14 +753,8 @@ document.addEventListener('DOMContentLoaded', () => {
             showCompletedTasks = state.showCompletedTasks || false;
             uninterruptedSessionsToday = state.uninterruptedSessionsToday || 0;
             
-            const defaultGamification = { level: 1, xp: 0, coins: 0, currentStreak: 0, longestStreak: 0, lastSessionDate: null, unlockedAchievements: [], dailyMissions: [], completedMissions: [], lastMissionDate: null, purchasedItems: [] };
+            const defaultGamification = { level: 1, xp: 0, coins: 0, currentStreak: 0, longestStreak: 0, lastSessionDate: null, unlockedAchievements: [], dailyMissions: [], completedMissions: [], lastMissionDate: null };
             gamification = { ...defaultGamification, ...state.gamification };
-
-            // --- CORREÇÃO APLICADA ---
-            // Garante que 'purchasedItems' exista, prevenindo o erro em estados antigos.
-            if (!Array.isArray(gamification.purchasedItems)) {
-                gamification.purchasedItems = [];
-            }
 
             if (state.timerState) {
                 const { isRunning: wasRunning, mode: savedMode, endTime: savedEndTime, totalTime: savedTotalTime } = state.timerState;
@@ -790,7 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        tasks.forEach(task => task.isEditing = false);
+        tasks.forEach(task => task.isEditing = false); // Garante que nenhuma tarefa carregue em modo de edição
         focusDurationInput.value = settings.focusDuration;
         shortBreakDurationInput.value = settings.shortBreakDuration;
         longBreakDurationInput.value = settings.longBreakDuration;
@@ -803,91 +778,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         generateDailyMissions();
     };
-
-    // --- LÓGICA DA LOJA (Funções ausentes adicionadas) ---
-    const renderShop = () => {
-        shopCoinsDisplay.textContent = gamification.coins;
-        shopItemsContainer.innerHTML = '';
-
-        Object.values(shopCollections).forEach(collection => {
-            const collectionEl = document.createElement('div');
-            collectionEl.className = 'shop-collection';
-            
-            let itemsHTML = '';
-            Object.values(collection.items).forEach(item => {
-                const isPurchased = gamification.purchasedItems.includes(item.id);
-                const canAfford = gamification.coins >= item.price;
-                const isAvailable = collection.seasonal ? isSeasonalItemAvailable(item) : true;
-
-                itemsHTML += `
-                    <div class="shop-item p-4 rounded-lg flex items-center justify-between ${isPurchased ? 'opacity-60' : ''}">
-                        <div class="flex items-center space-x-4">
-                            <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background-color: ${themes[item.themeId]['--color-bg-shell']}; border: 2px solid rgb(${themes[item.themeId]['--color-primary-rgb']});">
-                                <span class="text-2xl font-bold" style="color: rgb(${themes[item.themeId]['--color-primary-rgb']});">T</span>
-                            </div>
-                            <div>
-                                <p class="font-bold">${item.name}</p>
-                                <p class="text-sm text-muted">${item.availability || ''}</p>
-                            </div>
-                        </div>
-                        <button data-item-id="${item.id}" class="bg-primary-focus hover:bg-primary-darker text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2" 
-                                ${isPurchased || !canAfford || !isAvailable ? 'disabled' : ''}>
-                            ${isPurchased ? 'Comprado' : `
-                                <i data-lucide="circle-dollar-sign" class="w-4 h-4"></i>
-                                <span>${item.price}</span>
-                            `}
-                        </button>
-                    </div>
-                `;
-            });
-
-            collectionEl.innerHTML = `
-                <h3 class="text-lg font-bold text-primary-light mb-2">${collection.name}</h3>
-                <p class="text-sm text-muted mb-4">${collection.description}</p>
-                <div class="space-y-3">${itemsHTML}</div>
-            `;
-            shopItemsContainer.appendChild(collectionEl);
-        });
-        lucide.createIcons();
-    };
-
-    const isSeasonalItemAvailable = (item) => {
-        const month = new Date().getMonth(); // 0 = Janeiro, 11 = Dezembro
-        switch(item.id) {
-            case 'CARNAVAL': return [1, 2].includes(month); // Fev, Mar
-            case 'FESTA_JUNINA': return [5, 6].includes(month); // Jun, Jul
-            case 'HALLOWEEN': return month === 9; // Out
-            case 'NATAL': return month === 11; // Dez
-            default: return true;
-        }
-    };
-
-    const buyItem = (itemId) => {
-        let itemToBuy = null;
-        for (const collection of Object.values(shopCollections)) {
-            if (collection.items[itemId]) {
-                itemToBuy = collection.items[itemId];
-                break;
-            }
-        }
-
-        if (!itemToBuy) return;
-
-        if (gamification.coins >= itemToBuy.price && !gamification.purchasedItems.includes(itemId)) {
-            gamification.coins -= itemToBuy.price;
-            gamification.purchasedItems.push(itemId);
-            
-            playBeep(784, 150, 0.4);
-            showModal(alertModalOverlay, `Tema "${itemToBuy.name}" comprado com sucesso!`);
-            
-            updateGamificationUI();
-            renderShop();
-            saveState();
-        } else {
-            showModal(alertModalOverlay, 'Você não tem moedas suficientes ou já possui este item.');
-        }
-    };
-
 
     // --- EVENT LISTENERS ---
     const handleStartPauseClick = () => {
@@ -914,6 +804,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
+    // CORREÇÃO: Restaurando a lógica de notificação do iOS
     startPauseBtn.addEventListener('click', () => {
         if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
         xpGainDisplay.textContent = '';
@@ -946,7 +837,7 @@ document.addEventListener('DOMContentLoaded', () => {
             eventDescription = `Sua pausa acabou. Hora de voltar ao foco!`;
             duration = mode === 'shortBreak' ? settings.shortBreakDuration : settings.longBreakDuration;
         }
-        
+        // Lógica para gerar e baixar o arquivo .ics
         const formatDT = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
         const eventStartTime = new Date(Date.now() + duration * 60 * 1000);
         const eventEndTime = new Date(eventStartTime.getTime() + 1 * 60 * 1000);
@@ -979,11 +870,6 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsBtn.addEventListener('click', () => { renderPaletteSelector(); showModal(settingsModalOverlay); });
     dashboardBtn.addEventListener('click', () => { renderDashboard(); showModal(dashboardModalOverlay); });
     helpBtn.addEventListener('click', () => showModal(helpModalOverlay));
-    shopBtn.addEventListener('click', () => {
-        renderShop();
-        showModal(shopModalOverlay);
-    });
-    shopModalCloseBtn.addEventListener('click', () => hideModal(shopModalOverlay));
     dashboardModalCloseBtn.addEventListener('click', () => hideModal(dashboardModalOverlay));
     alertModalCloseBtn.addEventListener('click', () => hideModal(alertModalOverlay));
     sessionEndCloseBtn.addEventListener('click', () => hideModal(sessionEndModalOverlay));
@@ -1045,17 +931,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    shopItemsContainer.addEventListener('click', (e) => {
-        const buyButton = e.target.closest('button[data-item-id]');
-        if (buyButton && !buyButton.disabled) {
-            buyItem(buyButton.dataset.itemId);
-        }
-    });
-
-    [alertModalOverlay, settingsModalOverlay, dashboardModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay, iosStartPromptModalOverlay, shopModalOverlay].forEach(overlay => {
+    [alertModalOverlay, settingsModalOverlay, dashboardModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay, iosStartPromptModalOverlay].forEach(overlay => {
         overlay.addEventListener('click', (e) => { if (e.target === overlay) hideModal(overlay); });
     });
 
+    // CORREÇÃO: Restaurando os listeners para edição de tarefas
     taskListEl.addEventListener('click', (e) => {
         const deleteBtn = e.target.closest('[data-delete-id]');
         const completeBtn = e.target.closest('[data-complete-id]');
