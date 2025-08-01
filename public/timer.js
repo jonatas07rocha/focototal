@@ -12,14 +12,17 @@ export function startTimer() {
     if (!state.selectedTaskId && state.mode === 'focus') return 'NO_TASK';
     
     if (state.settings.focusMethod === 'pomodoro' || state.mode !== 'focus') {
-        state.timeRemaining = (state.settings[`${state.mode}Duration`] || 25) * 60;
-        state.totalTime = state.timeRemaining;
+        // Se não houver tempo restante (início ou após reset), define a duração total.
+        if (state.timeRemaining <= 0) {
+            state.timeRemaining = (state.settings[`${state.mode}Duration`] || 25) * 60;
+            state.totalTime = state.timeRemaining;
+        }
     } else {
-        state.timeRemaining = 0;
+        state.timeRemaining = state.timeRemaining || 0;
         state.totalTime = 1; // Para a barra de progresso no modo adaptativo
     }
     state.isRunning = true;
-    state.endTime = Date.now() + (state.settings.focusMethod === 'pomodoro' || state.mode !== 'focus' ? state.timeRemaining * 1000 : 0);
+    state.endTime = Date.now() + state.timeRemaining * 1000;
     
     return true;
 }
@@ -29,7 +32,8 @@ export function pauseTimer() {
     if (!state.isRunning) return;
     state.isRunning = false;
     clearInterval(state.timerInterval);
-    if (state.settings.focusMethod === 'pomodoro' || state.mode !== 'focus') {
+    state.timerInterval = null;
+    if (state.endTime) {
         state.timeRemaining = Math.round((state.endTime - Date.now()) / 1000);
     }
     saveState();
@@ -44,6 +48,7 @@ export function updateTimer() {
             state.timeRemaining = remaining;
         } else {
             clearInterval(state.timerInterval);
+            state.timerInterval = null;
             finished = true;
         }
     } else {
@@ -86,6 +91,7 @@ export function switchMode() {
 // Reseta o timer para o modo atual.
 export function resetTimer(forceMode = null) {
     clearInterval(state.timerInterval);
+    state.timerInterval = null;
     state.isRunning = false;
     state.endTime = null;
     state.mode = forceMode || state.mode;
