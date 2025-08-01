@@ -88,7 +88,15 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.coinGainDisplay.textContent = '';
         
         if (state.isRunning) {
-            timer.pauseTimer();
+            // CORREÇÃO: Verifica se está no modo adaptativo para finalizar a sessão em vez de pausar.
+            if (state.settings.focusMethod === 'adaptativo' && state.mode === 'focus') {
+                clearInterval(state.timerInterval);
+                state.timerInterval = null;
+                handleSessionEnd();
+            } else {
+                // Comportamento original de pausa para Pomodoro e pausas.
+                timer.pauseTimer();
+            }
         } else {
             const startResult = timer.startTimer();
             if (startResult === 'NO_TASK') {
