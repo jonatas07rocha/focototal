@@ -215,29 +215,30 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.showModal(dom.settingsModalOverlay);
     });
 
-    // CORREÇÃO: Adiciona o listener para abrir o modal do Dashboard.
     dom.dashboardBtn.addEventListener('click', () => {
-        ui.renderDashboard(); // Garante que os dados estão atualizados
+        ui.renderDashboard();
         ui.showModal(dom.dashboardModalOverlay);
     });
 
-    // CORREÇÃO: Adiciona a lógica de controle das abas do Dashboard.
-    dom.dashboardModalOverlay.addEventListener('click', (e) => {
-        const tabButton = e.target.closest('.dashboard-tab');
-        if (!tabButton) return;
+    // CORREÇÃO: Lógica de controle das abas do Dashboard aprimorada.
+    if (dom.dashboardModalOverlay) {
+        const tabButtons = dom.dashboardModalOverlay.querySelectorAll('.dashboard-tab');
+        const tabContents = dom.dashboardModalOverlay.querySelectorAll('.dashboard-tab-content');
 
-        const tabName = tabButton.dataset.tab;
-        
-        // Atualiza os botões
-        dom.dashboardModalOverlay.querySelectorAll('.dashboard-tab').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabName);
-        });
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.dataset.tab;
 
-        // Atualiza os painéis de conteúdo
-        dom.dashboardModalOverlay.querySelectorAll('.dashboard-tab-content').forEach(content => {
-            content.classList.toggle('hidden', content.id !== `dashboard-${tabName}-content`);
+                tabButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn === button);
+                });
+
+                tabContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== `dashboard-${tabName}-content`);
+                });
+            });
         });
-    });
+    }
 
 
     dom.settingsSaveBtn.addEventListener('click', () => {
