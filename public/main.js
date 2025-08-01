@@ -167,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const checkMissionsProgress = () => {
         const stats = getDailyStats();
-        // CORREÇÃO: A lista de missões secretas deve vir de `missionsData`, não da loja.
         const allMissions = [...gamification.dailyMissions, ...Object.values(missionsData).filter(m => m.type === 'secret')];
 
         allMissions.forEach(mission => {
@@ -275,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const shuffled = allDailyMissions.sort(() => 0.5 - Math.random());
         gamification.dailyMissions = shuffled.slice(0, 3);
         
-        // CORREÇÃO: O filtro deve usar `missionsData` para encontrar missões secretas.
         gamification.completedMissions = gamification.completedMissions.filter(id => missionsData[id]?.type === 'secret');
         gamification.lastMissionDate = today;
         changedThemesCount.clear();
@@ -777,6 +775,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const defaultGamification = { level: 1, xp: 0, coins: 0, currentStreak: 0, longestStreak: 0, lastSessionDate: null, unlockedAchievements: [], dailyMissions: [], completedMissions: [], lastMissionDate: null, purchasedItems: [] };
             gamification = { ...defaultGamification, ...state.gamification };
 
+            // --- CORREÇÃO APLICADA ---
+            // Garante que 'purchasedItems' exista, prevenindo o erro em estados antigos.
+            if (!Array.isArray(gamification.purchasedItems)) {
+                gamification.purchasedItems = [];
+            }
+
             if (state.timerState) {
                 const { isRunning: wasRunning, mode: savedMode, endTime: savedEndTime, totalTime: savedTotalTime } = state.timerState;
                 if (wasRunning && savedEndTime && savedEndTime > Date.now()) {
@@ -800,6 +804,92 @@ document.addEventListener('DOMContentLoaded', () => {
         generateDailyMissions();
     };
 
+    // --- LÓGICA DA LOJA (Funções ausentes adicionadas) ---
+    const renderShop = () => {
+        shopCoinsDisplay.textContent = gamification.coins;
+        shopItemsContainer.innerHTML = '';
+
+        Object.values(shopCollections).forEach(collection => {
+            const collectionEl = document.createElement('div');
+            collectionEl.className = 'shop-collection';
+            
+            let itemsHTML = '';
+            Object.values(collection.items).forEach(item => {
+                const isPurchased = gamification.purchasedItems.includes(item.id);
+                const canAfford = gamification.coins >= item.price;
+                const isAvailable = collection.seasonal ? isSeasonalItemAvailable(item) : true;
+
+                itemsHTML += `
+                    <div class="shop-item p-4 rounded-lg flex items-center justify-between ${isPurchased ? 'opacity-60' : ''}">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background-color: ${themes[item.themeId]['--color-bg-shell']}; border: 2px solid rgb(${themes[item.themeId]['--color-primary-rgb']});">
+                                <span class="text-2xl font-bold" style="color: rgb(${themes[item.themeId]['--color-primary-rgb']});">T</span>
+                            </div>
+                            <div>
+                                <p class="font-bold">${item.name}</p>
+                                <p class="text-sm text-muted">${item.availability || ''}</p>
+                            </div>
+                        </div>
+                        <button data-item-id="${item.id}" class="bg-primary-focus hover:bg-primary-darker text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2" 
+                                ${isPurchased || !canAfford || !isAvailable ? 'disabled' : ''}>
+                            ${isPurchased ? 'Comprado' : `
+                                <i data-lucide="circle-dollar-sign" class="w-4 h-4"></i>
+                                <span>${item.price}</span>
+                            `}
+                        </button>
+                    </div>
+                `;
+            });
+
+            collectionEl.innerHTML = `
+                <h3 class="text-lg font-bold text-primary-light mb-2">${collection.name}</h3>
+                <p class="text-sm text-muted mb-4">${collection.description}</p>
+                <div class="space-y-3">${itemsHTML}</div>
+            `;
+            shopItemsContainer.appendChild(collectionEl);
+        });
+        lucide.createIcons();
+    };
+
+    const isSeasonalItemAvailable = (item) => {
+        const month = new Date().getMonth(); // 0 = Janeiro, 11 = Dezembro
+        switch(item.id) {
+            case 'CARNAVAL': return [1, 2].includes(month); // Fev, Mar
+            case 'FESTA_JUNINA': return [5, 6].includes(month); // Jun, Jul
+            case 'HALLOWEEN': return month === 9; // Out
+            case 'NATAL': return month === 11; // Dez
+            default: return true;
+        }
+    };
+
+    const buyItem = (itemId) => {
+        let itemToBuy = null;
+        for (const collection of Object.values(shopCollections)) {
+            if (collection.items[itemId]) {
+                itemToBuy = collection.items[itemId];
+                break;
+            }
+        }
+
+        if (!itemToBuy) return;
+
+        if (gamification.coins >= itemToBuy.price && !gamification.purchasedItems.includes(itemId)) {
+            gamification.coins -= itemToBuy.price;
+            gamification.purchasedItems.push(itemId);
+            
+            playBeep(784, 150, 0.4);
+            showModal(alertModalOverlay, `Tema "${itemToBuy.name}" comprado com sucesso!`);
+            
+            updateGamificationUI();
+            renderShop();
+            saveState();
+        } else {
+            showModal(alertModalOverlay, 'Você não tem moedas suficientes ou já possui este item.');
+        }
+    };
+
+
+    // --- EVENT LISTENERS ---
     const handleStartPauseClick = () => {
         startPauseBtn.classList.add('start-pause-btn-clicked');
         startPauseBtn.addEventListener('animationend', () => startPauseBtn.classList.remove('start-pause-btn-clicked'), { once: true });
