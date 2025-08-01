@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const checkMissionsProgress = () => {
         const stats = getDailyStats();
+        // CORREÇÃO: A lista de missões secretas deve vir de `missionsData`, não da loja.
         const allMissions = [...gamification.dailyMissions, ...Object.values(missionsData).filter(m => m.type === 'secret')];
 
         allMissions.forEach(mission => {
@@ -274,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const shuffled = allDailyMissions.sort(() => 0.5 - Math.random());
         gamification.dailyMissions = shuffled.slice(0, 3);
         
+        // CORREÇÃO: O filtro deve usar `missionsData` para encontrar missões secretas.
         gamification.completedMissions = gamification.completedMissions.filter(id => missionsData[id]?.type === 'secret');
         gamification.lastMissionDate = today;
         changedThemesCount.clear();
