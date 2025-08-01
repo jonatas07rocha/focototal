@@ -1,6 +1,7 @@
-// Importa a definição de temas e missões
+// Importa a definição de temas, missões e conquistas
 import { themes } from './themes.js';
 import { missionsData } from './missions.js';
+import { achievements } from './achievements.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- ELEMENTOS DO DOM ---
@@ -42,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const installBtn = document.getElementById('install-btn');
     const installDismissBtn = document.getElementById('install-dismiss-btn');
     const colorPaletteSelector = document.getElementById('color-palette-selector');
-    // CORREÇÃO: Adicionando os elementos do modal do iOS que faltavam
     const iosStartPromptModalOverlay = document.getElementById('ios-start-prompt-modal-overlay');
     const iosPromptConfirmBtn = document.getElementById('ios-prompt-confirm-btn');
     const iosPromptCancelBtn = document.getElementById('ios-prompt-cancel-btn');
@@ -101,18 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dailyMissions: [],
         completedMissions: [],
         lastMissionDate: null,
-    };
-
-    const achievements = {
-        FIRST_STEP: { name: 'Primeiro Passo', description: 'Complete sua primeira sessão de foco.', emoji: '🚀' },
-        FOCUSED_BEGINNER: { name: 'Iniciante Focado', description: 'Complete 5 sessões de foco.', emoji: '🎯' },
-        TASK_MASTER: { name: 'Mestre das Tarefas', description: 'Complete 10 tarefas em um dia.', emoji: '✔️' },
-        MARATHONER: { name: 'Maratonista', description: 'Foque por um total de 4 horas em um dia.', emoji: '🏃' },
-        STREAK_STARTER: { name: 'Começando a Pegar Fogo', description: 'Alcance uma sequência de 3 dias.', emoji: '🔥' },
-        ON_FIRE: { name: 'Em Chamas!', description: 'Alcance uma sequência de 7 dias.', emoji: '🔥🔥' },
-        COIN_COLLECTOR: { name: 'Colecionador de Moedas', description: 'Acumule 500 moedas.', emoji: '💰' },
-        LEVEL_5: { name: 'Nível 5', description: 'Alcance o nível 5.', emoji: '⭐' },
-        LEVEL_10: { name: 'Nível 10', description: 'Alcance o nível 10.', emoji: '🌟' }
     };
 
     // --- LÓGICA DE GAMIFICATION ---
@@ -502,7 +490,6 @@ document.addEventListener('DOMContentLoaded', () => {
         coinGainDisplay.textContent = '';
         if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
 
-        // CORREÇÃO: Restaurando a lógica de notificação Push
         if ('Notification' in window && Notification.permission === 'granted') {
             const notificationTitle = mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!';
             const notificationBody = mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?';
@@ -613,7 +600,6 @@ document.addEventListener('DOMContentLoaded', () => {
             taskEl.className = `task-item p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''} ${task.completed ? 'opacity-60' : ''}`;
             taskEl.dataset.id = task.id;
             
-            // CORREÇÃO: Restaurando o template detalhado do card de tarefa
             taskEl.innerHTML = `
             <div class="flex justify-between items-center">
                 <div class="flex items-center min-w-0 flex-grow">
@@ -683,7 +669,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // CORREÇÃO: Restaurando a lógica de edição de tarefas
     const toggleEditState = (id) => {
         tasks.forEach(task => task.isEditing = task.id === id ? !task.isEditing : false);
         renderTasks();
@@ -765,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        tasks.forEach(task => task.isEditing = false); // Garante que nenhuma tarefa carregue em modo de edição
+        tasks.forEach(task => task.isEditing = false);
         focusDurationInput.value = settings.focusDuration;
         shortBreakDurationInput.value = settings.shortBreakDuration;
         longBreakDurationInput.value = settings.longBreakDuration;
@@ -804,7 +789,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // CORREÇÃO: Restaurando a lógica de notificação do iOS
     startPauseBtn.addEventListener('click', () => {
         if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
         xpGainDisplay.textContent = '';
@@ -837,7 +821,6 @@ document.addEventListener('DOMContentLoaded', () => {
             eventDescription = `Sua pausa acabou. Hora de voltar ao foco!`;
             duration = mode === 'shortBreak' ? settings.shortBreakDuration : settings.longBreakDuration;
         }
-        // Lógica para gerar e baixar o arquivo .ics
         const formatDT = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
         const eventStartTime = new Date(Date.now() + duration * 60 * 1000);
         const eventEndTime = new Date(eventStartTime.getTime() + 1 * 60 * 1000);
@@ -935,7 +918,6 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.addEventListener('click', (e) => { if (e.target === overlay) hideModal(overlay); });
     });
 
-    // CORREÇÃO: Restaurando os listeners para edição de tarefas
     taskListEl.addEventListener('click', (e) => {
         const deleteBtn = e.target.closest('[data-delete-id]');
         const completeBtn = e.target.closest('[data-complete-id]');
