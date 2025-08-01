@@ -230,6 +230,15 @@ export function updateMethodToggleUI() {
     dom.newTaskEstimateLabel.style.display = state.settings.focusMethod === 'pomodoro' ? 'inline-block' : 'none';
 }
 
+// CORREÇÃO: Adiciona função para atualizar a aparência do botão "Mostrar/Ocultar Concluídas".
+export function updateShowCompletedBtn() {
+    if (dom.toggleCompletedBtn) {
+        dom.toggleCompletedBtn.textContent = state.showCompletedTasks ? 'Ocultar Concluídas' : 'Mostrar Concluídas';
+        dom.toggleCompletedBtn.classList.toggle('active', state.showCompletedTasks);
+    }
+}
+
+
 // --- Funções de Utilidade da UI ---
 
 export function showModal(modalOverlay, message) {
