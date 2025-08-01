@@ -8,6 +8,8 @@ import { dom } from './ui.js';
 import { themes } from './themes.js';
 import { achievements } from './achievements.js';
 import { xpForNextLevel } from './gamification.js';
+// CORREÇÃO: Importa os dados da loja para saber quais temas são pagos.
+import { shopCollections } from './shop.js';
 
 // --- Funções de Renderização ---
 
@@ -133,19 +135,27 @@ export function renderDashboard() {
     renderAchievements();
 }
 
-// CORREÇÃO: Filtra os temas para mostrar apenas os que o usuário possui.
+// CORREÇÃO: A lógica agora identifica dinamicamente os temas gratuitos.
 export function renderPaletteSelector() {
     dom.colorPaletteSelector.innerHTML = '';
     
-    // Define quais temas são gratuitos e sempre devem aparecer.
-    const defaultThemes = ['brasil_dark', 'brasil_light'];
+    // 1. Cria um conjunto com todos os IDs de temas que estão à venda na loja.
+    const paidThemeIds = new Set();
+    for (const collectionId in shopCollections) {
+        for (const itemId in shopCollections[collectionId].items) {
+            paidThemeIds.add(shopCollections[collectionId].items[itemId].themeId);
+        }
+    }
+
+    // 2. Filtra a lista principal de temas para encontrar os que NÃO são pagos.
+    const defaultThemes = Object.keys(themes).filter(themeId => !paidThemeIds.has(themeId));
     
-    // Combina os temas padrão com os temas que o usuário desbloqueou.
-    // O 'Set' é usado para evitar duplicatas caso um tema padrão seja comprado.
+    // 3. Combina os temas padrão (gratuitos) com os temas que o usuário desbloqueou.
     const availableThemeIds = new Set([...defaultThemes, ...state.gamification.unlockedThemes]);
 
+    // 4. Renderiza os botões para cada tema disponível.
     availableThemeIds.forEach(themeId => {
-        if (!themes[themeId]) return; // Pula se o tema não existir
+        if (!themes[themeId]) return; 
 
         const theme = themes[themeId];
         const button = document.createElement('button');
