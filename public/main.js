@@ -1,132 +1,38 @@
-// Importa a definição de temas, missões e conquistas
+// Importa os dados da aplicação
 import { themes } from './themes.js';
 import { missionsData } from './missions.js';
 import { achievements } from './achievements.js';
 
+// Importa os módulos de estado e UI
+import { state } from './state.js';
+import { dom } from './ui.js';
+
 document.addEventListener('DOMContentLoaded', () => {
-    // --- ELEMENTOS DO DOM ---
-    const themeColorMeta = document.getElementById('theme-color-meta');
-    const timerDisplay = document.getElementById('timer-display');
-    const startPauseBtn = document.getElementById('start-pause-btn');
-    const internalInterruptBtn = document.getElementById('internal-interrupt-btn');
-    const externalInterruptBtn = document.getElementById('external-interrupt-btn');
-    const resetBtn = document.getElementById('reset-btn');
-    const settingsBtn = document.getElementById('settings-btn');
-    const dashboardBtn = document.getElementById('dashboard-btn');
-    const helpBtn = document.getElementById('help-btn');
-    const progressRing = document.getElementById('progress-ring');
-    const newTaskInput = document.getElementById('new-task-input');
-    const newTaskEstimateInput = document.getElementById('new-task-estimate');
-    const newTaskEstimateLabel = document.getElementById('new-task-estimate-label');
-    const addTaskBtn = document.getElementById('add-task-btn');
-    const taskListEl = document.getElementById('task-list');
-    const currentTaskDisplay = document.getElementById('current-task-display');
-    const pomodoroCyclesEl = document.getElementById('pomodoro-cycles');
-    const focusMethodToggle = document.getElementById('focus-method-toggle');
-    const toggleCompletedTasksBtn = document.getElementById('toggle-completed-tasks-btn');
-    const alertModalOverlay = document.getElementById('alert-modal-overlay');
-    const alertModalCloseBtn = document.getElementById('alert-modal-close-btn');
-    const sessionEndModalOverlay = document.getElementById('session-end-modal-overlay');
-    const sessionEndCloseBtn = document.getElementById('session-end-close-btn');
-    const settingsModalOverlay = document.getElementById('settings-modal-overlay');
-    const settingsSaveBtn = document.getElementById('settings-save-btn');
-    const helpModalOverlay = document.getElementById('help-modal-overlay');
-    const helpModalCloseBtn = document.getElementById('help-modal-close-btn');
-    const resetConfirmModalOverlay = document.getElementById('reset-confirm-modal-overlay');
-    const resetConfirmBtn = document.getElementById('reset-confirm-btn');
-    const resetCancelBtn = document.getElementById('reset-cancel-btn');
-    const focusDurationInput = document.getElementById('focus-duration');
-    const shortBreakDurationInput = document.getElementById('short-break-duration');
-    const longBreakDurationInput = document.getElementById('long-break-duration');
-    const longBreakIntervalInput = document.getElementById('long-break-interval');
-    const installBanner = document.getElementById('install-banner');
-    const installBtn = document.getElementById('install-btn');
-    const installDismissBtn = document.getElementById('install-dismiss-btn');
-    const colorPaletteSelector = document.getElementById('color-palette-selector');
-    const iosStartPromptModalOverlay = document.getElementById('ios-start-prompt-modal-overlay');
-    const iosPromptConfirmBtn = document.getElementById('ios-prompt-confirm-btn');
-    const iosPromptCancelBtn = document.getElementById('ios-prompt-cancel-btn');
-    const iosPromptTitle = document.getElementById('ios-prompt-title');
-    const iosPromptMessage = document.getElementById('ios-prompt-message');
-
-    // --- ELEMENTOS DE GAMIFICATION ---
-    const levelDisplay = document.getElementById('level-display');
-    const xpDisplay = document.getElementById('xp-display');
-    const xpNextLevelDisplay = document.getElementById('xp-next-level-display');
-    const xpBarFill = document.getElementById('xp-bar-fill');
-    const xpGainDisplay = document.getElementById('xp-gain-display');
-    const coinGainDisplay = document.getElementById('coin-gain-display');
-    const achievementToast = document.getElementById('achievement-toast');
-    const achievementToastName = document.getElementById('achievement-toast-name');
-    const missionToast = document.getElementById('mission-toast');
-    const missionToastName = document.getElementById('mission-toast-name');
-    const missionToastEmoji = document.getElementById('mission-toast-emoji');
-    const coinsDisplay = document.getElementById('coins-display');
-    const streakDisplay = document.getElementById('streak-display');
-    
-    // --- ELEMENTOS DO DASHBOARD ---
-    const dashboardModalOverlay = document.getElementById('dashboard-modal-overlay');
-    const dashboardModalCloseBtn = document.getElementById('dashboard-modal-close-btn');
-    const dashboardStatsContent = document.getElementById('dashboard-stats-content');
-    const dashboardMissionsContent = document.getElementById('dashboard-missions-content');
-    const dashboardAchievementsContent = document.getElementById('dashboard-achievements-content');
-    const dashboardCurrentStreak = document.getElementById('dashboard-current-streak');
-    const dashboardLongestStreak = document.getElementById('dashboard-longest-streak');
-    const dashboardDailyReport = document.getElementById('dashboard-daily-report');
-
-    // --- ESTADO DA APLICAÇÃO ---
-    let timerInterval, isRunning = false, mode = 'focus', timeRemaining, totalTime, endTime;
-    let tasks = [], selectedTaskId = null, pomodoroSessionCount = 0, uninterruptedSessionsToday = 0;
-    let settings = { 
-        focusDuration: 25, 
-        shortBreakDuration: 5, 
-        longBreakDuration: 15, 
-        longBreakInterval: 4,
-        theme: 'brasil_dark'
-    };
-    let focusMethod = 'pomodoro';
-    let deferredInstallPrompt = null;
-    let showCompletedTasks = false;
-    let changedThemesCount = new Set();
-
-    // --- ESTADO DE GAMIFICATION ---
-    let gamification = {
-        level: 1,
-        xp: 0,
-        coins: 0,
-        currentStreak: 0,
-        longestStreak: 0,
-        lastSessionDate: null,
-        unlockedAchievements: [],
-        dailyMissions: [],
-        completedMissions: [],
-        lastMissionDate: null,
-    };
 
     // --- LÓGICA DE GAMIFICATION ---
-    const xpForNextLevel = () => Math.floor(100 * Math.pow(1.5, gamification.level - 1));
+    const xpForNextLevel = () => Math.floor(100 * Math.pow(1.5, state.gamification.level - 1));
 
     const updateGamificationUI = () => {
         const nextLevelXP = xpForNextLevel();
-        levelDisplay.textContent = gamification.level;
-        xpDisplay.textContent = gamification.xp;
-        xpNextLevelDisplay.textContent = nextLevelXP;
-        xpBarFill.style.width = `${(gamification.xp / nextLevelXP) * 100}%`;
-        coinsDisplay.textContent = gamification.coins;
-        streakDisplay.textContent = gamification.currentStreak;
+        dom.levelDisplay.textContent = state.gamification.level;
+        dom.xpDisplay.textContent = state.gamification.xp;
+        dom.xpNextLevelDisplay.textContent = nextLevelXP;
+        dom.xpBarFill.style.width = `${(state.gamification.xp / nextLevelXP) * 100}%`;
+        dom.coinsDisplay.textContent = state.gamification.coins;
+        dom.streakDisplay.textContent = state.gamification.currentStreak;
     };
     
     const showToast = (type, data) => {
         let toastEl, nameEl, emojiEl;
 
         if (type === 'achievement') {
-            toastEl = achievementToast;
-            nameEl = achievementToastName;
+            toastEl = dom.achievementToast;
+            nameEl = dom.achievementToastName;
             emojiEl = null;
         } else { 
-            toastEl = missionToast;
-            nameEl = missionToastName;
-            emojiEl = missionToastEmoji;
+            toastEl = dom.missionToast;
+            nameEl = dom.missionToastName;
+            emojiEl = dom.missionToastEmoji;
         }
 
         nameEl.textContent = data.name || data.title;
@@ -139,8 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const unlockAchievement = (key) => {
-        if (!gamification.unlockedAchievements.includes(key)) {
-            gamification.unlockedAchievements.push(key);
+        if (!state.gamification.unlockedAchievements.includes(key)) {
+            state.gamification.unlockedAchievements.push(key);
             showToast('achievement', achievements[key]);
             playBeep(880, 200, 0.5);
             renderAchievements();
@@ -149,18 +55,18 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const getDailyStats = () => ({
-        focusTimeToday: tasks.reduce((acc, task) => acc + task.focusTime, 0),
-        tasksCompletedToday: tasks.filter(t => t.completed).length,
-        pomodorosCompletedToday: tasks.reduce((acc, task) => acc + task.pomodorosCompleted, 0),
-        uninterruptedSessionsToday: uninterruptedSessionsToday,
+        focusTimeToday: state.tasks.reduce((acc, task) => acc + task.focusTime, 0),
+        tasksCompletedToday: state.tasks.filter(t => t.completed).length,
+        pomodorosCompletedToday: state.tasks.reduce((acc, task) => acc + task.pomodorosCompleted, 0),
+        uninterruptedSessionsToday: state.uninterruptedSessionsToday,
     });
 
     const checkMissionsProgress = () => {
         const stats = getDailyStats();
-        const allMissions = [...gamification.dailyMissions, ...Object.values(missionsData).filter(m => m.type === 'secret')];
+        const allMissions = [...state.gamification.dailyMissions, ...Object.values(missionsData).filter(m => m.type === 'secret')];
 
         allMissions.forEach(mission => {
-            if (gamification.completedMissions.includes(mission.id)) return;
+            if (state.gamification.completedMissions.includes(mission.id)) return;
 
             let completed = false;
             if (mission.type === 'daily') {
@@ -170,13 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else if (mission.type === 'secret') {
                 const hour = new Date().getHours();
-                if (mission.id === 'SECRET_NIGHT_OWL' && isRunning && hour >= 22) completed = true;
-                if (mission.id === 'SECRET_EARLY_BIRD' && isRunning && hour < 6) completed = true;
-                if (mission.id === 'SECRET_THEME_EXPLORER' && changedThemesCount.size >= 3) completed = true;
+                if (mission.id === 'SECRET_NIGHT_OWL' && state.isRunning && hour >= 22) completed = true;
+                if (mission.id === 'SECRET_EARLY_BIRD' && state.isRunning && hour < 6) completed = true;
+                if (mission.id === 'SECRET_THEME_EXPLORER' && state.gamification.changedThemesCount.size >= 3) completed = true;
             }
 
             if (completed) {
-                gamification.completedMissions.push(mission.id);
+                state.gamification.completedMissions.push(mission.id);
                 addXP(mission.rewards.xp);
                 addCoins(mission.rewards.coins);
                 showToast('mission', mission);
@@ -189,28 +95,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const checkForAchievements = () => {
         const stats = getDailyStats();
+        const focusTimeInHours = stats.focusTimeToday / 3600;
+
         if (stats.pomodorosCompletedToday >= 1) unlockAchievement('FIRST_STEP');
         if (stats.pomodorosCompletedToday >= 5) unlockAchievement('FOCUSED_BEGINNER');
         if (stats.tasksCompletedToday >= 10) unlockAchievement('TASK_MASTER');
-        if (stats.focusTimeToday >= 14400) unlockAchievement('MARATHONER');
-        if (gamification.currentStreak >= 3) unlockAchievement('STREAK_STARTER');
-        if (gamification.currentStreak >= 7) unlockAchievement('ON_FIRE');
-        if (gamification.coins >= 500) unlockAchievement('COIN_COLLECTOR');
-        if (gamification.level >= 5) unlockAchievement('LEVEL_5');
-        if (gamification.level >= 10) unlockAchievement('LEVEL_10');
+        if (focusTimeInHours >= 4) unlockAchievement('MARATHONER');
+        if (state.gamification.currentStreak >= 3) unlockAchievement('STREAK_STARTER');
+        if (state.gamification.currentStreak >= 7) unlockAchievement('ON_FIRE');
+        if (state.gamification.coins >= 500) unlockAchievement('COIN_COLLECTOR');
+        if (state.gamification.level >= 5) unlockAchievement('LEVEL_5');
+        if (state.gamification.level >= 10) unlockAchievement('LEVEL_10');
+        if (state.gamification.level >= 25) unlockAchievement('LEVEL_25');
     };
 
     const addXP = (amount) => {
         if (!amount) return;
-        gamification.xp += amount;
-        xpGainDisplay.textContent = `+${amount} XP`;
+        state.gamification.xp += amount;
+        dom.xpGainDisplay.textContent = `+${amount} XP`;
         let nextLevelXP = xpForNextLevel();
-        while (gamification.xp >= nextLevelXP) {
-            gamification.xp -= nextLevelXP;
-            gamification.level++;
+        while (state.gamification.xp >= nextLevelXP) {
+            state.gamification.xp -= nextLevelXP;
+            state.gamification.level++;
             playBeep(659, 150, 0.4);
             setTimeout(() => playBeep(784, 300, 0.5), 200);
-            showModal(alertModalOverlay, `Parabéns! Você alcançou o Nível ${gamification.level}!`);
+            showModal(dom.alertModalOverlay, `Parabéns! Você alcançou o Nível ${state.gamification.level}!`);
             nextLevelXP = xpForNextLevel();
         }
         updateGamificationUI();
@@ -219,58 +128,58 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const addCoins = (amount) => {
         if (!amount) return;
-        gamification.coins += amount;
-        coinGainDisplay.textContent = `+${amount} Moedas`;
+        state.gamification.coins += amount;
+        dom.coinGainDisplay.textContent = `+${amount} Moedas`;
         updateGamificationUI();
         checkForAchievements();
     };
 
     const checkStreak = () => {
         const today = new Date().toISOString().slice(0, 10);
-        if (gamification.lastSessionDate === today) return;
+        if (state.gamification.lastSessionDate === today) return;
         
         const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
-        if (gamification.lastSessionDate === yesterday) {
-            gamification.currentStreak++;
-            const bonusCoins = gamification.currentStreak * 2;
+        if (state.gamification.lastSessionDate === yesterday) {
+            state.gamification.currentStreak++;
+            const bonusCoins = state.gamification.currentStreak * 2;
             addCoins(bonusCoins);
-            showModal(alertModalOverlay, `Sequência de ${gamification.currentStreak} dias! Você ganhou ${bonusCoins} moedas de bônus!`);
+            showModal(dom.alertModalOverlay, `Sequência de ${state.gamification.currentStreak} dias! Você ganhou ${bonusCoins} moedas de bônus!`);
         } else {
-            gamification.currentStreak = 1;
+            state.gamification.currentStreak = 1;
         }
 
-        if (gamification.currentStreak > gamification.longestStreak) {
-            gamification.longestStreak = gamification.currentStreak;
+        if (state.gamification.currentStreak > state.gamification.longestStreak) {
+            state.gamification.longestStreak = state.gamification.currentStreak;
         }
         
-        gamification.lastSessionDate = today;
+        state.gamification.lastSessionDate = today;
         updateGamificationUI();
     };
 
     const generateDailyMissions = () => {
         const today = new Date().toISOString().slice(0, 10);
-        if (gamification.lastMissionDate === today) return; 
+        if (state.gamification.lastMissionDate === today) return; 
 
         const allDailyMissions = Object.values(missionsData).filter(m => m.type === 'daily');
         const shuffled = allDailyMissions.sort(() => 0.5 - Math.random());
-        gamification.dailyMissions = shuffled.slice(0, 3);
+        state.gamification.dailyMissions = shuffled.slice(0, 3);
         
-        gamification.completedMissions = gamification.completedMissions.filter(id => missionsData[id]?.type === 'secret');
-        gamification.lastMissionDate = today;
-        changedThemesCount.clear();
+        state.gamification.completedMissions = state.gamification.completedMissions.filter(id => missionsData[id]?.type === 'secret');
+        state.gamification.lastMissionDate = today;
+        state.gamification.changedThemesCount.clear();
         saveState();
     };
 
     const renderMissions = () => {
-        dashboardMissionsContent.innerHTML = '';
-        if (gamification.dailyMissions.length === 0) {
-            dashboardMissionsContent.innerHTML = '<p class="text-muted text-center">Nenhuma missão para hoje. Volte amanhã!</p>';
+        dom.dashboardMissionsContent.innerHTML = '';
+        if (state.gamification.dailyMissions.length === 0) {
+            dom.dashboardMissionsContent.innerHTML = '<p class="text-muted text-center">Nenhuma missão para hoje. Volte amanhã!</p>';
             return;
         }
         const stats = getDailyStats();
-        gamification.dailyMissions.forEach(mission => {
-            const isCompleted = gamification.completedMissions.includes(mission.id);
+        state.gamification.dailyMissions.forEach(mission => {
+            const isCompleted = state.gamification.completedMissions.includes(mission.id);
             const currentProgress = Math.min(stats[mission.metric] || 0, mission.goal);
             const progressPercent = (currentProgress / mission.goal) * 100;
 
@@ -295,15 +204,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-right text-xs mt-1 text-muted">${Math.floor(currentProgress)} / ${mission.goal}</p>
                 </div>
             `;
-            dashboardMissionsContent.appendChild(el);
+            dom.dashboardMissionsContent.appendChild(el);
         });
     };
 
     const renderAchievements = () => {
-        dashboardAchievementsContent.innerHTML = '';
+        dom.dashboardAchievementsContent.innerHTML = '';
         Object.keys(achievements).forEach(key => {
             const achievement = achievements[key];
-            const isUnlocked = gamification.unlockedAchievements.includes(key);
+            const isUnlocked = state.gamification.unlockedAchievements.includes(key);
             const el = document.createElement('div');
             el.className = `achievement-item p-4 rounded-lg flex items-center space-x-4 ${isUnlocked ? 'unlocked' : 'opacity-60'}`;
             el.innerHTML = `
@@ -313,21 +222,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="text-sm text-muted">${achievement.description}</p>
                 </div>
             `;
-            dashboardAchievementsContent.appendChild(el);
+            dom.dashboardAchievementsContent.appendChild(el);
         });
     };
     
     const renderDashboard = () => {
-        // Renderiza estatísticas gerais
-        dashboardCurrentStreak.textContent = gamification.currentStreak;
-        dashboardLongestStreak.textContent = gamification.longestStreak;
+        dom.dashboardCurrentStreak.textContent = state.gamification.currentStreak;
+        dom.dashboardLongestStreak.textContent = state.gamification.longestStreak;
         
-        // CORREÇÃO: Renderiza o relatório detalhado por tarefa
-        if (tasks.length === 0) {
-            dashboardDailyReport.innerHTML = '<p class="text-muted text-center text-sm">Nenhuma tarefa para exibir.</p>';
+        if (state.tasks.length === 0) {
+            dom.dashboardDailyReport.innerHTML = '<p class="text-muted text-center text-sm">Nenhuma tarefa para exibir.</p>';
         } else {
             let statsHTML = '';
-            [...tasks].sort((a, b) => a.completed - b.completed).forEach(task => {
+            [...state.tasks].sort((a, b) => a.completed - b.completed).forEach(task => {
                 statsHTML += `
                 <div class="stats-item p-3 rounded-lg ${task.completed ? 'opacity-60' : ''}">
                     <p class="font-bold truncate ${task.completed ? 'line-through' : ''}">${task.name}</p>
@@ -339,31 +246,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>`;
             });
-            dashboardDailyReport.innerHTML = statsHTML;
+            dom.dashboardDailyReport.innerHTML = statsHTML;
         }
 
         renderMissions();
         renderAchievements();
     };
 
-    // --- LÓGICA DE BADGING E ÁUDIO ---
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    let audioInitialized = false;
+    // --- LÓGICA DE ÁUDIO ---
     const _playBeepInternal = (frequency, duration, volume) => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        const oscillator = state.audioContext.createOscillator();
+        const gainNode = state.audioContext.createGain();
         oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        gainNode.connect(state.audioContext.destination);
         oscillator.frequency.value = frequency;
         oscillator.type = 'sine';
-        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-        gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + duration / 1000);
+        gainNode.gain.setValueAtTime(0, state.audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(volume, state.audioContext.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, state.audioContext.currentTime + duration / 1000);
+        oscillator.start(state.audioContext.currentTime);
+        oscillator.stop(state.audioContext.currentTime + duration / 1000);
     };
     const playBeep = (frequency = 800, duration = 200, volume = 0.3) => {
-        if (audioContext.state === 'suspended') audioContext.resume().then(() => _playBeepInternal(frequency, duration, volume));
+        if (state.audioContext.state === 'suspended') state.audioContext.resume().then(() => _playBeepInternal(frequency, duration, volume));
         else _playBeepInternal(frequency, duration, volume);
     };
     const playFinishSound = () => {
@@ -373,53 +278,53 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- LÓGICA DE INSTALAÇÃO PWA ---
-    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstallPrompt = e; if (!localStorage.getItem('installBannerDismissed')) installBanner.style.display = 'block'; });
-    installBtn.addEventListener('click', () => { if (deferredInstallPrompt) { deferredInstallPrompt.prompt(); deferredInstallPrompt.userChoice.then(() => { deferredInstallPrompt = null; installBanner.style.display = 'none'; }); } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) { showModal(alertModalOverlay, 'Para instalar no iOS, toque em Compartilhar e "Adicionar à Tela de Início".'); } });
-    installDismissBtn.addEventListener('click', () => { localStorage.setItem('installBannerDismissed', 'true'); installBanner.style.display = 'none'; });
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) installBanner.style.display = 'none';
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); state.deferredInstallPrompt = e; if (!localStorage.getItem('installBannerDismissed')) dom.installBanner.style.display = 'block'; });
+    dom.installBtn.addEventListener('click', () => { if (state.deferredInstallPrompt) { state.deferredInstallPrompt.prompt(); state.deferredInstallPrompt.userChoice.then(() => { state.deferredInstallPrompt = null; dom.installBanner.style.display = 'none'; }); } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) { showModal(dom.alertModalOverlay, 'Para instalar no iOS, toque em Compartilhar e "Adicionar à Tela de Início".'); } });
+    dom.installDismissBtn.addEventListener('click', () => { localStorage.setItem('installBannerDismissed', 'true'); dom.installBanner.style.display = 'none'; });
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) dom.installBanner.style.display = 'none';
 
     // --- FUNÇÕES DE GESTÃO DE TEMA E MODO ---
     const applyTheme = (themeName) => {
         const theme = themes[themeName] || themes.brasil_dark; 
         const root = document.documentElement;
         Object.keys(theme).forEach(key => { if (key !== 'name') root.style.setProperty(key, theme[key]); });
-        themeColorMeta.setAttribute('content', theme['--color-bg-shell']);
-        if (gamification.lastMissionDate === new Date().toISOString().slice(0, 10)) {
-            changedThemesCount.add(themeName);
+        dom.themeColorMeta.setAttribute('content', theme['--color-bg-shell']);
+        if (state.gamification.lastMissionDate === new Date().toISOString().slice(0, 10)) {
+            state.gamification.changedThemesCount.add(themeName);
             checkMissionsProgress();
         }
     };
 
     const renderPaletteSelector = () => {
-        colorPaletteSelector.innerHTML = '';
+        dom.colorPaletteSelector.innerHTML = '';
         Object.keys(themes).sort().forEach(key => {
             const theme = themes[key];
             const button = document.createElement('button');
             button.dataset.theme = key;
             button.title = theme.name;
-            button.className = `h-12 rounded-lg border-2 transition-all transform flex flex-col items-center justify-center p-1 text-xs font-semibold ${settings.theme === key ? 'border-white scale-105' : 'border-transparent'}`;
+            button.className = `h-12 rounded-lg border-2 transition-all transform flex flex-col items-center justify-center p-1 text-xs font-semibold ${state.settings.theme === key ? 'border-white scale-105' : 'border-transparent'}`;
             button.style.backgroundColor = theme['--color-bg-shell'];
             button.style.color = theme['--color-text-muted'];
             button.innerHTML = `<div class="w-full h-4 rounded" style="background-color: rgb(${theme['--color-primary-rgb']})"></div><span class="mt-1">${theme.name.split(' ')[0]}</span>`;
-            colorPaletteSelector.appendChild(button);
+            dom.colorPaletteSelector.appendChild(button);
         });
     };
 
     const updateMethodToggleUI = () => {
         document.querySelectorAll('#focus-method-toggle .method-btn').forEach(btn => {
-            const isSelected = btn.dataset.method === focusMethod;
+            const isSelected = btn.dataset.method === state.settings.focusMethod;
             btn.classList.toggle('bg-primary-focus', isSelected);
             btn.classList.toggle('text-white', isSelected);
-            const isDarkTheme = settings.theme.includes('_dark'); 
+            const isDarkTheme = state.settings.theme.includes('_dark'); 
             btn.classList.toggle(isDarkTheme ? 'text-gray-400' : 'text-gray-500', !isSelected);
         });
-        pomodoroCyclesEl.style.display = focusMethod === 'pomodoro' ? 'flex' : 'none';
-        newTaskEstimateInput.style.display = focusMethod === 'pomodoro' ? 'inline-block' : 'none';
-        newTaskEstimateLabel.style.display = focusMethod === 'pomodoro' ? 'inline-block' : 'none';
-        if (!isRunning) resetTimer('focus');
+        dom.pomodoroCyclesEl.style.display = state.settings.focusMethod === 'pomodoro' ? 'flex' : 'none';
+        dom.newTaskEstimateInput.style.display = state.settings.focusMethod === 'pomodoro' ? 'inline-block' : 'none';
+        dom.newTaskEstimateLabel.style.display = state.settings.focusMethod === 'pomodoro' ? 'inline-block' : 'none';
+        if (!state.isRunning) resetTimer('focus');
     };
 
-    // --- FUNÇÕES DO TIMER ---
+    // --- FUNÇÕES DO TIMER E MODAIS ---
     const showModal = (modalOverlay, message) => {
         const messageElId = modalOverlay.id.replace('-overlay', '-message');
         const messageEl = document.getElementById(messageElId);
@@ -429,86 +334,86 @@ document.addEventListener('DOMContentLoaded', () => {
     const hideModal = (modalOverlay) => modalOverlay.classList.remove('visible');
     
     const startTimer = () => {
-        if (isRunning) return;
-        if (!selectedTaskId && mode === 'focus') {
-            showModal(alertModalOverlay, 'Por favor, selecione uma tarefa para iniciar o foco.');
+        if (state.isRunning) return;
+        if (!state.selectedTaskId && state.mode === 'focus') {
+            showModal(dom.alertModalOverlay, 'Por favor, selecione uma tarefa para iniciar o foco.');
             return;
         }
-        if (mode === 'focus') checkMissionsProgress(); 
+        if (state.mode === 'focus') checkMissionsProgress(); 
         
-        if (focusMethod === 'pomodoro' || mode !== 'focus') {
-            timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
-            totalTime = timeRemaining;
+        if (state.settings.focusMethod === 'pomodoro' || state.mode !== 'focus') {
+            state.timeRemaining = (state.settings[`${state.mode}Duration`] || 25) * 60;
+            state.totalTime = state.timeRemaining;
         } else {
-            timeRemaining = 0;
-            totalTime = 1;
+            state.timeRemaining = 0;
+            state.totalTime = 1;
         }
-        isRunning = true;
-        endTime = Date.now() + (focusMethod === 'pomodoro' || mode !== 'focus' ? timeRemaining * 1000 : 0);
+        state.isRunning = true;
+        state.endTime = Date.now() + (state.settings.focusMethod === 'pomodoro' || state.mode !== 'focus' ? state.timeRemaining * 1000 : 0);
         updateUI();
-        timerInterval = setInterval(updateTimer, 1000);
+        state.timerInterval = setInterval(updateTimer, 1000);
     };
 
     const pauseTimer = () => {
-        if (!isRunning) return;
-        isRunning = false;
-        clearInterval(timerInterval);
-        if (focusMethod === 'pomodoro' || mode !== 'focus') timeRemaining = Math.round((endTime - Date.now()) / 1000);
+        if (!state.isRunning) return;
+        state.isRunning = false;
+        clearInterval(state.timerInterval);
+        if (state.settings.focusMethod === 'pomodoro' || state.mode !== 'focus') state.timeRemaining = Math.round((state.endTime - Date.now()) / 1000);
         saveState();
         updateUI();
     };
 
     const updateTimerDisplay = () => {
-        const totalSecondsAbs = Math.abs(timeRemaining);
+        const totalSecondsAbs = Math.abs(state.timeRemaining);
         const minutes = Math.floor((totalSecondsAbs % 3600) / 60);
         const seconds = totalSecondsAbs % 60;
         const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        timerDisplay.textContent = display;
+        dom.timerDisplay.textContent = display;
         document.title = `${display} - Foco Total`;
         const circumference = 2 * Math.PI * 45;
-        let progress = (focusMethod === 'pomodoro' || mode !== 'focus') ? ((totalTime > 0) ? (totalTime - timeRemaining) / totalTime : 0) : (isRunning ? 1 : 0);
-        progressRing.style.strokeDasharray = circumference;
-        progressRing.style.strokeDashoffset = circumference * (1 - progress);
+        let progress = (state.settings.focusMethod === 'pomodoro' || state.mode !== 'focus') ? ((state.totalTime > 0) ? (state.totalTime - state.timeRemaining) / state.totalTime : 0) : (state.isRunning ? 1 : 0);
+        dom.progressRing.style.strokeDasharray = circumference;
+        dom.progressRing.style.strokeDashoffset = circumference * (1 - progress);
     };
 
     const updateTimer = () => {
-        if (focusMethod === 'pomodoro' || mode !== 'focus') {
-            const remaining = Math.round((endTime - Date.now()) / 1000);
-            if (remaining >= 0) timeRemaining = remaining;
-            else { clearInterval(timerInterval); switchMode(); }
+        if (state.settings.focusMethod === 'pomodoro' || state.mode !== 'focus') {
+            const remaining = Math.round((state.endTime - Date.now()) / 1000);
+            if (remaining >= 0) state.timeRemaining = remaining;
+            else { clearInterval(state.timerInterval); switchMode(); }
         } else {
-            timeRemaining++;
+            state.timeRemaining++;
         }
         updateTimerDisplay();
     };
 
     const switchMode = () => {
-        isRunning = false;
-        endTime = null;
+        state.isRunning = false;
+        state.endTime = null;
         playFinishSound();
-        xpGainDisplay.textContent = ''; 
-        coinGainDisplay.textContent = '';
+        dom.xpGainDisplay.textContent = ''; 
+        dom.coinGainDisplay.textContent = '';
         if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]);
 
         if ('Notification' in window && Notification.permission === 'granted') {
-            const notificationTitle = mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!';
-            const notificationBody = mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?';
+            const notificationTitle = state.mode === 'focus' ? 'Foco Finalizado!' : 'Pausa Finalizada!';
+            const notificationBody = state.mode === 'focus' ? 'Hora de fazer uma pausa.' : 'Vamos voltar ao trabalho?';
             navigator.serviceWorker.ready.then(reg => reg.showNotification(notificationTitle, { body: notificationBody, icon: '/icon-192x192.png', renotify: true, tag: 'foco-total-notification' }));
         }
 
-        if (mode === 'focus') {
+        if (state.mode === 'focus') {
             checkStreak();
-            uninterruptedSessionsToday++;
-            const task = tasks.find(t => t.id === selectedTaskId);
+            state.uninterruptedSessionsToday++;
+            const task = state.tasks.find(t => t.id === state.selectedTaskId);
             let focusDuration = 0;
             if (task) {
-                if (focusMethod === 'pomodoro') {
-                    pomodoroSessionCount++;
+                if (state.settings.focusMethod === 'pomodoro') {
+                    state.pomodoroSessionCount++;
                     task.pomodorosCompleted++;
-                    focusDuration = settings.focusDuration * 60;
+                    focusDuration = state.settings.focusDuration * 60;
                     task.focusTime += focusDuration;
                 } else {
-                    focusDuration = timeRemaining;
+                    focusDuration = state.timeRemaining;
                     task.focusTime += focusDuration;
                 }
             }
@@ -516,27 +421,27 @@ document.addEventListener('DOMContentLoaded', () => {
             addXP(xpGained);
             addCoins(5);
             checkMissionsProgress();
-            mode = (focusMethod === 'pomodoro' && pomodoroSessionCount % settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
-            showModal(sessionEndModalOverlay, `Você ${focusMethod === 'pomodoro' ? 'completou um Pomodoro!' : 'finalizou seu foco.'} Hora de fazer uma pausa.`);
+            state.mode = (state.settings.focusMethod === 'pomodoro' && state.pomodoroSessionCount % state.settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
+            showModal(dom.sessionEndModalOverlay, `Você ${state.settings.focusMethod === 'pomodoro' ? 'completou um Pomodoro!' : 'finalizou seu foco.'} Hora de fazer uma pausa.`);
         } else {
-            mode = 'focus';
-            showModal(sessionEndModalOverlay, 'Pausa finalizada! Vamos voltar ao trabalho?');
+            state.mode = 'focus';
+            showModal(dom.sessionEndModalOverlay, 'Pausa finalizada! Vamos voltar ao trabalho?');
         }
         resetTimer();
         renderTasks();
     };
 
     const resetTimer = (forceMode = null) => {
-        clearInterval(timerInterval);
-        isRunning = false;
-        endTime = null;
-        mode = forceMode || mode;
-        if (focusMethod === 'pomodoro' || mode !== 'focus') {
-            timeRemaining = (settings[`${mode}Duration`] || 25) * 60;
-            totalTime = timeRemaining;
+        clearInterval(state.timerInterval);
+        state.isRunning = false;
+        state.endTime = null;
+        state.mode = forceMode || state.mode;
+        if (state.settings.focusMethod === 'pomodoro' || state.mode !== 'focus') {
+            state.timeRemaining = (state.settings[`${state.mode}Duration`] || 25) * 60;
+            state.totalTime = state.timeRemaining;
         } else {
-            timeRemaining = 0;
-            totalTime = 1;
+            state.timeRemaining = 0;
+            state.totalTime = 1;
         }
         saveState();
         updateUI();
@@ -544,41 +449,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const resetDay = () => {
         pauseTimer();
-        tasks = [];
-        selectedTaskId = null;
-        pomodoroSessionCount = 0;
-        uninterruptedSessionsToday = 0;
+        state.tasks = [];
+        state.selectedTaskId = null;
+        state.pomodoroSessionCount = 0;
+        state.uninterruptedSessionsToday = 0;
         resetTimer('focus');
         renderTasks();
-        hideModal(resetConfirmModalOverlay);
-        showModal(alertModalOverlay, 'O dia foi zerado com sucesso!');
+        hideModal(dom.resetConfirmModalOverlay);
+        showModal(dom.alertModalOverlay, 'O dia foi zerado com sucesso!');
     };
 
     const updateUI = () => {
         updateTimerDisplay();
-        const currentTheme = themes[settings.theme] || themes.brasil_dark;
+        const currentTheme = themes[state.settings.theme] || themes.brasil_dark;
 
-        if (mode === 'shortBreak') progressRing.style.stroke = currentTheme['--color-break-short'];
-        else if (mode === 'longBreak') progressRing.style.stroke = currentTheme['--color-break-long'];
-        else progressRing.style.stroke = `rgb(${currentTheme['--color-primary-rgb']})`;
+        if (state.mode === 'shortBreak') dom.progressRing.style.stroke = currentTheme['--color-break-short'];
+        else if (state.mode === 'longBreak') dom.progressRing.style.stroke = currentTheme['--color-break-long'];
+        else dom.progressRing.style.stroke = `rgb(${currentTheme['--color-primary-rgb']})`;
         
-        progressRing.classList.toggle('breathing', focusMethod === 'adaptativo' && mode === 'focus' && isRunning);
+        dom.progressRing.classList.toggle('breathing', state.settings.focusMethod === 'adaptativo' && state.mode === 'focus' && state.isRunning);
 
         let btnIcon, btnBgClass, ariaLabelText;
-        if (focusMethod === 'pomodoro' || mode !== 'focus') {
-            btnIcon = isRunning ? 'pause' : 'play';
-            btnBgClass = isRunning ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-primary-focus hover:bg-primary-darker';
-            ariaLabelText = isRunning ? 'Pausar Timer' : 'Iniciar Timer';
+        if (state.settings.focusMethod === 'pomodoro' || state.mode !== 'focus') {
+            btnIcon = state.isRunning ? 'pause' : 'play';
+            btnBgClass = state.isRunning ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-primary-focus hover:bg-primary-darker';
+            ariaLabelText = state.isRunning ? 'Pausar Timer' : 'Iniciar Timer';
         } else {
-            btnIcon = isRunning ? 'square' : 'play';
-            btnBgClass = isRunning ? 'bg-red-600 hover:bg-red-700' : 'bg-primary-focus hover:bg-primary-darker';
-            ariaLabelText = isRunning ? 'Parar Foco Adaptativo' : 'Iniciar Foco Adaptativo';
+            btnIcon = state.isRunning ? 'square' : 'play';
+            btnBgClass = state.isRunning ? 'bg-red-600 hover:bg-red-700' : 'bg-primary-focus hover:bg-primary-darker';
+            ariaLabelText = state.isRunning ? 'Parar Foco Adaptativo' : 'Iniciar Foco Adaptativo';
         }
-        startPauseBtn.className = `w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center ${btnBgClass}`;
-        startPauseBtn.innerHTML = `<i data-lucide="${btnIcon}" class="w-8 h-8 ${btnIcon === 'play' ? 'pl-1' : ''}"></i>`;
-        startPauseBtn.setAttribute('aria-label', ariaLabelText);
-        internalInterruptBtn.style.display = (isRunning && mode === 'focus') ? 'flex' : 'none';
-        externalInterruptBtn.style.display = (isRunning && mode === 'focus') ? 'flex' : 'none';
+        dom.startPauseBtn.className = `w-20 h-20 text-white font-bold rounded-full text-base transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center ${btnBgClass}`;
+        dom.startPauseBtn.innerHTML = `<i data-lucide="${btnIcon}" class="w-8 h-8 ${btnIcon === 'play' ? 'pl-1' : ''}"></i>`;
+        dom.startPauseBtn.setAttribute('aria-label', ariaLabelText);
+        dom.internalInterruptBtn.style.display = (state.isRunning && state.mode === 'focus') ? 'flex' : 'none';
+        dom.externalInterruptBtn.style.display = (state.isRunning && state.mode === 'focus') ? 'flex' : 'none';
         updateCurrentTaskDisplay();
         lucide.createIcons();
     };
@@ -592,12 +497,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${minutes}m`;
     };
 
+    // --- LÓGICA DE TAREFAS ---
     const renderTasks = () => {
-        const tasksToRender = showCompletedTasks ? tasks : tasks.filter(task => !task.completed);
-        taskListEl.innerHTML = tasksToRender.length === 0 ? '<p class="text-muted text-center text-sm">Adicione a sua primeira tarefa!</p>' : '';
+        const tasksToRender = state.showCompletedTasks ? state.tasks : state.tasks.filter(task => !task.completed);
+        dom.taskListEl.innerHTML = tasksToRender.length === 0 ? '<p class="text-muted text-center text-sm">Adicione a sua primeira tarefa!</p>' : '';
         tasksToRender.forEach(task => {
             const taskEl = document.createElement('div');
-            taskEl.className = `task-item p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === selectedTaskId ? 'selected' : ''} ${task.completed ? 'opacity-60' : ''}`;
+            taskEl.className = `task-item p-3 rounded-lg border-2 border-transparent cursor-pointer ${task.id === state.selectedTaskId ? 'selected' : ''} ${task.completed ? 'opacity-60' : ''}`;
             taskEl.dataset.id = task.id;
             
             taskEl.innerHTML = `
@@ -615,12 +521,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
             <div class="grid grid-cols-4 gap-1 items-center mt-2 pl-8 text-xs text-center">
-                ${focusMethod === 'pomodoro' ? `<span class="text-muted font-bold flex items-center justify-center" title="Pomodoros"><i data-lucide="check-circle-2" class="w-4 h-4 mr-1 text-green-500"></i>${task.pomodorosCompleted}/${task.pomodoroEstimate}</span>` : ''}
+                ${state.settings.focusMethod === 'pomodoro' ? `<span class="text-muted font-bold flex items-center justify-center" title="Pomodoros"><i data-lucide="check-circle-2" class="w-4 h-4 mr-1 text-green-500"></i>${task.pomodorosCompleted}/${task.pomodoroEstimate}</span>` : ''}
                 <span class="text-muted font-bold flex items-center justify-center" title="Tempo de Foco"><i data-lucide="clock" class="w-4 h-4 mr-1 text-primary-light"></i>${formatTime(task.focusTime)}</span>
                 <span class="text-muted font-bold flex items-center justify-center" title="Interrupções Internas"><i data-lucide="zap-off" class="w-4 h-4 mr-1"></i>${task.internalInterruptions}</span>
                 <span class="text-muted font-bold flex items-center justify-center" title="Interrupções Externas"><i data-lucide="user-x" class="w-4 h-4 mr-1"></i>${task.externalInterruptions}</span>
             </div>`;
-            taskListEl.appendChild(taskEl);
+            dom.taskListEl.appendChild(taskEl);
         });
         updateCurrentTaskDisplay();
         saveState();
@@ -628,31 +534,31 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const addTask = () => {
-        if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
-        const taskName = newTaskInput.value.trim();
+        if (!state.audioInitialized) state.audioContext.resume().then(() => state.audioInitialized = true);
+        const taskName = dom.newTaskInput.value.trim();
         if (taskName) {
-            const newTask = { id: Date.now(), name: taskName, pomodoroEstimate: (parseInt(newTaskEstimateInput.value) || 1), pomodorosCompleted: 0, internalInterruptions: 0, externalInterruptions: 0, focusTime: 0, completed: false, isEditing: false };
-            tasks.push(newTask);
-            newTaskInput.value = '';
-            newTaskEstimateInput.value = '1';
+            const newTask = { id: Date.now(), name: taskName, pomodoroEstimate: (parseInt(dom.newTaskEstimateInput.value) || 1), pomodorosCompleted: 0, internalInterruptions: 0, externalInterruptions: 0, focusTime: 0, completed: false, isEditing: false };
+            state.tasks.push(newTask);
+            dom.newTaskInput.value = '';
+            dom.newTaskEstimateInput.value = '1';
             playBeep(440, 100, 0.2);
-            const currentSelectedTask = tasks.find(t => t.id === selectedTaskId);
+            const currentSelectedTask = state.tasks.find(t => t.id === state.selectedTaskId);
             if (!currentSelectedTask || currentSelectedTask.completed) selectTask(newTask.id);
             else renderTasks();
         }
     };
 
     const deleteTask = (id) => {
-        tasks = tasks.filter(task => task.id !== id);
-        if (selectedTaskId === id) {
-            selectTask(tasks.find(t => !t.completed)?.id || null);
+        state.tasks = state.tasks.filter(task => task.id !== id);
+        if (state.selectedTaskId === id) {
+            selectTask(state.tasks.find(t => !t.completed)?.id || null);
         } else {
             renderTasks();
         }
     };
 
     const toggleTaskCompleted = (id) => {
-        const task = tasks.find(t => t.id === id);
+        const task = state.tasks.find(t => t.id === id);
         if (task) {
             task.completed = !task.completed;
             if (task.completed) {
@@ -660,24 +566,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 addCoins(2);
                 checkMissionsProgress();
             }
-            if (task.completed && selectedTaskId === id) {
-                if(isRunning) pauseTimer();
-                selectTask(tasks.find(t => !t.completed)?.id || null);
-                if (!isRunning && mode === 'focus') resetTimer('focus');
+            if (task.completed && state.selectedTaskId === id) {
+                if(state.isRunning) pauseTimer();
+                selectTask(state.tasks.find(t => !t.completed)?.id || null);
+                if (!state.isRunning && state.mode === 'focus') resetTimer('focus');
             }
             renderTasks();
         }
     };
 
     const toggleEditState = (id) => {
-        tasks.forEach(task => task.isEditing = task.id === id ? !task.isEditing : false);
+        state.tasks.forEach(task => task.isEditing = task.id === id ? !task.isEditing : false);
         renderTasks();
         const input = document.querySelector(`[data-edit-input-id="${id}"]`);
         if (input) { input.focus(); input.select(); }
     };
 
     const updateTaskName = (id, newName) => {
-        const task = tasks.find(t => t.id === id);
+        const task = state.tasks.find(t => t.id === id);
         if (task) {
             if (newName) task.name = newName;
             task.isEditing = false;
@@ -686,102 +592,127 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const selectTask = (id) => {
-        const task = tasks.find(t => t.id === id);
-        if ((task || id === null) && !tasks.some(t => t.isEditing)) {
-            selectedTaskId = id;
+        const task = state.tasks.find(t => t.id === id);
+        if ((task || id === null) && !state.tasks.some(t => t.isEditing)) {
+            state.selectedTaskId = id;
             renderTasks();
-            if (!isRunning) resetTimer('focus');
+            if (!state.isRunning) resetTimer('focus');
         }
     };
 
     const logInterruption = (type) => {
-        if (isRunning && mode === 'focus' && selectedTaskId) {
-            const task = tasks.find(t => t.id === selectedTaskId);
+        if (state.isRunning && state.mode === 'focus' && state.selectedTaskId) {
+            const task = state.tasks.find(t => t.id === state.selectedTaskId);
             if (task) {
                 if (type === 'internal') task.internalInterruptions++;
                 else if (type === 'external') task.externalInterruptions++;
-                uninterruptedSessionsToday = 0;
+                state.uninterruptedSessionsToday = 0;
                 renderTasks();
-                showModal(alertModalOverlay, `Interrupção registrada!`);
+                showModal(dom.alertModalOverlay, `Interrupção registrada!`);
             }
         } else {
-            showModal(alertModalOverlay, 'Só pode registrar interrupções durante um foco ativo.');
+            showModal(dom.alertModalOverlay, 'Só pode registrar interrupções durante um foco ativo.');
         }
     };
 
     const updateCurrentTaskDisplay = () => {
-        const task = tasks.find(t => t.id === selectedTaskId);
-        currentTaskDisplay.textContent = task ? task.name : 'Nenhuma tarefa selecionada';
-        pomodoroCyclesEl.innerHTML = '';
-        if (focusMethod !== 'pomodoro' || !settings.longBreakInterval || settings.longBreakInterval <= 0) return;
-        const cyclesToShow = pomodoroSessionCount % settings.longBreakInterval;
-        for(let i = 0; i < settings.longBreakInterval; i++) {
+        const task = state.tasks.find(t => t.id === state.selectedTaskId);
+        dom.currentTaskDisplay.textContent = task ? task.name : 'Nenhuma tarefa selecionada';
+        dom.pomodoroCyclesEl.innerHTML = '';
+        if (state.settings.focusMethod !== 'pomodoro' || !state.settings.longBreakInterval || state.settings.longBreakInterval <= 0) return;
+        const cyclesToShow = state.pomodoroSessionCount % state.settings.longBreakInterval;
+        for(let i = 0; i < state.settings.longBreakInterval; i++) {
             const icon = i < cyclesToShow ? '<i data-lucide="check-circle-2" class="text-green-500"></i>' : '<i data-lucide="circle" class="text-muted"></i>';
-            pomodoroCyclesEl.innerHTML += `<span class="transition-all">${icon}</span>`;
+            dom.pomodoroCyclesEl.innerHTML += `<span class="transition-all">${icon}</span>`;
         }
         lucide.createIcons();
     };
 
+    // --- PERSISTÊNCIA ---
     const saveState = () => {
-        const state = { settings, tasks, selectedTaskId, pomodoroSessionCount, focusMethod, showCompletedTasks, gamification, uninterruptedSessionsToday, timerState: { isRunning, mode, endTime, totalTime } };
-        localStorage.setItem('pomodoroAppState', JSON.stringify(state));
+        const stateToSave = {
+            tasks: state.tasks,
+            selectedTaskId: state.selectedTaskId,
+            pomodoroSessionCount: state.pomodoroSessionCount,
+            uninterruptedSessionsToday: state.uninterruptedSessionsToday,
+            settings: state.settings,
+            gamification: state.gamification,
+            timerState: {
+                isRunning: state.isRunning,
+                mode: state.mode,
+                endTime: state.endTime,
+                totalTime: state.totalTime
+            }
+        };
+        // O Set não é serializável, então o convertemos para um array
+        const serializableGamification = { ...state.gamification, changedThemesCount: Array.from(state.gamification.changedThemesCount) };
+        stateToSave.gamification = serializableGamification;
+
+        localStorage.setItem('pomodoroAppState', JSON.stringify(stateToSave));
     };
 
     const loadState = () => {
-        const state = JSON.parse(localStorage.getItem('pomodoroAppState'));
-        if (state) {
-            settings = { ...settings, ...state.settings };
-            tasks = state.tasks || [];
-            selectedTaskId = state.selectedTaskId;
-            pomodoroSessionCount = state.pomodoroSessionCount || 0;
-            focusMethod = state.focusMethod || 'pomodoro';
-            showCompletedTasks = state.showCompletedTasks || false;
-            uninterruptedSessionsToday = state.uninterruptedSessionsToday || 0;
-            
-            const defaultGamification = { level: 1, xp: 0, coins: 0, currentStreak: 0, longestStreak: 0, lastSessionDate: null, unlockedAchievements: [], dailyMissions: [], completedMissions: [], lastMissionDate: null };
-            gamification = { ...defaultGamification, ...state.gamification };
+        const savedStateJSON = localStorage.getItem('pomodoroAppState');
+        if (!savedStateJSON) return;
 
-            if (state.timerState) {
-                const { isRunning: wasRunning, mode: savedMode, endTime: savedEndTime, totalTime: savedTotalTime } = state.timerState;
-                if (wasRunning && savedEndTime && savedEndTime > Date.now()) {
-                    isRunning = true; mode = savedMode; totalTime = savedTotalTime; endTime = savedEndTime;
-                    timeRemaining = Math.round((endTime - Date.now()) / 1000);
-                    timerInterval = setInterval(updateTimer, 1000);
-                }
+        const savedState = JSON.parse(savedStateJSON);
+        
+        state.tasks = savedState.tasks || [];
+        state.selectedTaskId = savedState.selectedTaskId;
+        state.pomodoroSessionCount = savedState.pomodoroSessionCount || 0;
+        state.uninterruptedSessionsToday = savedState.uninterruptedSessionsToday || 0;
+        Object.assign(state.settings, savedState.settings);
+        Object.assign(state.gamification, savedState.gamification);
+        
+        if (savedState.timerState) {
+            const { isRunning: wasRunning, mode: savedMode, endTime: savedEndTime, totalTime: savedTotalTime } = savedState.timerState;
+            if (wasRunning && savedEndTime && savedEndTime > Date.now()) {
+                state.isRunning = true;
+                state.mode = savedMode;
+                state.totalTime = savedTotalTime;
+                state.endTime = savedEndTime;
+                state.timeRemaining = Math.round((state.endTime - Date.now()) / 1000);
+                state.timerInterval = setInterval(updateTimer, 1000);
             }
         }
-        tasks.forEach(task => task.isEditing = false);
-        focusDurationInput.value = settings.focusDuration;
-        shortBreakDurationInput.value = settings.shortBreakDuration;
-        longBreakDurationInput.value = settings.longBreakDuration;
-        longBreakIntervalInput.value = settings.longBreakInterval;
-        if (selectedTaskId && (!tasks.find(t => t.id === selectedTaskId) || tasks.find(t => t.id === selectedTaskId).completed)) {
-            selectedTaskId = null;
+        
+        state.tasks.forEach(task => task.isEditing = false); 
+
+        // Converte o array de volta para um Set
+        state.gamification.changedThemesCount = new Set(savedState.gamification.changedThemesCount || []);
+        
+        dom.focusDurationInput.value = state.settings.focusDuration;
+        dom.shortBreakDurationInput.value = state.settings.shortBreakDuration;
+        dom.longBreakDurationInput.value = state.settings.longBreakDuration;
+        dom.longBreakIntervalInput.value = state.settings.longBreakInterval;
+
+        if (state.selectedTaskId && (!state.tasks.find(t => t.id === state.selectedTaskId) || state.tasks.find(t => t.id === state.selectedTaskId).completed)) {
+            state.selectedTaskId = null;
         }
-        if (!selectedTaskId) {
-            selectTask(tasks.find(t => !t.completed)?.id || null);
+        if (!state.selectedTaskId) {
+            selectTask(state.tasks.find(t => !t.completed)?.id || null);
         }
         generateDailyMissions();
     };
 
     // --- EVENT LISTENERS ---
     const handleStartPauseClick = () => {
-        startPauseBtn.classList.add('start-pause-btn-clicked');
-        startPauseBtn.addEventListener('animationend', () => startPauseBtn.classList.remove('start-pause-btn-clicked'), { once: true });
-        if (focusMethod === 'pomodoro' || mode !== 'focus') {
-            isRunning ? pauseTimer() : startTimer();
+        dom.startPauseBtn.classList.add('start-pause-btn-clicked');
+        dom.startPauseBtn.addEventListener('animationend', () => dom.startPauseBtn.classList.remove('start-pause-btn-clicked'), { once: true });
+        if (state.settings.focusMethod === 'pomodoro' || state.mode !== 'focus') {
+            state.isRunning ? pauseTimer() : startTimer();
         } else {
-            if (isRunning) {
+            if (state.isRunning) {
                 pauseTimer();
-                const focusDuration = timeRemaining;
-                const task = tasks.find(t => t.id === selectedTaskId);
+                const focusDuration = state.timeRemaining;
+                const task = state.tasks.find(t => t.id === state.selectedTaskId);
                 if (task) task.focusTime += focusDuration;
                 const xpGained = Math.floor(focusDuration / 60);
                 addXP(xpGained);
                 addCoins(5);
                 checkStreak();
                 checkMissionsProgress();
-                showModal(sessionEndModalOverlay, `Você se concentrou por ${formatTime(timeRemaining)}.`);
+                showModal(dom.sessionEndModalOverlay, `Você se concentrou por ${formatTime(state.timeRemaining)}.`);
                 resetTimer('focus');
             } else {
                 startTimer();
@@ -789,37 +720,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    startPauseBtn.addEventListener('click', () => {
-        if (!audioInitialized) audioContext.resume().then(() => audioInitialized = true);
-        xpGainDisplay.textContent = '';
-        coinGainDisplay.textContent = '';
+    dom.startPauseBtn.addEventListener('click', () => {
+        if (!state.audioInitialized) state.audioContext.resume().then(() => state.audioInitialized = true);
+        dom.xpGainDisplay.textContent = '';
+        dom.coinGainDisplay.textContent = '';
         
         const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-        if (isIOS && !isRunning && focusMethod === 'pomodoro') {
-            if (mode === 'focus') {
-                iosPromptTitle.textContent = 'Lembrete de Foco';
-                iosPromptMessage.textContent = 'Para garantir o alarme no final do foco, recomendamos criar um lembrete. Deseja fazer isso agora?';
+        if (isIOS && !state.isRunning && state.settings.focusMethod === 'pomodoro') {
+            if (state.mode === 'focus') {
+                dom.iosPromptTitle.textContent = 'Lembrete de Foco';
+                dom.iosPromptMessage.textContent = 'Para garantir o alarme no final do foco, recomendamos criar um lembrete. Deseja fazer isso agora?';
             } else {
-                iosPromptTitle.textContent = 'Lembrete de Pausa';
-                iosPromptMessage.textContent = 'Para garantir o alarme no final da pausa, recomendamos criar um lembrete. Deseja fazer isso agora?';
+                dom.iosPromptTitle.textContent = 'Lembrete de Pausa';
+                dom.iosPromptMessage.textContent = 'Para garantir o alarme no final da pausa, recomendamos criar um lembrete. Deseja fazer isso agora?';
             }
-            showModal(iosStartPromptModalOverlay);
+            showModal(dom.iosStartPromptModalOverlay);
         } else {
             handleStartPauseClick();
         }
     });
 
-    iosPromptConfirmBtn.addEventListener('click', () => {
+    dom.iosPromptConfirmBtn.addEventListener('click', () => {
         let duration, eventTitle, eventDescription;
-        if (mode === 'focus') {
-            const task = tasks.find(t => t.id === selectedTaskId);
+        if (state.mode === 'focus') {
+            const task = state.tasks.find(t => t.id === state.selectedTaskId);
             eventTitle = `🎉 Fim do Foco: ${task ? task.name : 'Foco'}`;
             eventDescription = `Sua sessão de foco terminou. Hora de fazer uma pausa!`;
-            duration = settings.focusDuration;
+            duration = state.settings.focusDuration;
         } else {
-            eventTitle = mode === 'shortBreak' ? `🚀 Fim da Pausa Curta` : `🏆 Fim da Pausa Longa`;
+            eventTitle = state.mode === 'shortBreak' ? `🚀 Fim da Pausa Curta` : `🏆 Fim da Pausa Longa`;
             eventDescription = `Sua pausa acabou. Hora de voltar ao foco!`;
-            duration = mode === 'shortBreak' ? settings.shortBreakDuration : settings.longBreakDuration;
+            duration = state.mode === 'shortBreak' ? state.settings.shortBreakDuration : state.settings.longBreakDuration;
         }
         const formatDT = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
         const eventStartTime = new Date(Date.now() + duration * 60 * 1000);
@@ -837,41 +768,41 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = `data:text/calendar;base64,${base64Content}`;
 
         handleStartPauseClick();
-        hideModal(iosStartPromptModalOverlay);
+        hideModal(dom.iosStartPromptModalOverlay);
     });
 
-    iosPromptCancelBtn.addEventListener('click', () => {
+    dom.iosPromptCancelBtn.addEventListener('click', () => {
         handleStartPauseClick();
-        hideModal(iosStartPromptModalOverlay);
+        hideModal(dom.iosStartPromptModalOverlay);
     });
     
-    resetBtn.addEventListener('click', () => showModal(resetConfirmModalOverlay));
-    resetConfirmBtn.addEventListener('click', resetDay);
-    resetCancelBtn.addEventListener('click', () => hideModal(resetConfirmModalOverlay));
-    internalInterruptBtn.addEventListener('click', () => logInterruption('internal'));
-    externalInterruptBtn.addEventListener('click', () => logInterruption('external'));
-    settingsBtn.addEventListener('click', () => { renderPaletteSelector(); showModal(settingsModalOverlay); });
-    dashboardBtn.addEventListener('click', () => { renderDashboard(); showModal(dashboardModalOverlay); });
-    helpBtn.addEventListener('click', () => showModal(helpModalOverlay));
-    dashboardModalCloseBtn.addEventListener('click', () => hideModal(dashboardModalOverlay));
-    alertModalCloseBtn.addEventListener('click', () => hideModal(alertModalOverlay));
-    sessionEndCloseBtn.addEventListener('click', () => hideModal(sessionEndModalOverlay));
+    dom.resetBtn.addEventListener('click', () => showModal(dom.resetConfirmModalOverlay));
+    dom.resetConfirmBtn.addEventListener('click', resetDay);
+    dom.resetCancelBtn.addEventListener('click', () => hideModal(dom.resetConfirmModalOverlay));
+    dom.internalInterruptBtn.addEventListener('click', () => logInterruption('internal'));
+    dom.externalInterruptBtn.addEventListener('click', () => logInterruption('external'));
+    dom.settingsBtn.addEventListener('click', () => { renderPaletteSelector(); showModal(dom.settingsModalOverlay); });
+    dom.dashboardBtn.addEventListener('click', () => { renderDashboard(); showModal(dom.dashboardModalOverlay); });
+    dom.helpBtn.addEventListener('click', () => showModal(dom.helpModalOverlay));
+    dom.dashboardModalCloseBtn.addEventListener('click', () => hideModal(dom.dashboardModalOverlay));
+    dom.alertModalCloseBtn.addEventListener('click', () => hideModal(dom.alertModalOverlay));
+    dom.sessionEndCloseBtn.addEventListener('click', () => hideModal(dom.sessionEndModalOverlay));
     
-    settingsSaveBtn.addEventListener('click', () => {
-        settings.focusDuration = parseInt(focusDurationInput.value) || 25;
-        settings.shortBreakDuration = parseInt(shortBreakDurationInput.value) || 5;
-        settings.longBreakDuration = parseInt(longBreakDurationInput.value) || 15;
-        settings.longBreakInterval = parseInt(longBreakIntervalInput.value) || 4;
-        hideModal(settingsModalOverlay);
-        if (!isRunning) resetTimer('focus');
+    dom.settingsSaveBtn.addEventListener('click', () => {
+        state.settings.focusDuration = parseInt(dom.focusDurationInput.value) || 25;
+        state.settings.shortBreakDuration = parseInt(dom.shortBreakDurationInput.value) || 5;
+        state.settings.longBreakDuration = parseInt(dom.longBreakDurationInput.value) || 15;
+        state.settings.longBreakInterval = parseInt(dom.longBreakIntervalInput.value) || 4;
+        hideModal(dom.settingsModalOverlay);
+        if (!state.isRunning) resetTimer('focus');
         saveState();
     });
 
-    colorPaletteSelector.addEventListener('click', (e) => {
+    dom.colorPaletteSelector.addEventListener('click', (e) => {
         const target = e.target.closest('button[data-theme]');
         if (target) {
-            settings.theme = target.dataset.theme;
-            applyTheme(settings.theme);
+            state.settings.theme = target.dataset.theme;
+            applyTheme(state.settings.theme);
             renderPaletteSelector();
             updateMethodToggleUI();
             updateUI();
@@ -879,46 +810,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    addTaskBtn.addEventListener('click', addTask);
-    newTaskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
+    dom.addTaskBtn.addEventListener('click', addTask);
+    dom.newTaskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
     
-    focusMethodToggle.addEventListener('click', (e) => {
+    dom.focusMethodToggle.addEventListener('click', (e) => {
         const target = e.target.closest('.method-btn');
-        if (target && !isRunning) {
-            focusMethod = target.dataset.method;
+        if (target && !state.isRunning) {
+            state.settings.focusMethod = target.dataset.method;
             updateMethodToggleUI();
             renderTasks();
             saveState();
-        } else if (isRunning) {
-            showModal(alertModalOverlay, 'Não é possível trocar de modo enquanto o timer está rodando.');
+        } else if (state.isRunning) {
+            showModal(dom.alertModalOverlay, 'Não é possível trocar de modo enquanto o timer está rodando.');
         }
     });
 
-    toggleCompletedTasksBtn.addEventListener('click', () => {
-        showCompletedTasks = !showCompletedTasks;
-        toggleCompletedTasksBtn.textContent = showCompletedTasks ? 'Esconder Concluídas' : 'Mostrar Concluídas';
+    dom.toggleCompletedTasksBtn.addEventListener('click', () => {
+        state.showCompletedTasks = !state.showCompletedTasks;
+        dom.toggleCompletedTasksBtn.textContent = state.showCompletedTasks ? 'Esconder Concluídas' : 'Mostrar Concluídas';
         renderTasks();
     });
     
-    dashboardModalOverlay.addEventListener('click', (e) => {
+    dom.dashboardModalOverlay.addEventListener('click', (e) => {
         const tabButton = e.target.closest('.dashboard-tab');
         if (tabButton) {
             const tabName = tabButton.dataset.tab;
             ['stats', 'missions', 'achievements'].forEach(tab => {
                 document.getElementById(`dashboard-${tab}-content`).classList.add('hidden');
             });
-            dashboardModalOverlay.querySelectorAll('.dashboard-tab').forEach(btn => btn.classList.remove('active'));
+            dom.dashboardModalOverlay.querySelectorAll('.dashboard-tab').forEach(btn => btn.classList.remove('active'));
             
             document.getElementById(`dashboard-${tabName}-content`).classList.remove('hidden');
             tabButton.classList.add('active');
         }
     });
 
-    [alertModalOverlay, settingsModalOverlay, dashboardModalOverlay, helpModalOverlay, resetConfirmModalOverlay, sessionEndModalOverlay, iosStartPromptModalOverlay].forEach(overlay => {
+    [dom.alertModalOverlay, dom.settingsModalOverlay, dom.dashboardModalOverlay, dom.helpModalOverlay, dom.resetConfirmModalOverlay, dom.sessionEndModalOverlay, dom.iosStartPromptModalOverlay].forEach(overlay => {
         overlay.addEventListener('click', (e) => { if (e.target === overlay) hideModal(overlay); });
     });
 
-    taskListEl.addEventListener('click', (e) => {
+    dom.taskListEl.addEventListener('click', (e) => {
         const deleteBtn = e.target.closest('[data-delete-id]');
         const completeBtn = e.target.closest('[data-complete-id]');
         const editBtn = e.target.closest('[data-edit-id]');
@@ -927,9 +858,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (completeBtn) { toggleTaskCompleted(parseInt(completeBtn.dataset.completeId)); return; }
         if (editBtn) {
             const id = parseInt(editBtn.dataset.editId);
-            const task = tasks.find(t => t.id === id);
+            const task = state.tasks.find(t => t.id === id);
             if (task && task.isEditing) {
-                const input = taskListEl.querySelector(`[data-edit-input-id="${id}"]`);
+                const input = dom.taskListEl.querySelector(`[data-edit-input-id="${id}"]`);
                 if (input) updateTaskName(id, input.value.trim());
             } else {
                 toggleEditState(id);
@@ -939,7 +870,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (taskItem) { selectTask(parseInt(taskItem.dataset.id)); }
     });
 
-    taskListEl.addEventListener('keyup', (e) => {
+    dom.taskListEl.addEventListener('keyup', (e) => {
         if (e.target.matches('.task-edit-input')) {
             const id = parseInt(e.target.dataset.editInputId);
             if (e.key === 'Enter') updateTaskName(id, e.target.value.trim());
@@ -947,26 +878,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    taskListEl.addEventListener('focusout', (e) => {
+    dom.taskListEl.addEventListener('focusout', (e) => {
         if (e.target.matches('.task-edit-input')) {
             const id = parseInt(e.target.dataset.editInputId);
             setTimeout(() => {
-                const task = tasks.find(t => t.id === id);
+                const task = state.tasks.find(t => t.id === id);
                 if (task && task.isEditing) updateTaskName(id, e.target.value.trim());
             }, 150);
         }
     });
 
     // --- INICIALIZAÇÃO DA APLICAÇÃO ---
-    loadState();
-    applyTheme(settings.theme); 
-    updateMethodToggleUI();
-    renderTasks();
-    updateUI();
-    updateGamificationUI();
-    checkForAchievements();
-    lucide.createIcons();
-    document.addEventListener('click', () => {
-        if (audioContext.state === 'suspended') audioContext.resume().then(() => audioInitialized = true);
-    }, { once: true });
+    const initializeApp = () => {
+        loadState();
+        applyTheme(state.settings.theme); 
+        updateMethodToggleUI();
+        renderTasks();
+        updateUI();
+        updateGamificationUI();
+        checkForAchievements();
+        lucide.createIcons();
+        document.addEventListener('click', () => {
+            if (state.audioContext.state === 'suspended') state.audioContext.resume().then(() => state.audioInitialized = true);
+        }, { once: true });
+    };
+
+    initializeApp();
 });
