@@ -43,6 +43,12 @@ export function toggleTaskCompleted(id) {
     return task.completed; // Retorna o novo estado.
 }
 
+// CORREÇÃO: Adiciona uma função para alternar a visibilidade das tarefas concluídas.
+export function toggleShowCompleted() {
+    state.showCompletedTasks = !state.showCompletedTasks;
+}
+
+
 // Ativa/desativa o modo de edição de uma tarefa.
 export function toggleEditState(id) {
     let inputToFocus = null;
