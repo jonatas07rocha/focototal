@@ -125,7 +125,7 @@ export function generateDailyMissions() {
 }
 
 // Obtém as estatísticas do dia.
-export function getDailyStats() {
+function getDailyStats() {
     return {
         focusTimeToday: state.tasks.reduce((acc, task) => acc + task.focusTime, 0),
         tasksCompletedToday: state.tasks.filter(t => t.completed).length,
