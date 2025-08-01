@@ -40,6 +40,8 @@ export const state = {
         longestStreak: 0,
         lastSessionDate: null,
         unlockedAchievements: [],
+        // CORREÇÃO: Adiciona a propriedade para temas desbloqueados.
+        unlockedThemes: [], 
         dailyMissions: [],
         completedMissions: [],
         lastMissionDate: null,
