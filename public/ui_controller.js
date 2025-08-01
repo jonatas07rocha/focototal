@@ -52,8 +52,6 @@ export function renderMissions() {
         dom.dashboardMissionsContent.innerHTML = '<p class="text-muted text-center">Nenhuma missão para hoje. Volte amanhã!</p>';
         return;
     }
-    // A função getDailyStats precisa estar acessível aqui ou ser importada.
-    // Por enquanto, vamos assumir que as stats são passadas ou lidas do state.
     const stats = {
         focusTimeToday: state.tasks.reduce((acc, task) => acc + task.focusTime, 0),
         tasksCompletedToday: state.tasks.filter(t => t.completed).length,
@@ -230,11 +228,11 @@ export function updateMethodToggleUI() {
     dom.newTaskEstimateLabel.style.display = state.settings.focusMethod === 'pomodoro' ? 'inline-block' : 'none';
 }
 
-// CORREÇÃO: Adiciona função para atualizar a aparência do botão "Mostrar/Ocultar Concluídas".
+// CORREÇÃO: Adiciona a lógica para verificar o estado e atualizar o texto do botão.
 export function updateShowCompletedBtn() {
-    if (dom.toggleCompletedBtn) {
-        dom.toggleCompletedBtn.textContent = state.showCompletedTasks ? 'Ocultar Concluídas' : 'Mostrar Concluídas';
-        dom.toggleCompletedBtn.classList.toggle('active', state.showCompletedTasks);
+    if (dom.toggleCompletedTasksBtn) {
+        dom.toggleCompletedTasksBtn.textContent = state.showCompletedTasks ? 'Ocultar Concluídas' : 'Mostrar Concluídas';
+        dom.toggleCompletedTasksBtn.classList.toggle('active', state.showCompletedTasks);
     }
 }
 
