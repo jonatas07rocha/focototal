@@ -79,7 +79,15 @@ export function switchMode() {
                 task.focusTime += focusDuration;
             }
         }
-        state.mode = (state.settings.focusMethod === 'pomodoro' && state.pomodoroSessionCount % state.settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
+        
+        // CORREÇÃO: A transição para a pausa só deve ocorrer no modo Pomodoro.
+        if (state.settings.focusMethod === 'pomodoro') {
+            state.mode = (state.pomodoroSessionCount % state.settings.longBreakInterval === 0) ? 'longBreak' : 'shortBreak';
+        } else {
+            // No modo adaptativo, apenas retorna para o modo de foco (parado).
+            state.mode = 'focus';
+        }
+
     } else {
         state.mode = 'focus';
     }
