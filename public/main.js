@@ -11,6 +11,8 @@ import * as gamification from './gamification.js';
 import * as timer from './timer.js';
 import * as tasks from './tasks.js';
 import * as ui from './ui_controller.js';
+// CORREÇÃO: Importa a lógica da loja
+import * as shop from './shop_logic.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -220,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.showModal(dom.dashboardModalOverlay);
     });
 
-    // CORREÇÃO: Lógica de controle das abas do Dashboard aprimorada.
     if (dom.dashboardModalOverlay) {
         const tabButtons = dom.dashboardModalOverlay.querySelectorAll('.dashboard-tab');
         const tabContents = dom.dashboardModalOverlay.querySelectorAll('.dashboard-tab-content');
@@ -239,6 +240,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    // CORREÇÃO: Adiciona os listeners para a Loja
+    dom.shopBtn.addEventListener('click', () => {
+        shop.renderShop();
+        ui.showModal(dom.shopModalOverlay);
+    });
+
+    dom.shopCollectionsContainer.addEventListener('click', (e) => {
+        const buyButton = e.target.closest('.buy-btn');
+        if (buyButton && !buyButton.disabled) {
+            shop.buyItem(buyButton.dataset.itemId);
+        }
+    });
 
 
     dom.settingsSaveBtn.addEventListener('click', () => {
@@ -281,11 +295,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Fechar Modais
-    [dom.alertModalOverlay, dom.settingsModalOverlay, dom.dashboardModalOverlay, dom.helpModalOverlay, dom.resetConfirmModalOverlay, dom.sessionEndModalOverlay].forEach(overlay => {
+    // CORREÇÃO: Adiciona o modal da loja à lista
+    [dom.alertModalOverlay, dom.settingsModalOverlay, dom.dashboardModalOverlay, dom.helpModalOverlay, dom.resetConfirmModalOverlay, dom.sessionEndModalOverlay, dom.shopModalOverlay].forEach(overlay => {
         overlay.addEventListener('click', (e) => { if (e.target === overlay) ui.hideModal(overlay); });
     });
-    [dom.alertModalCloseBtn, dom.sessionEndCloseBtn, dom.dashboardModalCloseBtn, dom.helpModalCloseBtn, dom.resetCancelBtn].forEach(btn => {
-        btn.addEventListener('click', () => ui.hideModal(btn.closest('.modal-overlay')));
+    [dom.alertModalCloseBtn, dom.sessionEndCloseBtn, dom.dashboardModalCloseBtn, dom.helpModalCloseBtn, dom.resetCancelBtn, dom.shopModalCloseBtn].forEach(btn => {
+        if(btn) btn.addEventListener('click', () => ui.hideModal(btn.closest('.modal-overlay')));
     });
 
     // --- INICIALIZAÇÃO DA APLICAÇÃO ---
