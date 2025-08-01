@@ -146,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // CORREÇÃO: Usa o nome correto da propriedade exportada por ui.js
     if (dom.toggleCompletedTasksBtn) {
         dom.toggleCompletedTasksBtn.addEventListener('click', () => {
             tasks.toggleShowCompleted();
@@ -274,6 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.updateGamificationUI();
         ui.renderDashboard();
         ui.updateUI();
+        // CORREÇÃO: Garante que o texto do botão seja atualizado ao carregar a página.
         ui.updateShowCompletedBtn();
         
         // Reinicia o timer se necessário
