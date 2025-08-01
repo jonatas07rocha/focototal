@@ -45,7 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 ui.showModal(dom.alertModalOverlay, `Parabéns! Você alcançou o Nível ${state.gamification.level}!`);
             }
             
-            // CORREÇÃO: A mensagem de fim de sessão agora é diferente para cada modo.
             const endMessage = state.settings.focusMethod === 'pomodoro'
                 ? 'Você completou um Pomodoro! Hora de fazer uma pausa.'
                 : 'Sessão de foco finalizada!';
@@ -80,6 +79,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newMissions.length > 0 || newAchievements.length > 0) {
             ui.renderDashboard();
             ui.updateGamificationUI();
+            saveState();
+        }
+    }
+    
+    // CORREÇÃO: Lógica de adicionar tarefa encapsulada para ser reutilizada.
+    function handleAddTask() {
+        const taskName = dom.newTaskInput.value.trim();
+        const estimate = parseInt(dom.newTaskEstimateInput.value);
+        const newTask = tasks.addTask(taskName, estimate);
+        if (newTask) {
+            dom.newTaskInput.value = '';
+            dom.newTaskEstimateInput.value = '1';
+            playBeep(440, 100, 0.2);
+            if (!state.selectedTaskId || state.tasks.find(t => t.id === state.selectedTaskId)?.completed) {
+                tasks.selectTask(newTask.id);
+                timer.resetTimer('focus');
+                ui.updateUI();
+            }
+            ui.renderTasks();
             saveState();
         }
     }
@@ -121,21 +139,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Controles de Tarefas
-    dom.addTaskBtn.addEventListener('click', () => {
-        const taskName = dom.newTaskInput.value.trim();
-        const estimate = parseInt(dom.newTaskEstimateInput.value);
-        const newTask = tasks.addTask(taskName, estimate);
-        if (newTask) {
-            dom.newTaskInput.value = '';
-            dom.newTaskEstimateInput.value = '1';
-            playBeep(440, 100, 0.2);
-            if (!state.selectedTaskId || state.tasks.find(t => t.id === state.selectedTaskId)?.completed) {
-                tasks.selectTask(newTask.id);
-                timer.resetTimer('focus');
-                ui.updateUI();
-            }
-            ui.renderTasks();
-            saveState();
+    dom.addTaskBtn.addEventListener('click', handleAddTask);
+
+    // CORREÇÃO: Adiciona listener para a tecla "Enter" no input da tarefa.
+    dom.newTaskInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+            handleAddTask();
         }
     });
     
