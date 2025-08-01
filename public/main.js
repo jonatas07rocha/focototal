@@ -146,9 +146,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // CORREÇÃO: Adiciona listener para o botão de mostrar/ocultar concluídas.
-    if (dom.toggleCompletedBtn) {
-        dom.toggleCompletedBtn.addEventListener('click', () => {
+    // CORREÇÃO: Usa o nome correto da propriedade exportada por ui.js
+    if (dom.toggleCompletedTasksBtn) {
+        dom.toggleCompletedTasksBtn.addEventListener('click', () => {
             tasks.toggleShowCompleted();
             ui.updateShowCompletedBtn();
             ui.renderTasks();
@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.updateGamificationUI();
         ui.renderDashboard();
         ui.updateUI();
-        ui.updateShowCompletedBtn(); // CORREÇÃO: Atualiza o estado inicial do botão.
+        ui.updateShowCompletedBtn();
         
         // Reinicia o timer se necessário
         if (state.isRunning) {
