@@ -11,7 +11,6 @@ import * as gamification from './gamification.js';
 import * as timer from './timer.js';
 import * as tasks from './tasks.js';
 import * as ui from './ui_controller.js';
-// CORREÇÃO: Importa a lógica da loja
 import * as shop from './shop_logic.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -103,14 +102,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- EVENT LISTENERS ---
-
-    // Controles do Timer
-    dom.startPauseBtn.addEventListener('click', () => {
-        if (!state.audioInitialized) state.audioContext.resume().then(() => state.audioInitialized = true);
-        dom.xpGainDisplay.textContent = '';
-        dom.coinGainDisplay.textContent = '';
-        
+    // CORREÇÃO: Encapsula a lógica de iniciar/pausar para ser reutilizada.
+    function handleStartPauseLogic() {
         if (state.isRunning) {
             if (state.settings.focusMethod === 'adaptativo' && state.mode === 'focus') {
                 clearInterval(state.timerInterval);
@@ -129,6 +122,69 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         ui.updateUI();
+    }
+
+    // --- EVENT LISTENERS ---
+
+    // Controles do Timer
+    // CORREÇÃO: Adiciona a verificação para iOS antes de iniciar o timer.
+    dom.startPauseBtn.addEventListener('click', () => {
+        if (!state.audioInitialized) state.audioContext.resume().then(() => state.audioInitialized = true);
+        dom.xpGainDisplay.textContent = '';
+        dom.coinGainDisplay.textContent = '';
+        
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        if (isIOS && !state.isRunning && state.settings.focusMethod === 'pomodoro') {
+            if (state.mode === 'focus') {
+                dom.iosPromptTitle.textContent = 'Lembrete de Foco';
+                dom.iosPromptMessage.textContent = 'Para garantir o alarme no final do foco, recomendamos criar um lembrete. Deseja fazer isso agora?';
+            } else {
+                dom.iosPromptTitle.textContent = 'Lembrete de Pausa';
+                dom.iosPromptMessage.textContent = 'Para garantir o alarme no final da pausa, recomendamos criar um lembrete. Deseja fazer isso agora?';
+            }
+            ui.showModal(dom.iosStartPromptModalOverlay);
+        } else {
+            handleStartPauseLogic();
+        }
+    });
+
+    // CORREÇÃO: Adiciona os listeners para o modal do iOS.
+    dom.iosPromptConfirmBtn.addEventListener('click', () => {
+        let duration, eventTitle, eventDescription;
+        if (state.mode === 'focus') {
+            const task = state.tasks.find(t => t.id === state.selectedTaskId);
+            eventTitle = `🎉 Fim do Foco: ${task ? task.name : 'Foco'}`;
+            eventDescription = `Sua sessão de foco terminou. Hora de fazer uma pausa!`;
+            duration = state.settings.focusDuration;
+        } else {
+            eventTitle = state.mode === 'shortBreak' ? `🚀 Fim da Pausa Curta` : `🏆 Fim da Pausa Longa`;
+            eventDescription = `Sua pausa acabou. Hora de voltar ao foco!`;
+            duration = state.mode === 'shortBreak' ? state.settings.shortBreakDuration : state.settings.longBreakDuration;
+        }
+        
+        const formatDT = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        const eventStartTime = new Date(Date.now() + duration * 60 * 1000);
+        const eventEndTime = new Date(eventStartTime.getTime() + 1 * 60 * 1000);
+        const icsContent = [
+            'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FocoTotal//PWA//PT',
+            'BEGIN:VEVENT', 'UID:' + Date.now() + '@focototal.app', 'DTSTAMP:' + formatDT(new Date()),
+            'DTSTART:' + formatDT(eventStartTime), 'DTEND:' + formatDT(eventEndTime),
+            'SUMMARY:' + eventTitle, 'DESCRIPTION:' + eventDescription,
+            'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + eventDescription, 'TRIGGER:-PT0S', 'END:VALARM',
+            'END:VEVENT', 'END:VCALENDAR'
+        ].join('\r\n');
+        
+        const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
+        window.location.href = `data:text/calendar;base64,${base64Content}`;
+
+        handleStartPauseLogic();
+        ui.hideModal(dom.iosStartPromptModalOverlay);
+    });
+
+    dom.iosPromptCancelBtn.addEventListener('click', () => {
+        handleStartPauseLogic();
+        ui.hideModal(dom.iosStartPromptModalOverlay);
     });
 
     dom.resetBtn.addEventListener('click', () => ui.showModal(dom.resetConfirmModalOverlay));
@@ -241,7 +297,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // CORREÇÃO: Adiciona os listeners para a Loja
     dom.shopBtn.addEventListener('click', () => {
         shop.renderShop();
         ui.showModal(dom.shopModalOverlay);
@@ -295,8 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Fechar Modais
-    // CORREÇÃO: Adiciona o modal da loja à lista
-    [dom.alertModalOverlay, dom.settingsModalOverlay, dom.dashboardModalOverlay, dom.helpModalOverlay, dom.resetConfirmModalOverlay, dom.sessionEndModalOverlay, dom.shopModalOverlay].forEach(overlay => {
+    [dom.alertModalOverlay, dom.settingsModalOverlay, dom.dashboardModalOverlay, dom.helpModalOverlay, dom.resetConfirmModalOverlay, dom.sessionEndModalOverlay, dom.shopModalOverlay, dom.iosStartPromptModalOverlay].forEach(overlay => {
         overlay.addEventListener('click', (e) => { if (e.target === overlay) ui.hideModal(overlay); });
     });
     [dom.alertModalCloseBtn, dom.sessionEndCloseBtn, dom.dashboardModalCloseBtn, dom.helpModalCloseBtn, dom.resetCancelBtn, dom.shopModalCloseBtn].forEach(btn => {
@@ -307,7 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function initializeApp() {
         loadState();
         
-        // Aplica o estado carregado à UI
         ui.applyTheme(state.settings.theme);
         ui.updateMethodToggleUI();
         ui.renderTasks();
@@ -316,13 +369,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.updateUI();
         ui.updateShowCompletedBtn();
         
-        // Reinicia o timer se necessário
         if (state.isRunning) {
             state.timerInterval = setInterval(handleTimerTick, 1000);
         }
         
         gamification.generateDailyMissions();
-        saveState(); // Salva caso missões tenham sido geradas
+        saveState();
         
         lucide.createIcons();
     }
