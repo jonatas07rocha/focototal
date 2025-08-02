@@ -92,10 +92,14 @@ export const dom = {
     shopCoinsDisplay: document.getElementById('shop-coins-display'),
     shopCollectionsContainer: document.getElementById('shop-collections-container'),
 
-    // CORREÇÃO: Adiciona os seletores do modal de notificação do iOS
+    // Seletores do iOS
     iosStartPromptModalOverlay: document.getElementById('ios-start-prompt-modal-overlay'),
     iosPromptConfirmBtn: document.getElementById('ios-prompt-confirm-btn'),
     iosPromptCancelBtn: document.getElementById('ios-prompt-cancel-btn'),
     iosPromptTitle: document.getElementById('ios-prompt-title'),
     iosPromptMessage: document.getElementById('ios-prompt-message'),
+
+    // CORREÇÃO: Adiciona os seletores do conteúdo de Ajuda
+    helpContentPomodoro: document.getElementById('help-content-pomodoro'),
+    helpContentAdaptativo: document.getElementById('help-content-adaptativo'),
 };
