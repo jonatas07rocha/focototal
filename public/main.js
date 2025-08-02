@@ -102,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // CORREÇÃO: Encapsula a lógica de iniciar/pausar para ser reutilizada.
     function handleStartPauseLogic() {
         if (state.isRunning) {
             if (state.settings.focusMethod === 'adaptativo' && state.mode === 'focus') {
@@ -127,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- EVENT LISTENERS ---
 
     // Controles do Timer
-    // CORREÇÃO: Adiciona a verificação para iOS antes de iniciar o timer.
     dom.startPauseBtn.addEventListener('click', () => {
         if (!state.audioInitialized) state.audioContext.resume().then(() => state.audioInitialized = true);
         dom.xpGainDisplay.textContent = '';
@@ -149,28 +147,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // CORREÇÃO: Adiciona os listeners para o modal do iOS.
     dom.iosPromptConfirmBtn.addEventListener('click', () => {
         let duration, eventTitle, eventDescription;
+        const appUrl = 'https://focototal.vercel.app'; // Link do app
+
         if (state.mode === 'focus') {
             const task = state.tasks.find(t => t.id === state.selectedTaskId);
             eventTitle = `🎉 Fim do Foco: ${task ? task.name : 'Foco'}`;
-            eventDescription = `Sua sessão de foco terminou. Hora de fazer uma pausa!`;
+            eventDescription = `Sua sessão de foco terminou. Hora de fazer uma pausa! Volte ao app: ${appUrl}`;
             duration = state.settings.focusDuration;
         } else {
             eventTitle = state.mode === 'shortBreak' ? `🚀 Fim da Pausa Curta` : `🏆 Fim da Pausa Longa`;
-            eventDescription = `Sua pausa acabou. Hora de voltar ao foco!`;
+            eventDescription = `Sua pausa acabou. Hora de voltar ao foco! Volte ao app: ${appUrl}`;
             duration = state.mode === 'shortBreak' ? state.settings.shortBreakDuration : state.settings.longBreakDuration;
         }
         
         const formatDT = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
         const eventStartTime = new Date(Date.now() + duration * 60 * 1000);
         const eventEndTime = new Date(eventStartTime.getTime() + 1 * 60 * 1000);
+        
+        // CORREÇÃO: Adiciona o link do app na descrição e no campo URL do evento.
         const icsContent = [
             'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FocoTotal//PWA//PT',
             'BEGIN:VEVENT', 'UID:' + Date.now() + '@focototal.app', 'DTSTAMP:' + formatDT(new Date()),
             'DTSTART:' + formatDT(eventStartTime), 'DTEND:' + formatDT(eventEndTime),
-            'SUMMARY:' + eventTitle, 'DESCRIPTION:' + eventDescription,
+            'SUMMARY:' + eventTitle, 
+            'DESCRIPTION:' + eventDescription,
+            'URL;VALUE=URI:' + appUrl,
             'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + eventDescription, 'TRIGGER:-PT0S', 'END:VALARM',
             'END:VEVENT', 'END:VCALENDAR'
         ].join('\r\n');
