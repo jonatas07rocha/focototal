@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dom.iosPromptConfirmBtn.addEventListener('click', () => {
         let duration, eventTitle, eventDescription;
-        const appUrl = 'https://focototal.vercel.app'; // Link do app
+        const appUrl = 'https://focototal.vercel.app';
 
         if (state.mode === 'focus') {
             const task = state.tasks.find(t => t.id === state.selectedTaskId);
@@ -166,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const eventStartTime = new Date(Date.now() + duration * 60 * 1000);
         const eventEndTime = new Date(eventStartTime.getTime() + 1 * 60 * 1000);
         
-        // CORREÇÃO: Adiciona o link do app na descrição e no campo URL do evento.
         const icsContent = [
             'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FocoTotal//PWA//PT',
             'BEGIN:VEVENT', 'UID:' + Date.now() + '@focototal.app', 'DTSTAMP:' + formatDT(new Date()),
@@ -310,6 +309,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (buyButton && !buyButton.disabled) {
             shop.buyItem(buyButton.dataset.itemId);
         }
+    });
+
+    // CORREÇÃO: Adiciona o listener para o botão de Ajuda.
+    dom.helpBtn.addEventListener('click', () => {
+        const isPomodoro = state.settings.focusMethod === 'pomodoro';
+        dom.helpContentPomodoro.classList.toggle('hidden', !isPomodoro);
+        dom.helpContentAdaptativo.classList.toggle('hidden', isPomodoro);
+        ui.showModal(dom.helpModalOverlay);
     });
 
 
