@@ -17,53 +17,48 @@ import * as shop from './shop_logic.js';
 import { initFirebaseAuth, signInWithGoogle, signOutUser } from './firebase_auth.js';
 
 
-// --- LÓGICA DE AUTENTICAÇÃO E CONTROLE DE UI ---
+// --- LÓGICA DE AUTENTICAÇÃO (VERSÃO DE DIAGNÓSTICO) ---
 
 /**
- * Função executada quando o usuário faz login com sucesso.
- * @param {object} user - O objeto do usuário retornado pelo Firebase.
+ * Função de teste executada quando o usuário faz login com sucesso.
  */
 function onLogin(user) {
-    // Esconde a tela de login e mostra a aplicação principal
+    console.log(`Login bem-sucedido para ${user.displayName}. A aguardar antes de iniciar o app.`);
+    
+    // Esconde a tela de login
     dom.loginContainer.classList.add('hidden');
+    // Mostra o contêiner do app
     dom.appContainer.classList.remove('hidden');
-
-    // Atualiza a UI com as informações do usuário
-    dom.userProfile.classList.remove('hidden');
-    dom.focusMethodToggle.classList.add('hidden'); // Esconde o seletor de método do header
-    dom.userAvatar.src = user.photoURL;
-    dom.userAvatar.alt = `Avatar de ${user.displayName}`;
-
-    // Inicia o conteúdo principal do aplicativo
-    initializeAppContent();
+    
+    // PASSO DE DIAGNÓSTICO: Em vez de iniciar o app, limpamos o contêiner e mostramos uma mensagem.
+    // Isso testa se a autenticação por si só é estável.
+    dom.appContainer.innerHTML = `
+        <div class="text-white text-center p-8 flex flex-col items-center justify-center h-full">
+            <h1 class="text-2xl font-bold mb-4">Login Bem-Sucedido!</h1>
+            <img src="${user.photoURL}" alt="Avatar de ${user.displayName}" class="rounded-full w-24 h-24 mx-auto my-4 border-4 border-green-500">
+            <p class="text-lg">Olá, ${user.displayName}.</p>
+            <p class="mt-4 text-muted">Se esta tela permanecer visível, a autenticação está a funcionar corretamente.</p>
+            <p class="text-muted text-sm">(O problema estará na função que inicializa o conteúdo do app)</p>
+        </div>
+    `;
+    
+    // A linha que inicia o app foi comentada para este teste.
+    // initializeAppContent(); 
 }
 
 /**
  * Função executada quando o usuário faz logout.
  */
 function onLogout() {
-    // Esconde a aplicação principal e mostra a tela de login
-    dom.appContainer.classList.add('hidden');
-    dom.loginContainer.classList.remove('hidden');
-
-    // Esconde as informações do usuário e restaura a UI inicial
-    dom.userProfile.classList.add('hidden');
-    dom.focusMethodToggle.classList.remove('hidden');
-
-    // Para qualquer timer que esteja rodando
-    if (state.timerInterval) {
-        clearInterval(state.timerInterval);
-        state.timerInterval = null;
-        state.isRunning = false;
-    }
+    // Para garantir um estado limpo, a melhor abordagem ao fazer logout é simplesmente recarregar a página.
+    // Isso evita que o HTML de teste acima permaneça no DOM.
+    location.reload();
 }
 
 /**
- * Contém TODA a lógica original da aplicação.
- * Só é chamada DEPOIS que o login for confirmado.
+ * A função original da aplicação. Não será chamada neste teste.
  */
 function initializeAppContent() {
-    
     // --- LÓGICA DE CONTROLE (O ORQUESTRADOR) ---
     function handleTimerTick() {
         const finished = timer.updateTimer();
