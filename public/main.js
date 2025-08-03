@@ -12,13 +12,63 @@ import * as timer from './timer.js';
 import * as tasks from './tasks.js';
 import * as ui from './ui_controller.js';
 import * as shop from './shop_logic.js';
+
+// Módulo de Autenticação do Firebase
 import { initFirebaseAuth, signInWithGoogle, signOutUser } from './firebase_auth.js';
 
 
-document.addEventListener('DOMContentLoaded', () => {
+// --- LÓGICA DE INICIALIZAÇÃO E AUTENTICAÇÃO (O NOVO NÚCLEO) ---
 
+/**
+ * Função executada quando o usuário faz login com sucesso.
+ * @param {object} user - O objeto do usuário retornado pelo Firebase.
+ */
+function onLogin(user) {
+    console.log("Usuário logado:", user.displayName);
+    
+    // Esconde a tela de login e mostra a aplicação principal
+    dom.loginContainer.classList.add('hidden');
+    dom.appContainer.classList.remove('hidden');
+
+    // Atualiza a UI com as informações do usuário
+    dom.userProfile.classList.remove('hidden');
+    dom.helpBtn.classList.add('hidden'); // Esconde o botão de ajuda geral
+    dom.userAvatar.src = user.photoURL;
+    dom.userAvatar.alt = `Avatar de ${user.displayName}`;
+
+    // Inicia o conteúdo principal do aplicativo
+    initializeAppContent();
+}
+
+/**
+ * Função executada quando o usuário faz logout.
+ */
+function onLogout() {
+    console.log("Usuário deslogado.");
+
+    // Esconde a aplicação principal e mostra a tela de login
+    dom.appContainer.classList.add('hidden');
+    dom.loginContainer.classList.remove('hidden');
+
+    // Esconde as informações do usuário
+    dom.userProfile.classList.add('hidden');
+    dom.helpBtn.classList.remove('hidden'); // Mostra o botão de ajuda geral novamente
+
+    // Para qualquer timer que esteja rodando para evitar processamento em segundo plano
+    if (state.timerInterval) {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+        state.isRunning = false;
+    }
+}
+
+/**
+ * Contém toda a lógica de inicialização e funcionamento do app.
+ * Só é chamada DEPOIS que o login for confirmado.
+ */
+function initializeAppContent() {
+    
     // --- LÓGICA DE CONTROLE (O ORQUESTRADOR) ---
-
     function handleTimerTick() {
         const finished = timer.updateTimer();
         ui.updateTimerDisplay();
@@ -126,9 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- EVENT LISTENERS ---
-
-    dom.loginBtn.addEventListener('click', signInWithGoogle);
-    dom.logoutBtn.addEventListener('click', signOutUser);
 
     dom.startPauseBtn.addEventListener('click', () => {
         if (!state.audioInitialized) state.audioContext.resume().then(() => state.audioInitialized = true);
@@ -344,43 +391,31 @@ document.addEventListener('DOMContentLoaded', () => {
         if(btn) btn.addEventListener('click', () => ui.hideModal(btn.closest('.modal-overlay')));
     });
 
-    // --- LÓGICA DE INICIALIZAÇÃO E AUTENTICAÇÃO ---
-
-    function onLogin(user) {
-        dom.appContainer.classList.remove('blurred');
-        dom.loginOverlay.classList.remove('visible');
-        dom.userProfile.classList.remove('hidden');
-        dom.userAvatar.src = user.photoURL;
-        initializeAppContent();
+    // --- LÓGICA DE INICIALIZAÇÃO DO CONTEÚDO ---
+    loadState();
+    ui.applyTheme(state.settings.theme);
+    ui.updateMethodToggleUI();
+    ui.renderTasks();
+    ui.updateGamificationUI();
+    ui.renderDashboard();
+    ui.updateUI();
+    ui.updateShowCompletedBtn();
+    if (state.isRunning) {
+        state.timerInterval = setInterval(handleTimerTick, 1000);
     }
+    gamification.generateDailyMissions();
+    saveState();
+    lucide.createIcons();
+}
 
-    function onLogout() {
-        dom.appContainer.classList.add('blurred');
-        dom.loginOverlay.classList.add('visible');
-        dom.userProfile.classList.add('hidden');
-        if (state.timerInterval) {
-            clearInterval(state.timerInterval);
-            state.timerInterval = null;
-            state.isRunning = false;
-        }
-    }
+// --- PONTO DE ENTRADA PRINCIPAL DO APP ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Adiciona os listeners de login/logout que funcionam sempre
+    dom.loginBtn.addEventListener('click', signInWithGoogle);
+    dom.logoutBtn.addEventListener('click', signOutUser);
 
-    function initializeAppContent() {
-        loadState();
-        ui.applyTheme(state.settings.theme);
-        ui.updateMethodToggleUI();
-        ui.renderTasks();
-        ui.updateGamificationUI();
-        ui.renderDashboard();
-        ui.updateUI();
-        ui.updateShowCompletedBtn();
-        if (state.isRunning) {
-            state.timerInterval = setInterval(handleTimerTick, 1000);
-        }
-        gamification.generateDailyMissions();
-        saveState();
-        lucide.createIcons();
-    }
-
+    // Inicia a verificação de autenticação do Firebase.
+    // O Firebase vai chamar onLogin() ou onLogout() automaticamente,
+    // iniciando o resto do app apenas se o login for bem-sucedido.
     initFirebaseAuth(onLogin, onLogout);
 });
