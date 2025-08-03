@@ -156,15 +156,15 @@ input[type=number] { -moz-appearance: textfield; }
 @keyframes new-task-pop { 0% { transform: scale(0.98); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
 @keyframes breathe-animation { 0% { stroke-opacity: 0.5; } 50% { stroke-opacity: 1; } 100% { stroke-opacity: 0.5; } }
 .breathing { animation: breathe-animation 2.5s ease-in-out infinite; }
-#color-palette-selector {
+#color-palette-selector, #shop-collections-container {
     max-height: 250px;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--color-text-muted) var(--color-bg-panel);
 }
-#color-palette-selector::-webkit-scrollbar { width: 8px; }
-#color-palette-selector::-webkit-scrollbar-track { background: var(--color-bg-panel); border-radius: 10px; }
-#color-palette-selector::-webkit-scrollbar-thumb { background: var(--color-text-muted); border-radius: 10px; }
+#color-palette-selector::-webkit-scrollbar, #shop-collections-container::-webkit-scrollbar { width: 8px; }
+#color-palette-selector::-webkit-scrollbar-track, #shop-collections-container::-webkit-scrollbar-track { background: var(--color-bg-panel); border-radius: 10px; }
+#color-palette-selector::-webkit-scrollbar-thumb, #shop-collections-container::-webkit-scrollbar-thumb { background: var(--color-text-muted); border-radius: 10px; }
 
 /* --- Gamification Styles --- */
 .toast-notification {
@@ -294,6 +294,9 @@ input[type=number] { -moz-appearance: textfield; }
 <button id="dashboard-btn" class="text-muted hover:text-white p-2 rounded-full transition-colors" title="Ver Dashboard" aria-label="Ver Dashboard">
     <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
 </button>
+<button id="shop-btn" class="text-muted hover:text-white p-2 rounded-full transition-colors" title="Loja de Temas" aria-label="Abrir Loja de Temas">
+    <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+</button>
 <button id="settings-btn" class="text-muted hover:text-white p-2 rounded-full transition-colors" title="Configurações" aria-label="Configurações">
 <i data-lucide="settings-2" class="w-5 h-5"></i>
 </button>
@@ -368,8 +371,8 @@ Salvar e Fechar
             <button data-tab="achievements" class="dashboard-tab flex-1 px-3 py-2 rounded-md transition-colors" aria-label="Ver aba de conquistas">Conquistas</button>
         </div>
 
-        <!-- Stats Tab Content -->
-        <div id="dashboard-stats-content" class="space-y-4">
+        <!-- CORREÇÃO: Adiciona a classe comum 'dashboard-tab-content' aos painéis -->
+        <div id="dashboard-stats-content" class="dashboard-tab-content space-y-4">
             <div class="dashboard-card p-4 rounded-lg">
                 <h3 class="text-base font-semibold text-primary-light mb-3">Progresso Geral</h3>
                 <div class="grid grid-cols-2 gap-4 text-center">
@@ -389,13 +392,30 @@ Salvar e Fechar
             </div>
         </div>
         
-        <!-- Missions Tab Content -->
-        <div id="dashboard-missions-content" class="hidden space-y-3 max-h-80 overflow-y-auto p-2"></div>
+        <div id="dashboard-missions-content" class="dashboard-tab-content hidden space-y-3 max-h-80 overflow-y-auto p-2"></div>
 
-        <!-- Achievements Tab Content -->
-        <div id="dashboard-achievements-content" class="hidden space-y-3 max-h-80 overflow-y-auto p-2"></div>
+        <div id="dashboard-achievements-content" class="dashboard-tab-content hidden space-y-3 max-h-80 overflow-y-auto p-2"></div>
 
         <button id="dashboard-modal-close-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors" aria-label="Fechar dashboard">Fechar</button>
+    </div>
+</div>
+
+<!-- Shop Modal -->
+<div id="shop-modal-overlay" class="modal-overlay">
+    <div class="modal-content modal-border-primary">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Loja de Temas</h2>
+            <div class="flex items-center space-x-2 bg-gray-800 px-3 py-1 rounded-full">
+                <i data-lucide="circle-dollar-sign" class="w-5 h-5 text-coin"></i>
+                <span id="shop-coins-display" class="font-bold text-sm text-white">0</span>
+            </div>
+        </div>
+        
+        <div id="shop-collections-container" class="space-y-6 max-h-96 overflow-y-auto p-2 -mr-4 pr-4">
+            <!-- As coleções e itens da loja serão renderizados aqui pelo JS -->
+        </div>
+
+        <button id="shop-modal-close-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors" aria-label="Fechar loja">Fechar</button>
     </div>
 </div>
 
