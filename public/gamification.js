@@ -87,28 +87,54 @@ export function checkMissionsProgress() {
 }
 
 // Verifica e atualiza a sequência de dias de foco.
+// CORREÇÃO: Lógica de data aprimorada para ser mais robusta.
 export function checkStreak() {
-    const today = new Date().toISOString().slice(0, 10);
-    if (state.gamification.lastSessionDate === today) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Zera a hora para comparar apenas a data
+
+    // Se não houver data da última sessão, inicia a sequência hoje.
+    if (!state.gamification.lastSessionDate) {
+        state.gamification.currentStreak = 1;
+        state.gamification.lastSessionDate = today.toISOString();
+        if (state.gamification.longestStreak < 1) {
+            state.gamification.longestStreak = 1;
+        }
+        return { streak: 1, bonus: 0 };
+    }
+
+    const lastSession = new Date(state.gamification.lastSessionDate);
+    lastSession.setHours(0, 0, 0, 0);
+
+    // Se a última sessão foi hoje, não faz nada.
+    if (today.getTime() === lastSession.getTime()) {
+        return null;
+    }
     
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    
     let bonusCoins = 0;
 
-    if (state.gamification.lastSessionDate === yesterday) {
+    // Se a última sessão foi ontem, incrementa a sequência.
+    if (lastSession.getTime() === yesterday.getTime()) {
         state.gamification.currentStreak++;
         bonusCoins = state.gamification.currentStreak * 2;
         addCoins(bonusCoins);
     } else {
+        // Se não foi ontem, a sequência é quebrada e reinicia.
         state.gamification.currentStreak = 1;
     }
 
+    // Atualiza a maior sequência se necessário.
     if (state.gamification.currentStreak > state.gamification.longestStreak) {
         state.gamification.longestStreak = state.gamification.currentStreak;
     }
     
-    state.gamification.lastSessionDate = today;
+    // Salva a data de hoje como a última sessão.
+    state.gamification.lastSessionDate = today.toISOString();
     return { streak: state.gamification.currentStreak, bonus: bonusCoins };
 }
+
 
 // Gera novas missões diárias.
 export function generateDailyMissions() {
