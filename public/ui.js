@@ -1,6 +1,6 @@
 /**
  * ui.js
- * * Módulo para centralizar todas as referências a elementos do DOM.
+ * Módulo para centralizar todas as referências a elementos do DOM.
  */
 
 export const dom = {
@@ -8,7 +8,7 @@ export const dom = {
     themeColorMeta: document.getElementById('theme-color-meta'),
     
     // Contêineres principais
-    loginOverlay: document.getElementById('login-overlay'),
+    loginContainer: document.getElementById('login-container'), // CORRIGIDO
     appContainer: document.getElementById('app-container'),
 
     // Login/logout
