@@ -17,22 +17,20 @@ import * as shop from './shop_logic.js';
 import { initFirebaseAuth, signInWithGoogle, signOutUser } from './firebase_auth.js';
 
 
-// --- LÓGICA DE INICIALIZAÇÃO E AUTENTICAÇÃO (O NOVO NÚCLEO) ---
+// --- LÓGICA DE AUTENTICAÇÃO E CONTROLE DE UI ---
 
 /**
  * Função executada quando o usuário faz login com sucesso.
  * @param {object} user - O objeto do usuário retornado pelo Firebase.
  */
 function onLogin(user) {
-    console.log("Usuário logado:", user.displayName);
-    
     // Esconde a tela de login e mostra a aplicação principal
     dom.loginContainer.classList.add('hidden');
     dom.appContainer.classList.remove('hidden');
 
     // Atualiza a UI com as informações do usuário
     dom.userProfile.classList.remove('hidden');
-    dom.helpBtn.classList.add('hidden'); // Esconde o botão de ajuda geral
+    dom.focusMethodToggle.classList.add('hidden'); // Esconde o seletor de método do header
     dom.userAvatar.src = user.photoURL;
     dom.userAvatar.alt = `Avatar de ${user.displayName}`;
 
@@ -44,17 +42,15 @@ function onLogin(user) {
  * Função executada quando o usuário faz logout.
  */
 function onLogout() {
-    console.log("Usuário deslogado.");
-
     // Esconde a aplicação principal e mostra a tela de login
     dom.appContainer.classList.add('hidden');
     dom.loginContainer.classList.remove('hidden');
 
-    // Esconde as informações do usuário
+    // Esconde as informações do usuário e restaura a UI inicial
     dom.userProfile.classList.add('hidden');
-    dom.helpBtn.classList.remove('hidden'); // Mostra o botão de ajuda geral novamente
+    dom.focusMethodToggle.classList.remove('hidden');
 
-    // Para qualquer timer que esteja rodando para evitar processamento em segundo plano
+    // Para qualquer timer que esteja rodando
     if (state.timerInterval) {
         clearInterval(state.timerInterval);
         state.timerInterval = null;
@@ -63,7 +59,7 @@ function onLogout() {
 }
 
 /**
- * Contém toda a lógica de inicialização e funcionamento do app.
+ * Contém TODA a lógica original da aplicação.
  * Só é chamada DEPOIS que o login for confirmado.
  */
 function initializeAppContent() {
@@ -175,8 +171,7 @@ function initializeAppContent() {
         ui.updateUI();
     }
 
-    // --- EVENT LISTENERS ---
-
+    // --- EVENT LISTENERS (DA SUA LÓGICA ORIGINAL) ---
     dom.startPauseBtn.addEventListener('click', () => {
         if (!state.audioInitialized) state.audioContext.resume().then(() => state.audioInitialized = true);
         dom.xpGainDisplay.textContent = '';
@@ -391,7 +386,7 @@ function initializeAppContent() {
         if(btn) btn.addEventListener('click', () => ui.hideModal(btn.closest('.modal-overlay')));
     });
 
-    // --- LÓGICA DE INICIALIZAÇÃO DO CONTEÚDO ---
+    // --- INICIALIZAÇÃO DA APLICAÇÃO (DA SUA LÓGICA ORIGINAL) ---
     loadState();
     ui.applyTheme(state.settings.theme);
     ui.updateMethodToggleUI();
@@ -407,6 +402,7 @@ function initializeAppContent() {
     saveState();
     lucide.createIcons();
 }
+
 
 // --- PONTO DE ENTRADA PRINCIPAL DO APP ---
 document.addEventListener('DOMContentLoaded', () => {
