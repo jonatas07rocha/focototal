@@ -1,13 +1,21 @@
 /**
  * ui.js
  * * Módulo para centralizar todas as referências a elementos do DOM.
- * Isso evita a repetição de `document.getElementById` e organiza
- * o acesso à interface do usuário em um único lugar.
  */
 
 export const dom = {
     // Meta
     themeColorMeta: document.getElementById('theme-color-meta'),
+    
+    // CORREÇÃO: Adiciona seletores de contêineres principais
+    loginContainer: document.getElementById('login-container'),
+    appContainer: document.getElementById('app-container'),
+
+    // CORREÇÃO: Adiciona seletores de login/logout
+    loginBtn: document.getElementById('login-btn'),
+    logoutBtn: document.getElementById('logout-btn'),
+    userProfile: document.getElementById('user-profile'),
+    userAvatar: document.getElementById('user-avatar'),
     
     // Timer e Controles Principais
     timerDisplay: document.getElementById('timer-display'),
@@ -99,7 +107,7 @@ export const dom = {
     iosPromptTitle: document.getElementById('ios-prompt-title'),
     iosPromptMessage: document.getElementById('ios-prompt-message'),
 
-    // CORREÇÃO: Adiciona os seletores do conteúdo de Ajuda
+    // Conteúdo de Ajuda
     helpContentPomodoro: document.getElementById('help-content-pomodoro'),
     helpContentAdaptativo: document.getElementById('help-content-adaptativo'),
 };
