@@ -1,9 +1,10 @@
 /**
  * firebase_auth.js
  * Módulo para gerenciar a autenticação com o Firebase.
+ * Usa o método de redirect para máxima compatibilidade.
  */
 
-// Suas credenciais corretas do Firebase.
+// Configuração do Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyCBwAqYCT6avkLeb-HiS1D4j4k-zvNp5Wo",
     authDomain: "foco-total-pwa.firebaseapp.com",
@@ -14,17 +15,25 @@ const firebaseConfig = {
     measurementId: "G-5KK4EE1V7Z"
 };
 
-// Inicializa o Firebase usando a sintaxe de compatibilidade
+// Inicializa o Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
 /**
- * Inicia o observador de estado de autenticação.
- * @param {function} onLogin - Callback a ser executado quando o usuário faz login.
- * @param {function} onLogout - Callback a ser executado quando o usuário faz logout.
+ * Inicia o observador de estado de autenticação e processa o resultado do redirect.
+ * @param {function} onLogin - Callback a ser executado quando o utilizador faz login.
+ * @param {function} onLogout - Callback a ser executado quando o utilizador faz logout.
  */
 export function initFirebaseAuth(onLogin, onLogout) {
+    // Verifica se o utilizador está a voltar de um redirect de login
+    auth.getRedirectResult()
+        .catch((error) => {
+            console.error("Erro durante o getRedirectResult:", error);
+            alert("Ocorreu um erro ao tentar finalizar o login.");
+        });
+
+    // Inicia o observador para detetar mudanças de estado (login/logout)
     auth.onAuthStateChanged(user => {
         if (user) {
             onLogin(user);
@@ -35,22 +44,17 @@ export function initFirebaseAuth(onLogin, onLogout) {
 }
 
 /**
- * Inicia o fluxo de login com o popup do Google.
+ * Inicia o fluxo de login com o REDIRECT do Google.
  */
 export function signInWithGoogle() {
-    auth.signInWithPopup(provider)
-        .catch(error => {
-            console.error("Erro durante o login com o Google:", error);
-            alert("Ocorreu um erro ao tentar fazer o login.");
-        });
+    auth.signInWithRedirect(provider);
 }
 
 /**
- * Desloga o usuário atual.
+ * Desloga o utilizador atual.
  */
 export function signOutUser() {
-    auth.signOut()
-        .catch(error => {
-            console.error("Erro ao fazer logout:", error);
-        });
+    auth.signOut().catch(error => {
+        console.error("Erro ao fazer logout:", error);
+    });
 }
