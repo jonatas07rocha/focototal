@@ -1,7 +1,7 @@
 /**
  * firebase_auth.js
- * Módulo para gerenciar a autenticação com o Firebase.
- * Usa o método de redirect para máxima compatibilidade.
+ * Módulo para gerir a autenticação com o Firebase.
+ * CORRIGIDO: Usa setPersistence para lidar com restrições de cookies de terceiros.
  */
 
 // Configuração do Firebase
@@ -21,19 +21,31 @@ const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
 /**
+ * Inicia o fluxo de login com o REDIRECT do Google.
+ * Define a persistência da sessão antes de iniciar o login.
+ */
+export function signInWithGoogle() {
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+        .then(() => {
+            // Depois de definir a persistência, inicia o redirecionamento.
+            return auth.signInWithRedirect(provider);
+        })
+        .catch((error) => {
+            console.error("Erro ao definir a persistência ou ao iniciar o login:", error);
+        });
+}
+
+/**
  * Inicia o observador de estado de autenticação e processa o resultado do redirect.
  * @param {function} onLogin - Callback a ser executado quando o utilizador faz login.
  * @param {function} onLogout - Callback a ser executado quando o utilizador faz logout.
  */
 export function initFirebaseAuth(onLogin, onLogout) {
-    // Verifica se o utilizador está a voltar de um redirect de login
     auth.getRedirectResult()
         .catch((error) => {
             console.error("Erro durante o getRedirectResult:", error);
-            alert("Ocorreu um erro ao tentar finalizar o login.");
         });
 
-    // Inicia o observador para detetar mudanças de estado (login/logout)
     auth.onAuthStateChanged(user => {
         if (user) {
             onLogin(user);
@@ -41,13 +53,6 @@ export function initFirebaseAuth(onLogin, onLogout) {
             onLogout();
         }
     });
-}
-
-/**
- * Inicia o fluxo de login com o REDIRECT do Google.
- */
-export function signInWithGoogle() {
-    auth.signInWithRedirect(provider);
 }
 
 /**
