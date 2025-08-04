@@ -1,6 +1,6 @@
-// Acessamos o Firebase a partir do objeto global 'firebase',
-// não usando a sintaxe 'import'.
-// Os scripts são carregados via <script> tags no HTML.
+// Os scripts do Firebase são carregados via <script> tags no HTML,
+// então acessamos os módulos a partir do objeto global `firebase`.
+// Não há `import` para os módulos do Firebase aqui.
 
 // Módulos de Dados (preservados)
 import { themes } from './themes.js';
@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     let auth;
+    let db;
     let provider;
     
     // --- LÓGICA DE INICIALIZAÇÃO DA APLICAÇÃO (USANDO LOCALSTORAGE POR PADARÃO) ---
@@ -39,10 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
      * @description Inicia a lógica principal da aplicação.
      * Esta função é chamada imediatamente no carregamento da página.
      */
-    function initializeApp() {
+    async function initializeApp() {
         if (state.isAppInitialized) return;
 
-        loadState();
+        await loadState();
         ui.applyTheme(state.settings.theme);
         ui.updateMethodToggleUI();
         ui.renderTasks();
@@ -56,13 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         gamification.generateDailyMissions();
-        saveState();
+        await saveState();
         lucide.createIcons();
 
         // Esconde a tela de loading e exibe a interface principal
         dom.loadingContainer.classList.add('hidden');
         dom.appContainer.classList.remove('hidden');
-        dom.loginContainer.classList.add('hidden'); // Certifica que a tela de login está escondida
 
         // Marca a aplicação como inicializada
         state.isAppInitialized = true;
@@ -79,23 +79,38 @@ document.addEventListener('DOMContentLoaded', () => {
             // Usa as funções compatíveis
             const app = firebase.initializeApp(firebaseConfig);
             auth = firebase.auth();
+            db = firebase.firestore();
             provider = new firebase.auth.GoogleAuthProvider();
             
             // Inicia o observador de autenticação
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     console.log("Usuário autenticado:", user.uid);
+                    state.isAuthenticated = true;
+                    state.userId = user.uid;
                     dom.userAvatar.src = user.photoURL || 'https://placehold.co/40x40/5c6b73/ffffff?text=U';
                     dom.userProfile.classList.remove('hidden');
-                    // Oculta o botão de login e exibe o perfil do usuário
-                    dom.loginBtn.classList.add('hidden'); 
-                    dom.userProfile.classList.remove('hidden');
-                    // Aqui você poderia carregar dados do Firestore para o usuário
+                    if (dom.loginContainer) {
+                        dom.loginContainer.classList.add('hidden');
+                    }
+                    if (dom.loginBtn) {
+                        dom.loginBtn.classList.add('hidden'); 
+                    }
+                    if (dom.userProfile) {
+                        dom.userProfile.classList.remove('hidden');
+                    }
+
+                    // Força a sincronização com o Firestore após o login
+                    loadState();
+
                 } else {
                     console.log("Nenhum usuário autenticado.");
-                    // Exibe o botão de login e oculta o perfil do usuário
-                    dom.loginBtn.classList.remove('hidden');
+                    state.isAuthenticated = false;
+                    state.userId = null;
                     dom.userProfile.classList.add('hidden');
+                    if (dom.loginContainer) {
+                        dom.loginContainer.classList.remove('hidden');
+                    }
                 }
             });
         } catch (error) {
@@ -212,26 +227,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- EVENT LISTENERS ---
-    dom.loginBtn.addEventListener('click', async () => {
-        try {
-            // Usa as funções compatíveis
-            await firebase.auth().signInWithPopup(provider);
-        } catch (error) {
-            console.error("Erro no login:", error);
-            ui.showModal(dom.alertModalOverlay, `Erro ao fazer login: ${error.message}`);
-        }
-    });
+    if (dom.loginBtn) {
+        dom.loginBtn.addEventListener('click', async () => {
+            try {
+                await firebase.auth().signInWithPopup(provider);
+            } catch (error) {
+                console.error("Erro no login:", error);
+                ui.showModal(dom.alertModalOverlay, `Erro ao fazer login: ${error.message}`);
+            }
+        });
+    }
 
-    dom.logoutBtn.addEventListener('click', async () => {
-        try {
-            await firebase.auth().signOut();
-        } catch (error) {
-            console.error("Erro no logout:", error);
-            ui.showModal(dom.alertModalOverlay, `Erro ao sair: ${error.message}`);
-        }
-    });
+    if (dom.logoutBtn) {
+        dom.logoutBtn.addEventListener('click', async () => {
+            try {
+                await firebase.auth().signOut();
+            } catch (error) {
+                console.error("Erro no logout:", error);
+                ui.showModal(dom.alertModalOverlay, `Erro ao sair: ${error.message}`);
+            }
+        });
+    }
     
-    // (Restante dos event listeners idênticos aos da versão original)
     dom.startPauseBtn.addEventListener('click', () => {
         if (!state.audioInitialized) state.audioContext.resume().then(() => state.audioInitialized = true);
         dom.xpGainDisplay.textContent = '';
