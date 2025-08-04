@@ -18,14 +18,13 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     
     <style>
-        /* CORREÇÃO: Adicionados estilos essenciais para a estrutura da UI */
         :root {
             --color-primary-rgb: 59, 130, 246;
             --color-primary-focus-rgb: 37, 99, 235;
             --color-primary-darker-rgb: 29, 78, 216;
-            --color-bg-main: #111827; /* Fundo mais escuro e sólido */
+            --color-bg-main: #111827;
             --color-bg-shell: #1F2937;
-            --color-text-base: #E5E7EB; /* Texto base mais claro */
+            --color-text-base: #E5E7EB;
             --color-text-muted: #9CA3AF;
             --color-coin: #FBBF24;
             --color-streak: #F87171;
@@ -42,19 +41,16 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
-        .hidden { 
-            display: none !important; 
-        }
+        .hidden { display: none !important; }
 
-        /* Estilos para o contêiner principal do app, que estavam faltando */
         .device-shell {
             width: 100%;
-            max-width: 400px; /* Limita a largura em telas grandes */
+            max-width: 400px;
             height: 90vh;
-            max-height: 800px; /* Limita a altura */
+            max-height: 800px;
             background-color: var(--color-bg-shell);
             border-radius: 36px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 1px rgba(255,255,255,0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), inset 0 0 1px rgba(255,255,255,0.1);
             border: 1px solid #374151;
             padding: 1.5rem;
             display: flex;
@@ -63,7 +59,6 @@
             overflow: hidden;
         }
 
-        /* Estilos para botões e outros elementos para consistência */
         .method-btn.active {
             background-color: rgba(var(--color-primary-rgb), 0.9);
             color: white;
@@ -71,51 +66,110 @@
         .method-btn {
             background-color: rgba(255,255,255,0.1);
         }
+        
+        /* Estilos para o anel de progresso */
+        .progress-ring-bg { fill: transparent; stroke: #374151; stroke-width: 8; }
+        .progress-ring-circle {
+            fill: transparent;
+            stroke: url(#progress-gradient);
+            stroke-width: 8;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dashoffset 0.5s;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Tela de Loading (única visível no início) -->
+    <!-- Tela de Loading -->
     <div id="loading-container" class="text-center">
         <p class="text-lg text-slate-400">Carregando Foco Total...</p>
     </div>
 
-    <!-- Tela de Login (começa oculta) -->
+    <!-- Tela de Login -->
     <div id="login-container" class="text-center hidden p-8">
         <h1 class="text-3xl font-bold mb-2 text-slate-100">Bem-vindo ao Foco Total</h1>
         <p class="text-slate-400 mb-8">Faça login para sincronizar seu progresso.</p>
         <button id="login-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center mx-auto shadow-lg">
-            <svg class="w-6 h-6 mr-3" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M48 24C48 37.2548 37.2548 48 24 48C10.7452 48 0 37.2548 0 24C0 10.7452 10.7452 0 24 0C37.2548 0 48 10.7452 48 24Z" fill="#fff"></path><path d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" fill="#FFC107"></path><path d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" fill="#FF3D00"></path><path d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.222,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" fill="#4CAF50"></path><path d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C42.021,35.596,44,30.138,44,24C44,22.659,43.862,21.35,43.611,20.083z" fill="#1976D2"></path></svg>
+            <svg class="w-6 h-6 mr-3" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.57-.15-3.09-.38-4.55z" fill="#FFC107"></path><path d="M6.306 14.691 12.877 19.51c1.764-4.629 6.07-7.946 11.123-7.946 3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z" fill="#FF3D00"></path><path d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238c-2.148 1.453-4.842 2.3-7.219 2.3-5.222 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" fill="#4CAF50"></path><path d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.574l6.19 5.238C42.021 35.596 44 30.138 44 24c0-1.57-.15-3.09-.38-4.55z" fill="#1976D2"></path></svg>
             Entrar com Google
         </button>
     </div>
 
-    <!-- Contêiner Principal da Aplicação (começa oculto) -->
+    <!-- Contêiner Principal da Aplicação -->
     <div id="app-container" class="hidden">
         <div id="device-shell" class="device-shell">
-            <!-- O conteúdo original do seu app (cabeçalho, timer, tarefas, etc.) 
-                 deve estar aqui dentro para ser renderizado corretamente. 
-                 Estou mantendo a estrutura que você forneceu. -->
-            <header class="flex justify-between items-center mb-2 flex-shrink-0">
+            <!-- CABEÇALHO -->
+            <header class="flex justify-between items-center mb-4 flex-shrink-0">
                 <div class="flex items-center space-x-3">
                     <div class="flex items-center space-x-1" title="Moedas"><i data-lucide="circle-dollar-sign" class="w-5 h-5 text-coin"></i><span id="coins-display" class="font-bold text-sm">0</span></div>
                     <div class="flex items-center space-x-1" title="Sequência de Foco Diário"><i data-lucide="flame" class="w-5 h-5 text-streak"></i><span id="streak-display" class="font-bold text-sm">0</span></div>
                 </div>
+                <div id="focus-method-toggle" class="flex rounded-lg p-1 text-xs font-semibold bg-slate-800">
+                    <button data-method="pomodoro" class="method-btn px-3 py-1 rounded-md transition-colors">Pomodoro</button>
+                    <button data-method="adaptativo" class="method-btn px-3 py-1 rounded-md transition-colors">Adaptativo</button>
+                </div>
                 <div id="user-profile" class="hidden items-center space-x-2">
                     <img id="user-avatar" src="" alt="Avatar do usuário" class="w-8 h-8 rounded-full">
-                    <button id="logout-btn" class="text-slate-400 hover:text-white p-2 rounded-full transition-colors" title="Sair" aria-label="Sair"><i data-lucide="log-out" class="w-5 h-5"></i></button>
-                </div>
-                <div id="focus-method-toggle" class="flex rounded-lg p-1 text-xs font-semibold bg-slate-800">
-                    <button data-method="pomodoro" class="method-btn px-3 py-1 rounded-md transition-colors" aria-label="Selecionar modo Pomodoro">Pomodoro</button>
-                    <button data-method="adaptativo" class="method-btn px-3 py-1 rounded-md transition-colors" aria-label="Selecionar modo Adaptativo">Adaptativo</button>
+                    <button id="logout-btn" class="text-slate-400 hover:text-white p-1 rounded-full transition-colors" title="Sair"><i data-lucide="log-out" class="w-5 h-5"></i></button>
                 </div>
             </header>
-            <h1 class="text-xl font-bold text-center mb-2 text-slate-200">Foco Total</h1>
-            <!-- O resto do seu HTML original (timer, lista de tarefas, etc.) vai aqui -->
-            <!-- ... -->
+
+            <!-- TIMER -->
+            <main class="flex-grow flex flex-col items-center justify-center text-center">
+                <div class="relative w-64 h-64 mb-4">
+                    <svg class="w-full h-full" viewBox="0 0 120 120">
+                        <defs>
+                            <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:rgb(var(--color-primary-rgb));stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:rgb(var(--color-primary-darker-rgb));stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle class="progress-ring-bg" cx="60" cy="60" r="52"/>
+                        <circle id="progress-ring" class="progress-ring-circle" cx="60" cy="60" r="52"/>
+                    </svg>
+                    <div id="timer-display" class="absolute inset-0 flex items-center justify-center text-6xl font-bold tracking-tighter">
+                        25:00
+                    </div>
+                </div>
+                <p id="current-task-display" class="h-6 text-slate-400">Selecione uma tarefa</p>
+            </main>
+
+            <!-- CONTROLES PRINCIPAIS -->
+            <div class="flex justify-center items-center space-x-4 mb-6">
+                <button id="start-pause-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105">
+                    Começar
+                </button>
+            </div>
+            
+            <!-- PAINEL DE TAREFAS (Simplificado para caber no layout) -->
+            <div class="bg-slate-800/50 p-4 rounded-lg flex-shrink-0">
+                 <h2 class="text-sm font-bold text-slate-300 mb-2">Lista de Tarefas</h2>
+                 <ul id="task-list" class="space-y-2 max-h-24 overflow-y-auto">
+                    <!-- Tarefas serão inseridas aqui pelo JS -->
+                 </ul>
+            </div>
+
+            <!-- RODAPÉ DE ÍCONES -->
+            <footer class="flex justify-around items-center pt-4 mt-auto border-t border-slate-700 flex-shrink-0">
+                <button id="reset-btn" class="text-slate-400 hover:text-white" title="Resetar Dia"><i data-lucide="rotate-cw"></i></button>
+                <button id="settings-btn" class="text-slate-400 hover:text-white" title="Configurações"><i data-lucide="settings"></i></button>
+                <button id="dashboard-btn" class="text-slate-400 hover:text-white" title="Dashboard"><i data-lucide="layout-dashboard"></i></button>
+                <button id="shop-btn" class="text-slate-400 hover:text-white" title="Loja"><i data-lucide="store"></i></button>
+                <button id="help-btn" class="text-slate-400 hover:text-white" title="Ajuda"><i data-lucide="help-circle"></i></button>
+            </footer>
         </div>
-        <!-- O resto dos seus modais originais vai aqui -->
-        <!-- ... -->
+
+        <!-- MODAIS (Estrutura básica, o conteúdo é gerenciado pelo JS) -->
+        <div id="alert-modal-overlay" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4"></div>
+        <div id="session-end-modal-overlay" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4"></div>
+        <div id="settings-modal-overlay" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4"></div>
+        <div id="help-modal-overlay" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4"></div>
+        <div id="reset-confirm-modal-overlay" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4"></div>
+        <div id="dashboard-modal-overlay" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4"></div>
+        <div id="shop-modal-overlay" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4"></div>
+        <div id="ios-start-prompt-modal-overlay" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4"></div>
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
