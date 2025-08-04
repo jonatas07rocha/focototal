@@ -6,6 +6,11 @@
  */
 
 export const state = {
+    // Estado da Aplicação
+    isAppInitialized: false,
+    isAuthenticated: false,
+    userId: null,
+
     // Estado do Timer e da Sessão
     timerInterval: null,
     isRunning: false,
@@ -40,7 +45,6 @@ export const state = {
         longestStreak: 0,
         lastSessionDate: null,
         unlockedAchievements: [],
-        // CORREÇÃO: Adiciona a propriedade para temas desbloqueados.
         unlockedThemes: [], 
         dailyMissions: [],
         completedMissions: [],
