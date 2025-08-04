@@ -213,15 +213,40 @@ input[type=number] { -moz-appearance: textfield; }
     background-color: rgb(var(--color-primary-focus-rgb));
     color: white;
 }
+
+/* --- Estilo para a Animação de Carregamento --- */
+.spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top-color: rgb(var(--color-primary-light-rgb));
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
 </style>
 </head>
 <body>
 
-    <!-- Telas de Loading e Login -->
-    <div id="loading-container" class="text-center">
-        <p class="text-lg text-slate-400">Carregando Foco Total...</p>
+    <!-- Tela de Loading (agora com animação) -->
+    <div id="loading-container" class="fixed inset-0 flex items-center justify-center bg-gray-900 z-50">
+        <div class="spinner"></div>
     </div>
 
+    <!-- Tela de Login -->
     <div id="login-container" class="text-center hidden p-8 device-shell">
         <h1 class="text-3xl font-bold mb-2 text-slate-100">Bem-vindo ao Foco Total</h1>
         <p class="text-slate-400 mb-8">Faça login para sincronizar seu progresso.</p>
