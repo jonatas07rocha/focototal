@@ -1,7 +1,7 @@
 /**
  * firebase_auth.js
  * Módulo para gerenciar a autenticação com o Firebase.
- * Versão final e robusta.
+ * Versão final e robusta que resolve a condição de corrida.
  */
 
 // Configuração do Firebase
@@ -36,18 +36,21 @@ export function signInWithGoogle() {
 }
 
 /**
- * Inicia o observador de estado de autenticação e processa o resultado do redirect.
+ * Inicia o observador de estado de autenticação.
+ * Ele espera o resultado do redirect e só chama o callback
+ * quando o estado inicial do usuário é conhecido.
  * @param {function} callback - Função a ser chamada com o estado do usuário (user ou null).
  */
 export function initFirebaseAuth(callback) {
-    // Processa o resultado do login via redirect.
+    // Processa o resultado do login via redirect primeiro.
     auth.getRedirectResult().catch((error) => {
         console.error("Erro durante o getRedirectResult:", error.code, error.message);
     });
 
-    // O onAuthStateChanged é a fonte única e confiável do estado de autenticação.
-    auth.onAuthStateChanged(user => {
-        callback(user);
+    // onAuthStateChanged é a fonte única e confiável do estado de autenticação.
+    const unsubscribe = auth.onAuthStateChanged(user => {
+        unsubscribe(); // Cancela a inscrição para não disparar novamente em logins/logouts
+        callback(user); // Envia o estado inicial definitivo para o main.js
     });
 }
 
