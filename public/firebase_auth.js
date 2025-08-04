@@ -1,10 +1,11 @@
 /**
  * firebase_auth.js
- * Módulo para gerenciar a autenticação com o Firebase.
- * Versão final e robusta que resolve a condição de corrida.
+ * Módulo para gerenciar a autenticação com o Firebase, implementando um fluxo
+ * robusto para evitar condições de corrida na inicialização.
+ * * Esta versão foi corrigida para seguir o "Guia Detalhado".
  */
 
-// Configuração do Firebase
+// Suas credenciais do Firebase [cite: 1]
 const firebaseConfig = {
     apiKey: "AIzaSyCBwAqYCT6avkLeb-HiS1D4j4k-zvNp5Wo",
     authDomain: "foco-total-pwa.firebaseapp.com",
@@ -15,50 +16,62 @@ const firebaseConfig = {
     measurementId: "G-5KK4EE1V7Z"
 };
 
-// Inicializa o Firebase
-firebase.initializeApp(firebaseConfig);
+// 🔌 Passo 1: Preparação Imediata - Inicialização e Persistência
+firebase.initializeApp(firebaseConfig); // [cite: 18]
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
-// Define a persistência uma vez, na inicialização do módulo.
+// Define a persistência para 'local' para guardar a sessão no localStorage do navegador. [cite: 19, 21]
+// Isso é vital para que o usuário continue logado mesmo após fechar a aba ou o navegador. [cite: 22]
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-    .catch((error) => {
-        console.error("Erro ao definir a persistência:", error.code, error.message);
-    });
+  .catch(error => {
+    console.error("Erro ao definir a persistência de autenticação:", error);
+  });
 
 /**
- * Inicia o fluxo de login com o REDIRECT do Google.
+ * 🚪 Inicia o processo de verificação de autenticação de forma segura.
+ * Funciona como um "porteiro" que garante que a aplicação só renderize a UI
+ * quando o estado de autenticação for 100% conhecido. [cite: 3, 44]
+ * * @param {function} onAuthStateKnown - O callback a ser executado com o resultado
+ * definitivo (o objeto 'user' ou 'null'), que foi passado pelo main.js. [cite: 26, 41]
  */
-export function signInWithGoogle() {
-    auth.signInWithRedirect(provider).catch((error) => {
-        console.error("Erro ao iniciar signInWithRedirect:", error);
-    });
+export function initFirebaseAuth(onAuthStateKnown) {
+    // 🕵️ Passo 3: A Investigação Interna
+
+    // 🔍 Primeiro, chama o "Investigador Lento" para o caso do usuário estar
+    // voltando da página de login do Google. [cite: 10, 32, 33]
+    auth.getRedirectResult()
+        .catch(error => {
+            // Um erro aqui geralmente significa que o usuário não veio de um redirect,
+            // então podemos ignorá-lo com segurança na maioria dos casos.
+            console.error("Erro ao obter resultado do redirect:", error);
+        })
+        .finally(() => {
+            // 🎧 Em seguida, ativa o "Vigia Definitivo" (onAuthStateChanged).
+            // A chamada unsubscribe garante que este bloco execute apenas uma vez,
+            // eliminando a condição de corrida. [cite: 35, 39]
+            const unsubscribe = auth.onAuthStateChanged(user => {
+                unsubscribe(); // ✨ A "mágica" que impede o loop. [cite: 38]
+                // ✅ Envia o "Sinal Verde" para o main.js com o estado final. [cite: 41]
+                onAuthStateKnown(user);
+            });
+        });
 }
 
 /**
- * Inicia o observador de estado de autenticação.
- * Ele espera o resultado do redirect e só chama o callback
- * quando o estado inicial do usuário é conhecido.
- * @param {function} callback - Função a ser chamada com o estado do usuário (user ou null).
+ * Inicia o fluxo de login com o Google usando o método de redirecionamento.
+ * Este método é o parceiro natural do `getRedirectResult`.
  */
-export function initFirebaseAuth(callback) {
-    // Processa o resultado do login via redirect primeiro.
-    auth.getRedirectResult().catch((error) => {
-        console.error("Erro durante o getRedirectResult:", error.code, error.message);
-    });
-
-    // onAuthStateChanged é a fonte única e confiável do estado de autenticação.
-    const unsubscribe = auth.onAuthStateChanged(user => {
-        unsubscribe(); // Cancela a inscrição para não disparar novamente em logins/logouts
-        callback(user); // Envia o estado inicial definitivo para o main.js
-    });
+export function signInWithGoogle() {
+    auth.signInWithRedirect(provider);
 }
 
 /**
  * Desloga o usuário atual.
  */
 export function signOutUser() {
-    auth.signOut().catch(error => {
-        console.error("Erro ao fazer logout:", error);
-    });
+    auth.signOut()
+        .catch(error => {
+            console.error("Erro ao fazer logout:", error);
+        });
 }
