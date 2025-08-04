@@ -1,10 +1,18 @@
+/**
+ * main.js
+ * ---
+ * CORRIGIDO: A inicialização das referências do DOM agora é chamada
+ * explicitamente após o carregamento da página para evitar erros.
+ */
+
 // Módulos de Dados
 import { themes } from './themes.js';
 import { achievements } from './achievements.js';
 
 // Módulos de Lógica
 import { state } from './state.js';
-import { dom } from './ui.js';
+// CORREÇÃO: Importa o objeto 'dom' e a nova função 'initializeDOM'
+import { dom, initializeDOM } from './ui.js';
 import { loadState, saveState } from './persistence.js';
 import { playBeep, playFinishSound } from './audio.js';
 import * as gamification from './gamification.js';
@@ -392,12 +400,14 @@ function initializeAppContent() {
 
 // --- PONTO DE ENTRADA PRINCIPAL DO APP ---
 document.addEventListener('DOMContentLoaded', () => {
+    // CORREÇÃO: Inicializa as referências do DOM antes de qualquer outra coisa.
+    initializeDOM();
+
     // Adiciona o listener de login
     dom.loginBtn.addEventListener('click', signInWithGoogle);
 
     // Inicia o "vigia" do Firebase
     initFirebaseAuth(user => {
-        // Esta função agora é chamada apenas uma vez, com o estado definitivo.
         if (user) {
             showAppScreen(user);
         } else {
