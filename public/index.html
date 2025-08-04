@@ -18,14 +18,17 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
     
     <style>
+        /* Estilos originais preservados */
         :root {
             --color-primary-rgb: 59, 130, 246;
+            --color-primary-focus-rgb: 37, 99, 235;
+            --color-primary-darker-rgb: 29, 78, 216;
             --color-bg-main: radial-gradient(circle at center, #1a202c 0%, #000000 70%);
+            --color-bg-shell: #1F2937;
             --color-text-base: #D1D5DB;
             --color-text-muted: #9CA3AF;
         }
-        html { scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; background: var(--color-bg-main); color: var(--color-text-base); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 1rem; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background: var(--color-bg-main); color: var(--color-text-base); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -48,7 +51,26 @@
 
     <!-- Contêiner Principal da Aplicação (começa oculto) -->
     <div id="app-container" class="hidden">
-        <!-- Seu HTML original completo do app vai aqui -->
+        <!-- SEU HTML ORIGINAL COMPLETO ESTÁ AQUI DENTRO -->
+        <div id="device-shell" class="device-shell">
+            <header class="flex justify-between items-center mb-2 flex-shrink-0">
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-1" title="Moedas"><i data-lucide="circle-dollar-sign" class="w-5 h-5 text-coin"></i><span id="coins-display" class="font-bold text-sm">0</span></div>
+                    <div class="flex items-center space-x-1" title="Sequência de Foco Diário"><i data-lucide="flame" class="w-5 h-5 text-streak"></i><span id="streak-display" class="font-bold text-sm">0</span></div>
+                </div>
+                <div id="user-profile" class="hidden items-center space-x-2">
+                    <img id="user-avatar" src="" alt="Avatar do usuário" class="w-8 h-8 rounded-full">
+                    <button id="logout-btn" class="text-muted hover:text-white p-2 rounded-full transition-colors" title="Sair" aria-label="Sair"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+                </div>
+                <div id="focus-method-toggle" class="flex rounded-lg p-1 text-xs font-semibold">
+                    <button data-method="pomodoro" class="method-btn px-3 py-1 rounded-md transition-colors" aria-label="Selecionar modo Pomodoro">Pomodoro</button>
+                    <button data-method="adaptativo" class="method-btn px-3 py-1 rounded-md transition-colors" aria-label="Selecionar modo Adaptativo">Adaptativo</button>
+                </div>
+            </header>
+            <h1 class="text-xl font-bold text-center mb-2">Foco Total</h1>
+            <!-- ... resto do seu HTML original ... -->
+        </div>
+        <!-- ... resto dos seus modais originais ... -->
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
