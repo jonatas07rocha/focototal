@@ -1,7 +1,7 @@
 /**
  * firebase_auth.js
  * Módulo para gerenciar a autenticação com o Firebase.
- * CORRIGIDO: Define a persistência na inicialização para maior robustez.
+ * Versão final e robusta.
  */
 
 // Configuração do Firebase
@@ -20,8 +20,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
-// **MUDANÇA PRINCIPAL**: Define a persistência uma vez, na inicialização do módulo.
-// Isso garante que a sessão será guardada no armazenamento local para todos os logins.
+// Define a persistência uma vez, na inicialização do módulo.
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
     .catch((error) => {
         console.error("Erro ao definir a persistência:", error.code, error.message);
@@ -38,26 +37,17 @@ export function signInWithGoogle() {
 
 /**
  * Inicia o observador de estado de autenticação e processa o resultado do redirect.
- * @param {function} onLogin - Callback a ser executado quando o usuário faz login.
- * @param {function} onLogout - Callback a ser executado quando o usuário faz logout.
+ * @param {function} callback - Função a ser chamada com o estado do usuário (user ou null).
  */
-export function initFirebaseAuth(onLogin, onLogout) {
-    auth.getRedirectResult()
-        .then((result) => {
-            if (result.user) {
-                console.log("Resultado do redirect processado com sucesso.");
-            }
-        })
-        .catch((error) => {
-            console.error("Erro durante o getRedirectResult:", error.code, error.message);
-        });
+export function initFirebaseAuth(callback) {
+    // Processa o resultado do login via redirect.
+    auth.getRedirectResult().catch((error) => {
+        console.error("Erro durante o getRedirectResult:", error.code, error.message);
+    });
 
+    // O onAuthStateChanged é a fonte única e confiável do estado de autenticação.
     auth.onAuthStateChanged(user => {
-        if (user) {
-            onLogin(user);
-        } else {
-            onLogout();
-        }
+        callback(user);
     });
 }
 
