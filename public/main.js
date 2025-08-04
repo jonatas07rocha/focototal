@@ -391,24 +391,17 @@ function initializeAppContent() {
 }
 
 // --- PONTO DE ENTRADA PRINCIPAL DO APP ---
-let authInitialized = false; // Guarda para evitar chamadas múltiplas
-
 document.addEventListener('DOMContentLoaded', () => {
     // Adiciona o listener de login
     dom.loginBtn.addEventListener('click', signInWithGoogle);
 
     // Inicia o "vigia" do Firebase
     initFirebaseAuth(user => {
-        // A primeira vez que esta função é chamada, o estado inicial é conhecido.
-        if (!authInitialized) {
-            authInitialized = true; // Marca que a verificação inicial foi concluída
-            if (user) {
-                // Se houver um usuário, mostra a tela do app
-                showAppScreen(user);
-            } else {
-                // Se não houver usuário, mostra a tela de login
-                showLoginScreen();
-            }
+        // Esta função agora é chamada apenas uma vez, com o estado definitivo.
+        if (user) {
+            showAppScreen(user);
+        } else {
+            showLoginScreen();
         }
     });
 });
