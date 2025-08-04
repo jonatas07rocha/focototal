@@ -1,21 +1,22 @@
 /**
  * ui.js
  * Módulo para centralizar todas as referências a elementos do DOM.
+ * Versão final e completa com todos os seletores.
  */
 
 export const dom = {
-    // Meta
-    themeColorMeta: document.getElementById('theme-color-meta'),
-    
-    // Contêineres principais
-    loginContainer: document.getElementById('login-container'), // CORRIGIDO
+    // --- Seletores de Autenticação e Contêineres Principais ---
+    loadingContainer: document.getElementById('loading-container'),
+    loginContainer: document.getElementById('login-container'),
     appContainer: document.getElementById('app-container'),
-
-    // Login/logout
     loginBtn: document.getElementById('login-btn'),
     logoutBtn: document.getElementById('logout-btn'),
     userProfile: document.getElementById('user-profile'),
     userAvatar: document.getElementById('user-avatar'),
+
+    // --- Seletores Originais da Aplicação ---
+    // Meta
+    themeColorMeta: document.getElementById('theme-color-meta'),
     
     // Timer e Controles Principais
     timerDisplay: document.getElementById('timer-display'),
