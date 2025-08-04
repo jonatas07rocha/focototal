@@ -6,7 +6,8 @@
 
 import { state } from './state.js';
 import { dom } from './ui.js';
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js";
+// Correção: Remove os imports modulares para usar as funções compatíveis.
+// import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js";
 
 const db = firebase.firestore();
 
@@ -30,7 +31,7 @@ export async function saveState() {
     // Se o usuário estiver autenticado, salva no Firestore.
     if (state.isAuthenticated && state.userId) {
         try {
-            await setDoc(doc(db, "users", state.userId), stateToSave);
+            await db.collection("users").doc(state.userId).set(stateToSave);
         } catch (error) {
             console.error("Erro ao salvar estado no Firestore:", error);
             // Continua salvando no localStorage como fallback
@@ -49,10 +50,9 @@ export async function loadState() {
     // Tenta carregar do Firestore se o usuário estiver autenticado
     if (state.isAuthenticated && state.userId) {
         try {
-            const docRef = doc(db, "users", state.userId);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                savedState = docSnap.data();
+            const docRef = await db.collection("users").doc(state.userId).get();
+            if (docRef.exists) {
+                savedState = docRef.data();
                 console.log("Dados carregados do Firestore.");
             }
         } catch (error) {
