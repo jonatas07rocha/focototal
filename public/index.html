@@ -276,7 +276,7 @@ input[type=number] { -moz-appearance: textfield; }
                     <button data-method="adaptativo" class="method-btn px-3 py-1 rounded-md transition-colors" aria-label="Selecionar modo Adaptativo">Adaptativo</button>
                 </div>
                 <!-- Perfil de Usuário com Avatar e Logout -->
-                <div id="user-profile" class="flex items-center space-x-2">
+                <div id="user-profile" class="flex items-center space-x-2 hidden">
                     <img id="user-avatar" src="https://placehold.co/40x40/5c6b73/ffffff?text=U" alt="Avatar do usuário" class="w-8 h-8 rounded-full">
                     <button id="logout-btn" class="text-muted hover:text-white p-2 rounded-full transition-colors" title="Sair" aria-label="Sair">
                         <i data-lucide="log-out" class="w-6 h-6"></i>
@@ -418,11 +418,15 @@ input[type=number] { -moz-appearance: textfield; }
         <div id="dashboard-modal-overlay" class="modal-overlay">
             <div class="modal-content modal-border-primary">
                 <h2 class="text-xl font-bold mb-4 text-center">Dashboard</h2>
+                
+                <!-- Dashboard Tabs -->
                 <div class="flex justify-center mb-4 rounded-lg p-1 text-sm font-semibold bg-gray-800">
                     <button data-tab="stats" class="dashboard-tab flex-1 px-3 py-2 rounded-md transition-colors active" aria-label="Ver aba de estatísticas">Estatísticas</button>
                     <button data-tab="missions" class="dashboard-tab flex-1 px-3 py-2 rounded-md transition-colors" aria-label="Ver aba de missões">Missões</button>
                     <button data-tab="achievements" class="dashboard-tab flex-1 px-3 py-2 rounded-md transition-colors" aria-label="Ver aba de conquistas">Conquistas</button>
                 </div>
+
+                <!-- CORREÇÃO: Adiciona a classe comum 'dashboard-tab-content' aos painéis -->
                 <div id="dashboard-stats-content" class="dashboard-tab-content space-y-4">
                     <div class="dashboard-card p-4 rounded-lg">
                         <h3 class="text-base font-semibold text-primary-light mb-3">Progresso Geral</h3>
@@ -442,8 +446,11 @@ input[type=number] { -moz-appearance: textfield; }
                         <div id="dashboard-daily-report" class="space-y-3"></div>
                     </div>
                 </div>
+                
                 <div id="dashboard-missions-content" class="dashboard-tab-content hidden space-y-3 max-h-80 overflow-y-auto p-2"></div>
+
                 <div id="dashboard-achievements-content" class="dashboard-tab-content hidden space-y-3 max-h-80 overflow-y-auto p-2"></div>
+
                 <button id="dashboard-modal-close-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors" aria-label="Fechar dashboard">Fechar</button>
             </div>
         </div>
@@ -459,7 +466,9 @@ input[type=number] { -moz-appearance: textfield; }
                     </div>
                 </div>
                 <div id="shop-collections-container" class="space-y-6 max-h-96 overflow-y-auto p-2 -mr-4 pr-4">
+                    <!-- As coleções e itens da loja serão renderizados aqui pelo JS -->
                 </div>
+
                 <button id="shop-modal-close-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded-xl mt-6 transition-colors" aria-label="Fechar loja">Fechar</button>
             </div>
         </div>
