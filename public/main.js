@@ -163,13 +163,212 @@ function initializeAppContent() {
         const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
         if (isIOS && !state.isRunning && state.settings.focusMethod === 'pomodoro') {
-            // Lógica IOS
+            if (state.mode === 'focus') {
+                dom.iosPromptTitle.textContent = 'Lembrete de Foco';
+                dom.iosPromptMessage.textContent = 'Para garantir o alarme no final do foco, recomendamos criar um lembrete. Deseja fazer isso agora?';
+            } else {
+                dom.iosPromptTitle.textContent = 'Lembrete de Pausa';
+                dom.iosPromptMessage.textContent = 'Para garantir o alarme no final da pausa, recomendamos criar um lembrete. Deseja fazer isso agora?';
+            }
+            ui.showModal(dom.iosStartPromptModalOverlay);
         } else {
             handleStartPauseLogic();
         }
     });
 
-    // ... todos os seus outros event listeners originais (reset, add task, etc.)
+    dom.iosPromptConfirmBtn.addEventListener('click', () => {
+        let duration, eventTitle, eventDescription;
+        const appUrl = 'https://focototal.vercel.app';
+
+        if (state.mode === 'focus') {
+            const task = state.tasks.find(t => t.id === state.selectedTaskId);
+            eventTitle = `🎉 Fim do Foco: ${task ? task.name : 'Foco'}`;
+            eventDescription = `Sua sessão de foco terminou. Hora de fazer uma pausa! Volte ao app: ${appUrl}`;
+            duration = state.settings.focusDuration;
+        } else {
+            eventTitle = state.mode === 'shortBreak' ? `🚀 Fim da Pausa Curta` : `🏆 Fim da Pausa Longa`;
+            eventDescription = `Sua pausa acabou. Hora de voltar ao foco! Volte ao app: ${appUrl}`;
+            duration = state.mode === 'shortBreak' ? state.settings.shortBreakDuration : state.settings.longBreakDuration;
+        }
+        
+        const formatDT = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        const eventStartTime = new Date(Date.now() + duration * 60 * 1000);
+        const eventEndTime = new Date(eventStartTime.getTime() + 1 * 60 * 1000);
+        
+        const icsContent = [
+            'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FocoTotal//PWA//PT',
+            'BEGIN:VEVENT', 'UID:' + Date.now() + '@focototal.app', 'DTSTAMP:' + formatDT(new Date()),
+            'DTSTART:' + formatDT(eventStartTime), 'DTEND:' + formatDT(eventEndTime),
+            'SUMMARY:' + eventTitle, 
+            'DESCRIPTION:' + eventDescription,
+            'URL;VALUE=URI:' + appUrl,
+            'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + eventDescription, 'TRIGGER:-PT0S', 'END:VALARM',
+            'END:VEVENT', 'END:VCALENDAR'
+        ].join('\r\n');
+        
+        const base64Content = btoa(unescape(encodeURIComponent(icsContent)));
+        window.location.href = `data:text/calendar;base64,${base64Content}`;
+
+        handleStartPauseLogic();
+        ui.hideModal(dom.iosStartPromptModalOverlay);
+    });
+
+    dom.iosPromptCancelBtn.addEventListener('click', () => {
+        handleStartPauseLogic();
+        ui.hideModal(dom.iosStartPromptModalOverlay);
+    });
+
+    dom.resetBtn.addEventListener('click', () => ui.showModal(dom.resetConfirmModalOverlay));
+    dom.resetConfirmBtn.addEventListener('click', () => {
+        timer.resetDay();
+        ui.renderTasks();
+        ui.hideModal(dom.resetConfirmModalOverlay);
+        ui.showModal(dom.alertModalOverlay, 'O dia foi zerado com sucesso!');
+    });
+
+    dom.addTaskBtn.addEventListener('click', handleAddTask);
+    dom.newTaskInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') handleAddTask();
+    });
+
+    if (dom.toggleCompletedTasksBtn) {
+        dom.toggleCompletedTasksBtn.addEventListener('click', () => {
+            tasks.toggleShowCompleted();
+            ui.updateShowCompletedBtn();
+            ui.renderTasks();
+            saveState();
+        });
+    }
+    
+    dom.taskListEl.addEventListener('click', (e) => {
+        if (e.target.matches('.task-edit-input')) return;
+        const target = e.target.closest('[data-id], [data-complete-id], [data-edit-id], [data-delete-id]');
+        if (!target) return;
+        const id = parseInt(target.dataset.id || target.dataset.completeId || target.dataset.editId || target.dataset.deleteId);
+        if (target.matches('[data-complete-id]')) {
+            const wasCompleted = tasks.toggleTaskCompleted(id);
+            if (wasCompleted) {
+                const leveledUp = gamification.addXP(10);
+                gamification.addCoins(2);
+                if (leveledUp) ui.showModal(dom.alertModalOverlay, `Parabéns! Você alcançou o Nível ${state.gamification.level}!`);
+                checkGains();
+            }
+            if (state.isRunning && state.selectedTaskId === id) {
+                timer.pauseTimer();
+                timer.resetTimer('focus');
+            }
+        } else if (target.matches('[data-edit-id]')) {
+            tasks.toggleEditState(id);
+        } else if (target.matches('[data-delete-id]')) {
+            tasks.deleteTask(id);
+        } else if (target.matches('[data-id]')) {
+            tasks.selectTask(id);
+            timer.resetTimer('focus');
+        }
+        ui.renderTasks();
+        ui.updateUI();
+        ui.updateGamificationUI();
+        saveState();
+    });
+
+    dom.taskListEl.addEventListener('focusout', (e) => {
+        if (e.target.matches('.task-edit-input')) {
+            const id = parseInt(e.target.dataset.editInputId);
+            tasks.updateTaskName(id, e.target.value.trim());
+            ui.renderTasks();
+            saveState();
+        }
+    });
+    
+    dom.taskListEl.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter' && e.target.matches('.task-edit-input')) e.target.blur();
+    });
+
+    dom.settingsBtn.addEventListener('click', () => {
+        ui.renderPaletteSelector();
+        ui.showModal(dom.settingsModalOverlay);
+    });
+
+    dom.dashboardBtn.addEventListener('click', () => {
+        ui.renderDashboard();
+        ui.showModal(dom.dashboardModalOverlay);
+    });
+
+    if (dom.dashboardModalOverlay) {
+        const tabButtons = dom.dashboardModalOverlay.querySelectorAll('.dashboard-tab');
+        const tabContents = dom.dashboardModalOverlay.querySelectorAll('.dashboard-tab-content');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.dataset.tab;
+                tabButtons.forEach(btn => btn.classList.toggle('active', btn === button));
+                tabContents.forEach(content => content.classList.toggle('hidden', content.id !== `dashboard-${tabName}-content`));
+            });
+        });
+    }
+
+    dom.shopBtn.addEventListener('click', () => {
+        shop.renderShop();
+        ui.showModal(dom.shopModalOverlay);
+    });
+
+    dom.shopCollectionsContainer.addEventListener('click', (e) => {
+        const buyButton = e.target.closest('.buy-btn');
+        if (buyButton && !buyButton.disabled) shop.buyItem(buyButton.dataset.itemId);
+    });
+
+    dom.helpBtn.addEventListener('click', () => {
+        const isPomodoro = state.settings.focusMethod === 'pomodoro';
+        dom.helpContentPomodoro.classList.toggle('hidden', !isPomodoro);
+        dom.helpContentAdaptativo.classList.toggle('hidden', isPomodoro);
+        ui.showModal(dom.helpModalOverlay);
+    });
+
+    dom.settingsSaveBtn.addEventListener('click', () => {
+        state.settings.focusDuration = parseInt(dom.focusDurationInput.value) || 25;
+        state.settings.shortBreakDuration = parseInt(dom.shortBreakDurationInput.value) || 5;
+        state.settings.longBreakDuration = parseInt(dom.longBreakDurationInput.value) || 15;
+        state.settings.longBreakInterval = parseInt(dom.longBreakIntervalInput.value) || 4;
+        ui.hideModal(dom.settingsModalOverlay);
+        if (!state.isRunning) {
+            timer.resetTimer('focus');
+            ui.updateUI();
+        }
+        saveState();
+    });
+
+    dom.colorPaletteSelector.addEventListener('click', (e) => {
+        const target = e.target.closest('button[data-theme]');
+        if (target) {
+            state.settings.theme = target.dataset.theme;
+            ui.applyTheme(state.settings.theme);
+            ui.renderPaletteSelector();
+            ui.updateMethodToggleUI();
+            ui.updateUI();
+            saveState();
+        }
+    });
+
+    dom.focusMethodToggle.addEventListener('click', (e) => {
+        const target = e.target.closest('.method-btn');
+        if (target && !state.isRunning) {
+            state.settings.focusMethod = target.dataset.method;
+            ui.updateMethodToggleUI();
+            timer.resetTimer('focus');
+            ui.renderTasks();
+            ui.updateUI();
+            saveState();
+        } else if (state.isRunning) {
+            ui.showModal(dom.alertModalOverlay, 'Não é possível trocar de modo enquanto o timer está rodando.');
+        }
+    });
+
+    [dom.alertModalOverlay, dom.settingsModalOverlay, dom.dashboardModalOverlay, dom.helpModalOverlay, dom.resetConfirmModalOverlay, dom.sessionEndModalOverlay, dom.shopModalOverlay, dom.iosStartPromptModalOverlay].forEach(overlay => {
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) ui.hideModal(overlay); });
+    });
+    [dom.alertModalCloseBtn, dom.sessionEndCloseBtn, dom.dashboardModalCloseBtn, dom.helpModalCloseBtn, dom.resetCancelBtn, dom.shopModalCloseBtn].forEach(btn => {
+        if(btn) btn.addEventListener('click', () => ui.hideModal(btn.closest('.modal-overlay')));
+    });
+
     dom.logoutBtn.addEventListener('click', signOutUser);
     
     // --- INICIALIZAÇÃO DA APLICAÇÃO ---
@@ -192,16 +391,24 @@ function initializeAppContent() {
 }
 
 // --- PONTO DE ENTRADA PRINCIPAL DO APP ---
+let authInitialized = false; // Guarda para evitar chamadas múltiplas
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Adiciona o listener de login
     dom.loginBtn.addEventListener('click', signInWithGoogle);
 
-    initFirebaseAuth((user, isInitialAuthComplete) => {
-        if (!isInitialAuthComplete) return; // Espera a verificação inicial terminar
-
-        if (user) {
-            showAppScreen(user);
-        } else {
-            showLoginScreen();
+    // Inicia o "vigia" do Firebase
+    initFirebaseAuth(user => {
+        // A primeira vez que esta função é chamada, o estado inicial é conhecido.
+        if (!authInitialized) {
+            authInitialized = true; // Marca que a verificação inicial foi concluída
+            if (user) {
+                // Se houver um usuário, mostra a tela do app
+                showAppScreen(user);
+            } else {
+                // Se não houver usuário, mostra a tela de login
+                showLoginScreen();
+            }
         }
     });
 });
