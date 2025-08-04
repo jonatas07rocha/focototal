@@ -6,10 +6,18 @@
 
 import { state } from './state.js';
 import { dom } from './ui.js';
-// Correção: Remove os imports modulares para usar as funções compatíveis.
-// import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js";
 
-const db = firebase.firestore();
+let db = null;
+
+// Inicializa o objeto do Firestore. Esta função deve ser chamada após o Firebase ser inicializado.
+export function initializeFirestore() {
+    try {
+        db = firebase.firestore();
+        console.log("Firestore inicializado.");
+    } catch (error) {
+        console.error("Erro ao inicializar o Firestore:", error);
+    }
+}
 
 // Salva o estado atual no Firestore.
 export async function saveState() {
@@ -29,7 +37,7 @@ export async function saveState() {
     };
     
     // Se o usuário estiver autenticado, salva no Firestore.
-    if (state.isAuthenticated && state.userId) {
+    if (state.isAuthenticated && state.userId && db) {
         try {
             await db.collection("users").doc(state.userId).set(stateToSave);
         } catch (error) {
@@ -48,7 +56,7 @@ export async function loadState() {
     let savedState = null;
 
     // Tenta carregar do Firestore se o usuário estiver autenticado
-    if (state.isAuthenticated && state.userId) {
+    if (state.isAuthenticated && state.userId && db) {
         try {
             const docRef = await db.collection("users").doc(state.userId).get();
             if (docRef.exists) {
