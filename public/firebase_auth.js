@@ -1,69 +1,49 @@
 /**
  * firebase_auth.js
  * Módulo para gerenciar a autenticação com o Firebase.
- * ---
- * VERSÃO FINAL: Utiliza o método de pop-up para contornar a falha de
- * plataforma e força o recarregamento da página após o login para garantir
- * a correta renderização da interface do aplicativo.
+ * Esta versão corrige a inicialização e a forma como o login/logout
+ * é tratado, eliminando a necessidade de recarregar a página.
  */
 
-// Suas credenciais do Firebase (do projeto FocoTotal)
-const firebaseConfig = {
-    apiKey: "AIzaSyCBwAqYCT6avkLeb-HiS1D4j4k-zvNp5Wo",
-    authDomain: "foco-total-pwa.firebaseapp.com",
-    projectId: "foco-total-pwa",
-    storageBucket: "foco-total-pwa.appspot.com",
-    messagingSenderId: "796505727007",
-    appId: "1:796505727007:web:06060d343584a9fbe3352a",
-    measurementId: "G-5KK4EE1V7Z"
-};
-
-// Inicializa o Firebase
-firebase.initializeApp(firebaseConfig);
+// Acessamos o Firebase a partir do objeto global 'firebase',
+// inicializado no arquivo 'index.html'.
 const auth = firebase.auth();
+const provider = new firebase.auth.GoogleAuthProvider();
 
 /**
  * Inicia o observador de estado de autenticação.
- * Ele notificará o main.js sempre que o status de login mudar,
- * seja no carregamento inicial da página ou após uma ação de login/logout.
+ * Ele notificará o main.js sempre que o status de login mudar.
  * @param {function} callback - Função a ser executada quando o estado de login muda.
  */
 export function initFirebaseAuth(callback) {
+    // A função onAuthStateChanged é do Firebase e é chamada no carregamento
+    // e sempre que o estado de autenticação muda.
     auth.onAuthStateChanged(callback);
 }
 
 /**
- * Inicia o fluxo de login com o popup do Google e, em caso de sucesso,
- * força o recarregamento da página para garantir que a interface seja
- * renderizada a partir de um estado limpo.
+ * Inicia o fluxo de login com o popup do Google.
+ * Não recarrega a página. A UI é atualizada pelo observador de estado.
  */
-export function signInWithGoogle() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    
-    auth.signInWithPopup(provider)
-        .then((result) => {
-            // Se o login foi bem-sucedido e temos um objeto de usuário,
-            // simplesmente recarregamos a página.
-            if (result.user) {
-                window.location.reload();
-            }
-        })
-        .catch(error => {
-            // Erros comuns aqui são o usuário fechar o pop-up ou negar o acesso.
-            // O erro não será mostrado ao usuário se ele apenas fechar a janela.
-            console.error("Erro durante o login com o Google Popup:", error);
-            if (error.code !== 'auth/popup-closed-by-user') {
-                 alert("Ocorreu um erro ao tentar fazer o login. Verifique o console para mais detalhes.");
-            }
-        });
+export async function signInWithGoogle() {
+    try {
+        await auth.signInWithPopup(provider);
+    } catch (error) {
+        console.error("Erro durante o login com o Google Popup:", error);
+        // Retorna o erro para ser tratado pelo main.js (ex: exibindo um modal).
+        throw error;
+    }
 }
 
 /**
  * Desloga o usuário atual.
  */
-export function signOutUser() {
-    return auth.signOut()
-        .catch(error => {
-            console.error("Erro ao fazer logout:", error);
-        });
+export async function signOutUser() {
+    try {
+        await auth.signOut();
+    } catch (error) {
+        console.error("Erro ao fazer logout:", error);
+        // Retorna o erro para ser tratado pelo main.js.
+        throw error;
+    }
 }
