@@ -18,7 +18,7 @@ import * as tasks from './tasks.js';
 import * as ui from './ui_controller.js';
 import * as shop from './shop_logic.js';
 
-// --- CONFIGURAÇÃO E AUTENTICAÇÃO DO FIREBASE ---
+// --- CONTROLE CENTRAL DA APLICAÇÃO ---
 document.addEventListener('DOMContentLoaded', () => {
 
     // Adiciona os novos elementos DOM para login/carregamento ao objeto 'dom' existente
@@ -32,64 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
         userProfile: document.getElementById('user-profile')
     });
 
-    let auth, db;
-    let authInitialized = false;
-
-    // Função para inicializar Firebase e a aplicação
-    async function setupFirebaseAndApp() {
-        if (authInitialized) return;
-
-        try {
-            // Nota: '__firebase_config' é uma variável global fornecida pelo ambiente.
-            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-            if (Object.keys(firebaseConfig).length === 0) {
-                 throw new Error("Configuração do Firebase não encontrada. O login não funcionará.");
-            }
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            authInitialized = true;
-            
-            // Inicia o observador de autenticação após o Firebase ser inicializado
-            onAuthStateChanged(auth, handleAuthStateChange);
-        } catch (error) {
-            console.error("Erro ao inicializar Firebase:", error);
-            dom.loadingContainer.innerHTML = '<p class="text-lg text-red-500">Erro ao carregar o aplicativo. Verifique a configuração do Firebase.</p>';
-        }
-    }
-
-    /**
-     * @description Observador do estado de autenticação do Firebase.
-     * É a lógica central que alterna entre as telas de login e a aplicação.
-     */
-    function handleAuthStateChange(user) {
-        dom.loadingContainer.classList.add('hidden');
-        if (user) {
-            // Usuário logado
-            console.log("Usuário autenticado:", user.uid);
-            dom.loginContainer.classList.add('hidden');
-            dom.appContainer.classList.remove('hidden');
-            
-            // Atualiza a UI com dados do usuário
-            dom.userAvatar.src = user.photoURL || 'https://placehold.co/40x40/5c6b73/ffffff?text=U';
-            dom.userProfile.classList.remove('hidden');
-            
-            // Inicia a aplicação principal
-            initializeApp();
-        } else {
-            // Usuário não logado
-            console.log("Nenhum usuário autenticado.");
-            dom.appContainer.classList.add('hidden');
-            dom.loginContainer.classList.remove('hidden');
-            dom.userProfile.classList.add('hidden');
-        }
-    }
-
+    let auth;
+    
+    // --- LÓGICA DE INICIALIZAÇÃO DA APLICAÇÃO (SEM LOGIN) ---
     /**
      * @description Inicia a lógica principal da aplicação.
-     * Esta função é chamada apenas após a autenticação bem-sucedida.
+     * Esta função é chamada imediatamente no carregamento da página.
      */
     function initializeApp() {
+        if (state.isAppInitialized) return;
+
         loadState();
         ui.applyTheme(state.settings.theme);
         ui.updateMethodToggleUI();
@@ -106,10 +58,48 @@ document.addEventListener('DOMContentLoaded', () => {
         gamification.generateDailyMissions();
         saveState();
         lucide.createIcons();
+
+        // Esconde a tela de loading e exibe a interface principal
+        dom.loadingContainer.classList.add('hidden');
+        dom.appContainer.classList.remove('hidden');
+
+        // Marca a aplicação como inicializada
+        state.isAppInitialized = true;
+    }
+
+    // --- LÓGICA DO FIREBASE (INICIADA EM PARALELO) ---
+    async function setupFirebase() {
+        try {
+            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+            if (Object.keys(firebaseConfig).length === 0) {
+                 console.error("Firebase config is missing or empty.");
+                 return;
+            }
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            
+            // Inicia o observador de autenticação
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    console.log("Usuário autenticado:", user.uid);
+                    dom.userAvatar.src = user.photoURL || 'https://placehold.co/40x40/5c6b73/ffffff?text=U';
+                    dom.userProfile.classList.remove('hidden');
+                    dom.loginContainer.classList.add('hidden');
+                    // Aqui você poderia carregar dados do Firestore para o usuário
+                } else {
+                    console.log("Nenhum usuário autenticado.");
+                    dom.userProfile.classList.add('hidden');
+                    dom.loginContainer.classList.remove('hidden');
+                }
+            });
+        } catch (error) {
+            console.error("Erro ao inicializar Firebase:", error);
+            dom.loadingContainer.innerHTML = '<p class="text-lg text-red-500">Erro ao carregar o aplicativo. Verifique a configuração do Firebase.</p>';
+        }
     }
 
     // --- LÓGICA DE CONTROLE ORIGINAL (O ORQUESTRADOR) ---
-    // (As funções handleTimerTick, handleSessionEnd, checkGains, etc. permanecem inalteradas aqui)
+    // (As funções handleTimerTick, handleSessionEnd, checkGains, etc. permanecem inalteradas)
 
     function handleTimerTick() {
         const finished = timer.updateTimer();
@@ -219,11 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- EVENT LISTENERS ---
     dom.loginBtn.addEventListener('click', async () => {
-        if (!authInitialized) {
-            console.error("Firebase não inicializado.");
-            ui.showModal(dom.alertModalOverlay, 'Erro: Firebase não está pronto. Tente recarregar a página.');
-            return;
-        }
         try {
             const provider = new GoogleAuthProvider();
             await signInWithPopup(auth, provider);
@@ -241,7 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.showModal(dom.alertModalOverlay, `Erro ao sair: ${error.message}`);
         }
     });
-
+    
+    // (Restante dos event listeners idênticos aos da versão original)
     dom.startPauseBtn.addEventListener('click', () => {
         if (!state.audioInitialized) state.audioContext.resume().then(() => state.audioInitialized = true);
         dom.xpGainDisplay.textContent = '';
@@ -313,7 +299,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.showModal(dom.alertModalOverlay, 'O dia foi zerado com sucesso!');
     });
 
-    // Controles de Tarefas
     dom.addTaskBtn.addEventListener('click', handleAddTask);
 
     dom.newTaskInput.addEventListener('keyup', (e) => {
@@ -385,7 +370,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Outros Controles da UI
     dom.settingsBtn.addEventListener('click', () => {
         ui.renderPaletteSelector();
         ui.showModal(dom.settingsModalOverlay);
@@ -482,6 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(btn) btn.addEventListener('click', () => ui.hideModal(btn.closest('.modal-overlay')));
     });
 
-    // Inicia a configuração do Firebase assim que o DOM estiver pronto
-    setupFirebaseAndApp();
+    // Inicia a aplicação e o Firebase em paralelo
+    initializeApp();
+    setupFirebase();
 });
