@@ -1,6 +1,6 @@
 // Módulos do Firebase v9.6.10
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js";
+import { getAuth, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js";
 
 // Módulos de Dados (preservados)
@@ -33,8 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     let auth;
+    let provider;
     
-    // --- LÓGICA DE INICIALIZAÇÃO DA APLICAÇÃO (SEM LOGIN) ---
+    // --- LÓGICA DE INICIALIZAÇÃO DA APLICAÇÃO (USANDO LOCALSTORAGE POR PADRÃO) ---
     /**
      * @description Inicia a lógica principal da aplicação.
      * Esta função é chamada imediatamente no carregamento da página.
@@ -62,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Esconde a tela de loading e exibe a interface principal
         dom.loadingContainer.classList.add('hidden');
         dom.appContainer.classList.remove('hidden');
+        dom.loginContainer.classList.add('hidden'); // Certifica que a tela de login está escondida
 
         // Marca a aplicação como inicializada
         state.isAppInitialized = true;
@@ -77,6 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const app = initializeApp(firebaseConfig);
             auth = getAuth(app);
+            // Corrige a forma de obter o provedor de autenticação para a versão de compatibilidade.
+            provider = new firebase.auth.GoogleAuthProvider();
             
             // Inicia o observador de autenticação
             onAuthStateChanged(auth, (user) => {
@@ -84,23 +88,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log("Usuário autenticado:", user.uid);
                     dom.userAvatar.src = user.photoURL || 'https://placehold.co/40x40/5c6b73/ffffff?text=U';
                     dom.userProfile.classList.remove('hidden');
-                    dom.loginContainer.classList.add('hidden');
+                    // Oculta o botão de login e exibe o perfil do usuário
+                    dom.loginBtn.classList.add('hidden'); 
+                    dom.userProfile.classList.remove('hidden');
                     // Aqui você poderia carregar dados do Firestore para o usuário
                 } else {
                     console.log("Nenhum usuário autenticado.");
+                    // Exibe o botão de login e oculta o perfil do usuário
+                    dom.loginBtn.classList.remove('hidden');
                     dom.userProfile.classList.add('hidden');
-                    dom.loginContainer.classList.remove('hidden');
                 }
             });
         } catch (error) {
             console.error("Erro ao inicializar Firebase:", error);
-            dom.loadingContainer.innerHTML = '<p class="text-lg text-red-500">Erro ao carregar o aplicativo. Verifique a configuração do Firebase.</p>';
         }
     }
 
     // --- LÓGICA DE CONTROLE ORIGINAL (O ORQUESTRADOR) ---
     // (As funções handleTimerTick, handleSessionEnd, checkGains, etc. permanecem inalteradas)
-
     function handleTimerTick() {
         const finished = timer.updateTimer();
         ui.updateTimerDisplay();
@@ -210,7 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- EVENT LISTENERS ---
     dom.loginBtn.addEventListener('click', async () => {
         try {
-            const provider = new GoogleAuthProvider();
             await signInWithPopup(auth, provider);
         } catch (error) {
             console.error("Erro no login:", error);
