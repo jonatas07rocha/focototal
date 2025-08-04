@@ -1,21 +1,24 @@
 /**
  * persistence.js
- * Módulo para salvar e carregar o estado da aplicação no localStorage.
+ * Módulo para gerenciar a persistência de dados no Firestore.
+ * Inclui lógica de migração do localStorage para a nuvem.
  */
 
 import { state } from './state.js';
 import { dom } from './ui.js';
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js";
 
-// Salva o estado atual no localStorage.
-export function saveState() {
+const db = firebase.firestore();
+
+// Salva o estado atual no Firestore.
+export async function saveState() {
     const stateToSave = {
         tasks: state.tasks,
         selectedTaskId: state.selectedTaskId,
         pomodoroSessionCount: state.pomodoroSessionCount,
         uninterruptedSessionsToday: state.uninterruptedSessionsToday,
         settings: state.settings,
-        gamification: state.gamification,
-        showCompletedTasks: state.showCompletedTasks,
+        gamification: { ...state.gamification, changedThemesCount: Array.from(state.gamification.changedThemesCount) },
         timerState: {
             isRunning: state.isRunning,
             mode: state.mode,
@@ -23,19 +26,58 @@ export function saveState() {
             totalTime: state.totalTime
         }
     };
-    // Converte o Set para um Array para que possa ser salvo como JSON.
-    const serializableGamification = { ...state.gamification, changedThemesCount: Array.from(state.gamification.changedThemesCount) };
-    stateToSave.gamification = serializableGamification;
-
-    localStorage.setItem('pomodoroAppState', JSON.stringify(stateToSave));
+    
+    // Se o usuário estiver autenticado, salva no Firestore.
+    if (state.isAuthenticated && state.userId) {
+        try {
+            await setDoc(doc(db, "users", state.userId), stateToSave);
+        } catch (error) {
+            console.error("Erro ao salvar estado no Firestore:", error);
+            // Continua salvando no localStorage como fallback
+            localStorage.setItem('pomodoroAppState', JSON.stringify(stateToSave));
+        }
+    } else {
+        // Se não houver autenticação, salva apenas no localStorage.
+        localStorage.setItem('pomodoroAppState', JSON.stringify(stateToSave));
+    }
 }
 
-// Carrega o estado do localStorage.
-export function loadState() {
-    const savedStateJSON = localStorage.getItem('pomodoroAppState');
-    if (!savedStateJSON) return;
+// Carrega o estado do Firestore, com fallback para localStorage e migração.
+export async function loadState() {
+    let savedState = null;
 
-    const savedState = JSON.parse(savedStateJSON);
+    // Tenta carregar do Firestore se o usuário estiver autenticado
+    if (state.isAuthenticated && state.userId) {
+        try {
+            const docRef = doc(db, "users", state.userId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                savedState = docSnap.data();
+                console.log("Dados carregados do Firestore.");
+            }
+        } catch (error) {
+            console.error("Erro ao carregar do Firestore:", error);
+        }
+    }
+
+    // Se não encontrou dados no Firestore, tenta carregar do localStorage
+    if (!savedState) {
+        const savedStateJSON = localStorage.getItem('pomodoroAppState');
+        if (savedStateJSON) {
+            savedState = JSON.parse(savedStateJSON);
+            console.log("Dados carregados do localStorage.");
+            
+            // Lógica de Migração: se o usuário logou, mas os dados estavam no localStorage,
+            // salva-os no Firestore para que fiquem sincronizados.
+            if (state.isAuthenticated && state.userId) {
+                 console.log("Iniciando migração de dados para o Firestore...");
+                 await saveState();
+                 localStorage.removeItem('pomodoroAppState');
+            }
+        }
+    }
+
+    if (!savedState) return;
     
     // Hidrata o objeto de estado com os dados salvos.
     state.tasks = savedState.tasks || [];
@@ -65,8 +107,8 @@ export function loadState() {
     state.gamification.changedThemesCount = new Set(savedState.gamification.changedThemesCount || []);
 
     // Atualiza os inputs de configuração com os valores carregados
-    dom.focusDurationInput.value = state.settings.focusDuration;
-    dom.shortBreakDurationInput.value = state.settings.shortBreakDuration;
-    dom.longBreakDurationInput.value = state.settings.longBreakDuration;
-    dom.longBreakIntervalInput.value = state.settings.longBreakInterval;
+    if (dom.focusDurationInput) dom.focusDurationInput.value = state.settings.focusDuration;
+    if (dom.shortBreakDurationInput) dom.shortBreakDurationInput.value = state.settings.shortBreakDuration;
+    if (dom.longBreakDurationInput) dom.longBreakDurationInput.value = state.settings.longBreakDuration;
+    if (dom.longBreakIntervalInput) dom.longBreakIntervalInput.value = state.settings.longBreakInterval;
 }
