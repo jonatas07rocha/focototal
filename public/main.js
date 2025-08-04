@@ -1,14 +1,13 @@
-// Módulos do Firebase para autenticação
-// Nota: Usamos a versão 9.6.10, compatível com a interface original.
+// Módulos do Firebase v9.6.10
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js";
 
-// Módulos de Dados
+// Módulos de Dados (preservados)
 import { themes } from './themes.js';
 import { achievements } from './achievements.js';
 
-// Módulos de Lógica
+// Módulos de Lógica (preservados)
 import { state } from './state.js';
 import { dom } from './ui.js';
 import { loadState, saveState } from './persistence.js';
@@ -20,12 +19,10 @@ import * as ui from './ui_controller.js';
 import * as shop from './shop_logic.js';
 
 // --- CONFIGURAÇÃO E AUTENTICAÇÃO DO FIREBASE ---
-// Assegura que o código só é executado quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Referências estendidas para os novos elementos da UI
-    const combinedDom = {
-        ...dom, // Preserva as referências DOM originais
+    // Adiciona os novos elementos DOM para login/carregamento ao objeto 'dom' existente
+    Object.assign(dom, {
         loadingContainer: document.getElementById('loading-container'),
         loginContainer: document.getElementById('login-container'),
         appContainer: document.getElementById('app-container'),
@@ -33,19 +30,87 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn: document.getElementById('logout-btn'),
         userAvatar: document.getElementById('user-avatar'),
         userProfile: document.getElementById('user-profile')
-    };
-    
-    // Obtenção da configuração e inicialização do Firebase
-    // Nota: '__firebase_config' é uma variável global fornecida pelo ambiente.
-    const firebaseConfig = JSON.parse(__firebase_config);
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
+    });
 
-    // --- LÓGICA DE CONTROLE ORIGINAL (Orquestrador do aplicativo) ---
+    let auth, db;
+    let authInitialized = false;
 
-    // As funções abaixo foram mantidas a partir do seu código original.
+    // Função para inicializar Firebase e a aplicação
+    async function setupFirebaseAndApp() {
+        if (authInitialized) return;
+
+        try {
+            // Nota: '__firebase_config' é uma variável global fornecida pelo ambiente.
+            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+            if (Object.keys(firebaseConfig).length === 0) {
+                 throw new Error("Configuração do Firebase não encontrada. O login não funcionará.");
+            }
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            authInitialized = true;
+            
+            // Inicia o observador de autenticação após o Firebase ser inicializado
+            onAuthStateChanged(auth, handleAuthStateChange);
+        } catch (error) {
+            console.error("Erro ao inicializar Firebase:", error);
+            dom.loadingContainer.innerHTML = '<p class="text-lg text-red-500">Erro ao carregar o aplicativo. Verifique a configuração do Firebase.</p>';
+        }
+    }
+
+    /**
+     * @description Observador do estado de autenticação do Firebase.
+     * É a lógica central que alterna entre as telas de login e a aplicação.
+     */
+    function handleAuthStateChange(user) {
+        dom.loadingContainer.classList.add('hidden');
+        if (user) {
+            // Usuário logado
+            console.log("Usuário autenticado:", user.uid);
+            dom.loginContainer.classList.add('hidden');
+            dom.appContainer.classList.remove('hidden');
+            
+            // Atualiza a UI com dados do usuário
+            dom.userAvatar.src = user.photoURL || 'https://placehold.co/40x40/5c6b73/ffffff?text=U';
+            dom.userProfile.classList.remove('hidden');
+            
+            // Inicia a aplicação principal
+            initializeApp();
+        } else {
+            // Usuário não logado
+            console.log("Nenhum usuário autenticado.");
+            dom.appContainer.classList.add('hidden');
+            dom.loginContainer.classList.remove('hidden');
+            dom.userProfile.classList.add('hidden');
+        }
+    }
+
+    /**
+     * @description Inicia a lógica principal da aplicação.
+     * Esta função é chamada apenas após a autenticação bem-sucedida.
+     */
+    function initializeApp() {
+        loadState();
+        ui.applyTheme(state.settings.theme);
+        ui.updateMethodToggleUI();
+        ui.renderTasks();
+        ui.updateGamificationUI();
+        ui.renderDashboard();
+        ui.updateUI();
+        ui.updateShowCompletedBtn();
+        
+        if (state.isRunning) {
+            state.timerInterval = setInterval(handleTimerTick, 1000);
+        }
+        
+        gamification.generateDailyMissions();
+        saveState();
+        lucide.createIcons();
+    }
+
+    // --- LÓGICA DE CONTROLE ORIGINAL (O ORQUESTRADOR) ---
+    // (As funções handleTimerTick, handleSessionEnd, checkGains, etc. permanecem inalteradas aqui)
+
     function handleTimerTick() {
         const finished = timer.updateTimer();
         ui.updateTimerDisplay();
@@ -62,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (previousMode === 'focus') {
             const streakInfo = gamification.checkStreak();
             if (streakInfo && streakInfo.bonus > 0) {
-                ui.showModal(combinedDom.alertModalOverlay, `Sequência de ${streakInfo.streak} dias! Você ganhou ${streakInfo.bonus} moedas de bônus!`);
+                ui.showModal(dom.alertModalOverlay, `Sequência de ${streakInfo.streak} dias! Você ganhou ${streakInfo.bonus} moedas de bônus!`);
             }
             
             const xpGained = Math.floor(focusDuration / 60);
@@ -72,19 +137,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (leveledUp) {
                 playBeep(659, 150, 0.4);
                 setTimeout(() => playBeep(784, 300, 0.5), 200);
-                ui.showModal(combinedDom.alertModalOverlay, `Parabéns! Você alcançou o Nível ${state.gamification.level}!`);
+                ui.showModal(dom.alertModalOverlay, `Parabéns! Você alcançou o Nível ${state.gamification.level}!`);
             }
             
             const endMessage = state.settings.focusMethod === 'pomodoro'
                 ? 'Você completou um Pomodoro! Hora de fazer uma pausa.'
                 : 'Sessão de foco finalizada!';
-            ui.showModal(combinedDom.sessionEndModalOverlay, endMessage);
+            ui.showModal(dom.sessionEndModalOverlay, endMessage);
 
-            combinedDom.xpGainDisplay.textContent = `+${xpGained} XP`;
-            combinedDom.coinGainDisplay.textContent = `+5 Moedas`;
+            dom.xpGainDisplay.textContent = `+${xpGained} XP`;
+            dom.coinGainDisplay.textContent = `+5 Moedas`;
 
         } else {
-            ui.showModal(combinedDom.sessionEndModalOverlay, 'Pausa finalizada! Vamos voltar ao trabalho?');
+            ui.showModal(dom.sessionEndModalOverlay, 'Pausa finalizada! Vamos voltar ao trabalho?');
         }
         
         checkGains();
@@ -114,12 +179,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function handleAddTask() {
-        const taskName = combinedDom.newTaskInput.value.trim();
-        const estimate = parseInt(combinedDom.newTaskEstimateInput.value);
+        const taskName = dom.newTaskInput.value.trim();
+        const estimate = parseInt(dom.newTaskEstimateInput.value);
         const newTask = tasks.addTask(taskName, estimate);
         if (newTask) {
-            combinedDom.newTaskInput.value = '';
-            combinedDom.newTaskEstimateInput.value = '1';
+            dom.newTaskInput.value = '';
+            dom.newTaskEstimateInput.value = '1';
             playBeep(440, 100, 0.2);
             if (!state.selectedTaskId || state.tasks.find(t => t.id === state.selectedTaskId)?.completed) {
                 tasks.selectTask(newTask.id);
@@ -143,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const startResult = timer.startTimer();
             if (startResult === 'NO_TASK') {
-                ui.showModal(combinedDom.alertModalOverlay, 'Por favor, selecione uma tarefa para iniciar o foco.');
+                ui.showModal(dom.alertModalOverlay, 'Por favor, selecione uma tarefa para iniciar o foco.');
             } else if (startResult) {
                 state.timerInterval = setInterval(handleTimerTick, 1000);
                 checkGains();
@@ -152,31 +217,53 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.updateUI();
     }
 
-    // --- EVENT LISTENERS originais ---
+    // --- EVENT LISTENERS ---
+    dom.loginBtn.addEventListener('click', async () => {
+        if (!authInitialized) {
+            console.error("Firebase não inicializado.");
+            ui.showModal(dom.alertModalOverlay, 'Erro: Firebase não está pronto. Tente recarregar a página.');
+            return;
+        }
+        try {
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+        } catch (error) {
+            console.error("Erro no login:", error);
+            ui.showModal(dom.alertModalOverlay, `Erro ao fazer login: ${error.message}`);
+        }
+    });
 
-    // Controles do Timer
-    combinedDom.startPauseBtn.addEventListener('click', () => {
+    dom.logoutBtn.addEventListener('click', async () => {
+        try {
+            await signOut(auth);
+        } catch (error) {
+            console.error("Erro no logout:", error);
+            ui.showModal(dom.alertModalOverlay, `Erro ao sair: ${error.message}`);
+        }
+    });
+
+    dom.startPauseBtn.addEventListener('click', () => {
         if (!state.audioInitialized) state.audioContext.resume().then(() => state.audioInitialized = true);
-        combinedDom.xpGainDisplay.textContent = '';
-        combinedDom.coinGainDisplay.textContent = '';
+        dom.xpGainDisplay.textContent = '';
+        dom.coinGainDisplay.textContent = '';
         
         const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
         if (isIOS && !state.isRunning && state.settings.focusMethod === 'pomodoro') {
             if (state.mode === 'focus') {
-                combinedDom.iosPromptTitle.textContent = 'Lembrete de Foco';
-                combinedDom.iosPromptMessage.textContent = 'Para garantir o alarme no final do foco, recomendamos criar um lembrete. Deseja fazer isso agora?';
+                dom.iosPromptTitle.textContent = 'Lembrete de Foco';
+                dom.iosPromptMessage.textContent = 'Para garantir o alarme no final do foco, recomendamos criar um lembrete. Deseja fazer isso agora?';
             } else {
-                combinedDom.iosPromptTitle.textContent = 'Lembrete de Pausa';
-                combinedDom.iosPromptMessage.textContent = 'Para garantir o alarme no final da pausa, recomendamos criar um lembrete. Deseja fazer isso agora?';
+                dom.iosPromptTitle.textContent = 'Lembrete de Pausa';
+                dom.iosPromptMessage.textContent = 'Para garantir o alarme no final da pausa, recomendamos criar um lembrete. Deseja fazer isso agora?';
             }
-            ui.showModal(combinedDom.iosStartPromptModalOverlay);
+            ui.showModal(dom.iosStartPromptModalOverlay);
         } else {
             handleStartPauseLogic();
         }
     });
 
-    combinedDom.iosPromptConfirmBtn.addEventListener('click', () => {
+    dom.iosPromptConfirmBtn.addEventListener('click', () => {
         let duration, eventTitle, eventDescription;
         const appUrl = 'https://focototal.vercel.app';
 
@@ -210,33 +297,33 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = `data:text/calendar;base64,${base64Content}`;
 
         handleStartPauseLogic();
-        ui.hideModal(combinedDom.iosStartPromptModalOverlay);
+        ui.hideModal(dom.iosStartPromptModalOverlay);
     });
 
-    combinedDom.iosPromptCancelBtn.addEventListener('click', () => {
+    dom.iosPromptCancelBtn.addEventListener('click', () => {
         handleStartPauseLogic();
-        ui.hideModal(combinedDom.iosStartPromptModalOverlay);
+        ui.hideModal(dom.iosStartPromptModalOverlay);
     });
 
-    combinedDom.resetBtn.addEventListener('click', () => ui.showModal(combinedDom.resetConfirmModalOverlay));
-    combinedDom.resetConfirmBtn.addEventListener('click', () => {
+    dom.resetBtn.addEventListener('click', () => ui.showModal(dom.resetConfirmModalOverlay));
+    dom.resetConfirmBtn.addEventListener('click', () => {
         timer.resetDay();
         ui.renderTasks();
-        ui.hideModal(combinedDom.resetConfirmModalOverlay);
-        ui.showModal(combinedDom.alertModalOverlay, 'O dia foi zerado com sucesso!');
+        ui.hideModal(dom.resetConfirmModalOverlay);
+        ui.showModal(dom.alertModalOverlay, 'O dia foi zerado com sucesso!');
     });
 
     // Controles de Tarefas
-    combinedDom.addTaskBtn.addEventListener('click', handleAddTask);
+    dom.addTaskBtn.addEventListener('click', handleAddTask);
 
-    combinedDom.newTaskInput.addEventListener('keyup', (e) => {
+    dom.newTaskInput.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') {
             handleAddTask();
         }
     });
 
-    if (combinedDom.toggleCompletedTasksBtn) {
-        combinedDom.toggleCompletedTasksBtn.addEventListener('click', () => {
+    if (dom.toggleCompletedTasksBtn) {
+        dom.toggleCompletedTasksBtn.addEventListener('click', () => {
             tasks.toggleShowCompleted();
             ui.updateShowCompletedBtn();
             ui.renderTasks();
@@ -244,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    combinedDom.taskListEl.addEventListener('click', (e) => {
+    dom.taskListEl.addEventListener('click', (e) => {
         if (e.target.matches('.task-edit-input')) {
             return;
         }
@@ -260,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const leveledUp = gamification.addXP(10);
                 gamification.addCoins(2);
                 if (leveledUp) {
-                     ui.showModal(combinedDom.alertModalOverlay, `Parabéns! Você alcançou o Nível ${state.gamification.level}!`);
+                     ui.showModal(dom.alertModalOverlay, `Parabéns! Você alcançou o Nível ${state.gamification.level}!`);
                 }
                 checkGains();
             }
@@ -283,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveState();
     });
 
-    combinedDom.taskListEl.addEventListener('focusout', (e) => {
+    dom.taskListEl.addEventListener('focusout', (e) => {
         if (e.target.matches('.task-edit-input')) {
             const id = parseInt(e.target.dataset.editInputId);
             tasks.updateTaskName(id, e.target.value.trim());
@@ -292,26 +379,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    combinedDom.taskListEl.addEventListener('keyup', (e) => {
+    dom.taskListEl.addEventListener('keyup', (e) => {
         if (e.key === 'Enter' && e.target.matches('.task-edit-input')) {
             e.target.blur();
         }
     });
 
     // Outros Controles da UI
-    combinedDom.settingsBtn.addEventListener('click', () => {
+    dom.settingsBtn.addEventListener('click', () => {
         ui.renderPaletteSelector();
-        ui.showModal(combinedDom.settingsModalOverlay);
+        ui.showModal(dom.settingsModalOverlay);
     });
 
-    combinedDom.dashboardBtn.addEventListener('click', () => {
+    dom.dashboardBtn.addEventListener('click', () => {
         ui.renderDashboard();
-        ui.showModal(combinedDom.dashboardModalOverlay);
+        ui.showModal(dom.dashboardModalOverlay);
     });
 
-    if (combinedDom.dashboardModalOverlay) {
-        const tabButtons = combinedDom.dashboardModalOverlay.querySelectorAll('.dashboard-tab');
-        const tabContents = combinedDom.dashboardModalOverlay.querySelectorAll('.dashboard-tab-content');
+    if (dom.dashboardModalOverlay) {
+        const tabButtons = dom.dashboardModalOverlay.querySelectorAll('.dashboard-tab');
+        const tabContents = dom.dashboardModalOverlay.querySelectorAll('.dashboard-tab-content');
 
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
@@ -328,32 +415,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    combinedDom.shopBtn.addEventListener('click', () => {
+    dom.shopBtn.addEventListener('click', () => {
         shop.renderShop();
-        ui.showModal(combinedDom.shopModalOverlay);
+        ui.showModal(dom.shopModalOverlay);
     });
 
-    combinedDom.shopCollectionsContainer.addEventListener('click', (e) => {
+    dom.shopCollectionsContainer.addEventListener('click', (e) => {
         const buyButton = e.target.closest('.buy-btn');
         if (buyButton && !buyButton.disabled) {
             shop.buyItem(buyButton.dataset.itemId);
         }
     });
 
-    combinedDom.helpBtn.addEventListener('click', () => {
+    dom.helpBtn.addEventListener('click', () => {
         const isPomodoro = state.settings.focusMethod === 'pomodoro';
-        combinedDom.helpContentPomodoro.classList.toggle('hidden', !isPomodoro);
-        combinedDom.helpContentAdaptativo.classList.toggle('hidden', isPomodoro);
-        ui.showModal(combinedDom.helpModalOverlay);
+        dom.helpContentPomodoro.classList.toggle('hidden', !isPomodoro);
+        dom.helpContentAdaptativo.classList.toggle('hidden', isPomodoro);
+        ui.showModal(dom.helpModalOverlay);
     });
 
 
-    combinedDom.settingsSaveBtn.addEventListener('click', () => {
-        state.settings.focusDuration = parseInt(combinedDom.focusDurationInput.value) || 25;
-        state.settings.shortBreakDuration = parseInt(combinedDom.shortBreakDurationInput.value) || 5;
-        state.settings.longBreakDuration = parseInt(combinedDom.longBreakDurationInput.value) || 15;
-        state.settings.longBreakInterval = parseInt(combinedDom.longBreakIntervalInput.value) || 4;
-        ui.hideModal(combinedDom.settingsModalOverlay);
+    dom.settingsSaveBtn.addEventListener('click', () => {
+        state.settings.focusDuration = parseInt(dom.focusDurationInput.value) || 25;
+        state.settings.shortBreakDuration = parseInt(dom.shortBreakDurationInput.value) || 5;
+        state.settings.longBreakDuration = parseInt(dom.longBreakDurationInput.value) || 15;
+        state.settings.longBreakInterval = parseInt(dom.longBreakIntervalInput.value) || 4;
+        ui.hideModal(dom.settingsModalOverlay);
         if (!state.isRunning) {
             timer.resetTimer('focus');
             ui.updateUI();
@@ -361,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveState();
     });
 
-    combinedDom.colorPaletteSelector.addEventListener('click', (e) => {
+    dom.colorPaletteSelector.addEventListener('click', (e) => {
         const target = e.target.closest('button[data-theme]');
         if (target) {
             state.settings.theme = target.dataset.theme;
@@ -373,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    combinedDom.focusMethodToggle.addEventListener('click', (e) => {
+    dom.focusMethodToggle.addEventListener('click', (e) => {
         const target = e.target.closest('.method-btn');
         if (target && !state.isRunning) {
             state.settings.focusMethod = target.dataset.method;
@@ -383,89 +470,18 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.updateUI();
             saveState();
         } else if (state.isRunning) {
-            ui.showModal(combinedDom.alertModalOverlay, 'Não é possível trocar de modo enquanto o timer está rodando.');
+            ui.showModal(dom.alertModalOverlay, 'Não é possível trocar de modo enquanto o timer está rodando.');
         }
     });
 
     // Fechar Modais
-    [combinedDom.alertModalOverlay, combinedDom.settingsModalOverlay, combinedDom.dashboardModalOverlay, combinedDom.helpModalOverlay, combinedDom.resetConfirmModalOverlay, combinedDom.sessionEndModalOverlay, combinedDom.shopModalOverlay, combinedDom.iosStartPromptModalOverlay].forEach(overlay => {
+    [dom.alertModalOverlay, dom.settingsModalOverlay, dom.dashboardModalOverlay, dom.helpModalOverlay, dom.resetConfirmModalOverlay, dom.sessionEndModalOverlay, dom.shopModalOverlay, dom.iosStartPromptModalOverlay].forEach(overlay => {
         overlay.addEventListener('click', (e) => { if (e.target === overlay) ui.hideModal(overlay); });
     });
-    [combinedDom.alertModalCloseBtn, combinedDom.sessionEndCloseBtn, combinedDom.dashboardModalCloseBtn, combinedDom.helpModalCloseBtn, combinedDom.resetCancelBtn, combinedDom.shopModalCloseBtn].forEach(btn => {
+    [dom.alertModalCloseBtn, dom.sessionEndCloseBtn, dom.dashboardModalCloseBtn, dom.helpModalCloseBtn, dom.resetCancelBtn, dom.shopModalCloseBtn].forEach(btn => {
         if(btn) btn.addEventListener('click', () => ui.hideModal(btn.closest('.modal-overlay')));
     });
 
-    // --- LÓGICA DE AUTENTICAÇÃO E INICIALIZAÇÃO DA APLICAÇÃO ---
-
-    /**
-     * @description Inicia a lógica principal da aplicação.
-     * Esta função é chamada apenas após a autenticação bem-sucedida.
-     */
-    function initializeApp() {
-        loadState();
-        ui.applyTheme(state.settings.theme);
-        ui.updateMethodToggleUI();
-        ui.renderTasks();
-        ui.updateGamificationUI();
-        ui.renderDashboard();
-        ui.updateUI();
-        ui.updateShowCompletedBtn();
-        
-        if (state.isRunning) {
-            state.timerInterval = setInterval(handleTimerTick, 1000);
-        }
-        
-        gamification.generateDailyMissions();
-        saveState();
-        lucide.createIcons();
-    }
-
-    // Listener para o botão de login do Firebase
-    combinedDom.loginBtn.addEventListener('click', async () => {
-        try {
-            await signInWithPopup(auth, provider);
-        } catch (error) {
-            console.error("Erro no login:", error);
-            ui.showModal(combinedDom.alertModalOverlay, `Erro ao fazer login: ${error.message}`);
-        }
-    });
-
-    // Listener para o botão de logout
-    combinedDom.logoutBtn.addEventListener('click', async () => {
-        try {
-            await signOut(auth);
-            // O ouvinte onAuthStateChanged lida com a atualização da UI após o logout
-        } catch (error) {
-            console.error("Erro no logout:", error);
-            ui.showModal(combinedDom.alertModalOverlay, `Erro ao sair: ${error.message}`);
-        }
-    });
-
-    /**
-     * @description Observador do estado de autenticação do Firebase.
-     * É a lógica central que alterna entre as telas de login e a aplicação.
-     */
-    onAuthStateChanged(auth, (user) => {
-        // Esconde a tela de carregamento, independentemente do estado de autenticação.
-        combinedDom.loadingContainer.classList.add('hidden');
-        if (user) {
-            // Usuário logado
-            console.log("Usuário autenticado:", user.uid);
-            combinedDom.loginContainer.classList.add('hidden');
-            combinedDom.appContainer.classList.remove('hidden');
-            
-            // Atualiza a UI com dados do usuário
-            combinedDom.userAvatar.src = user.photoURL || 'https://placehold.co/40x40/5c6b73/ffffff?text=U';
-            combinedDom.userProfile.classList.remove('hidden');
-            
-            // Inicia a aplicação principal
-            initializeApp();
-        } else {
-            // Usuário não logado
-            console.log("Nenhum usuário autenticado.");
-            combinedDom.appContainer.classList.add('hidden');
-            combinedDom.loginContainer.classList.remove('hidden');
-            combinedDom.userProfile.classList.add('hidden');
-        }
-    });
+    // Inicia a configuração do Firebase assim que o DOM estiver pronto
+    setupFirebaseAndApp();
 });
