@@ -1,9 +1,10 @@
 /**
  * firebase_auth.js
- * Módulo para gerenciar a autenticação com o Firebase (versão com logs de depuração).
+ * Módulo para gerenciar a autenticação com o Firebase.
+ * * VERSÃO MODIFICADA PARA USAR O MÉTODO DE POP-UP *
  */
 
-// Configuração do Firebase
+// Suas credenciais do Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyCBwAqYCT6avkLeb-HiS1D4j4k-zvNp5Wo",
     authDomain: "foco-total-pwa.firebaseapp.com",
@@ -14,63 +15,42 @@ const firebaseConfig = {
     measurementId: "G-5KK4EE1V7Z"
 };
 
-// Inicialização
+// Inicializa o Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const provider = new firebase.auth.GoogleAuthProvider();
-console.log('[Auth] Módulo firebase_auth.js carregado.');
 
-// Definição da Persistência
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-  .then(() => {
-    console.log('[Auth] Persistência definida como LOCAL com sucesso.');
-  })
-  .catch(error => {
-    console.error("[Auth] ERRO ao definir a persistência:", error);
-  });
+/**
+ * Inicia o observador de estado de autenticação.
+ * Ele notificará o main.js sempre que o status de login mudar.
+ * @param {function} callback - Função a ser executada quando o estado de login muda.
+ */
+export function initFirebaseAuth(callback) {
+    // Agora usamos um ouvinte persistente, que é o ideal para o fluxo de pop-up.
+    auth.onAuthStateChanged(callback);
+}
 
-export function initFirebaseAuth(onAuthStateKnown) {
-    console.log('[Auth] 🚪 initFirebaseAuth foi chamada.');
-
-    console.log('[Auth] 🔍 Investigando getRedirectResult...');
-    auth.getRedirectResult()
-        .then(result => {
-            if (result.user) {
-                console.log(`[Auth] ✅ getRedirectResult encontrou um usuário: ${result.user.displayName}`);
-            } else {
-                console.log('[Auth] ℹ️ getRedirectResult retornou nulo (comportamento normal se não houver redirect).');
-            }
-        })
+/**
+ * Inicia o fluxo de login com o popup do Google.
+ */
+export function signInWithGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    // A função principal agora é a signInWithPopup
+    return auth.signInWithPopup(provider)
         .catch(error => {
-            console.error("[Auth] ❌ ERRO em getRedirectResult:", error);
-        })
-        .finally(() => {
-            console.log('[Auth] 🎧 Anexando o "Vigia Definitivo" (onAuthStateChanged)...');
-            const unsubscribe = auth.onAuthStateChanged(user => {
-                console.log('[Auth] ❗ "Vigia" (onAuthStateChanged) disparou.');
-                console.log('[Auth] ✨ Chamando unsubscribe() para garantir execução única.');
-                unsubscribe();
-                
-                if (user) {
-                    console.log(`[Auth] ✅ Resposta final: Usuário encontrado (${user.displayName}). Acionando callback do main.js.`);
-                } else {
-                    console.log('[Auth] ℹ️ Resposta final: Nenhum usuário (nulo). Acionando callback do main.js.');
-                }
-                
-                onAuthStateKnown(user);
-            });
+            // Erros comuns aqui são o usuário fechar o pop-up ou negar o acesso.
+            console.error("Erro durante o login com o Google Popup:", error);
+            if (error.code !== 'auth/popup-closed-by-user') {
+                 alert("Ocorreu um erro ao tentar fazer o login. Verifique o console para mais detalhes.");
+            }
         });
 }
 
-export function signInWithGoogle() {
-    console.log('[Auth] ➡️ Iniciando login com signInWithRedirect...');
-    auth.signInWithRedirect(provider);
-}
-
+/**
+ * Desloga o usuário atual.
+ */
 export function signOutUser() {
-    console.log('[Auth] 🚪 Iniciando processo de logout...');
-    auth.signOut()
+    return auth.signOut()
         .catch(error => {
-            console.error("[Auth] ERRO ao fazer logout:", error);
+            console.error("Erro ao fazer logout:", error);
         });
 }
