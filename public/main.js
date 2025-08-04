@@ -1,7 +1,6 @@
-// Módulos do Firebase v9.6.10
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js";
-import { getAuth, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js";
+// Acessamos o Firebase a partir do objeto global 'firebase',
+// não usando a sintaxe 'import'.
+// Os scripts são carregados via <script> tags no HTML.
 
 // Módulos de Dados (preservados)
 import { themes } from './themes.js';
@@ -35,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let auth;
     let provider;
     
-    // --- LÓGICA DE INICIALIZAÇÃO DA APLICAÇÃO (USANDO LOCALSTORAGE POR PADRÃO) ---
+    // --- LÓGICA DE INICIALIZAÇÃO DA APLICAÇÃO (USANDO LOCALSTORAGE POR PADARÃO) ---
     /**
      * @description Inicia a lógica principal da aplicação.
      * Esta função é chamada imediatamente no carregamento da página.
@@ -77,13 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
                  console.error("Firebase config is missing or empty.");
                  return;
             }
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            // Corrige a forma de obter o provedor de autenticação para a versão de compatibilidade.
+            // Usa as funções compatíveis
+            const app = firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
             provider = new firebase.auth.GoogleAuthProvider();
             
             // Inicia o observador de autenticação
-            onAuthStateChanged(auth, (user) => {
+            auth.onAuthStateChanged((user) => {
                 if (user) {
                     console.log("Usuário autenticado:", user.uid);
                     dom.userAvatar.src = user.photoURL || 'https://placehold.co/40x40/5c6b73/ffffff?text=U';
@@ -215,7 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- EVENT LISTENERS ---
     dom.loginBtn.addEventListener('click', async () => {
         try {
-            await signInWithPopup(auth, provider);
+            // Usa as funções compatíveis
+            await firebase.auth().signInWithPopup(provider);
         } catch (error) {
             console.error("Erro no login:", error);
             ui.showModal(dom.alertModalOverlay, `Erro ao fazer login: ${error.message}`);
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dom.logoutBtn.addEventListener('click', async () => {
         try {
-            await signOut(auth);
+            await firebase.auth().signOut();
         } catch (error) {
             console.error("Erro no logout:", error);
             ui.showModal(dom.alertModalOverlay, `Erro ao sair: ${error.message}`);
