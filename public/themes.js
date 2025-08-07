@@ -22,6 +22,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '255, 255, 0', /* Amarelo */
         '--color-break-long': '255, 0, 0', /* Vermelho */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     alagoas_light: {
         name: 'AL Claro',
@@ -42,6 +44,8 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '255, 0, 0', /* Vermelho */
         '--color-break-long': '255, 255, 255', /* Branco */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     amapa_dark: {
         name: 'AP Escuro',
@@ -62,6 +66,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '0, 0, 139', /* Azul Marinho */
         '--color-break-long': '0, 128, 0', /* Verde */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     amazonas_light: {
         name: 'AM Claro',
@@ -82,6 +88,8 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '255, 0, 0', /* Vermelho */
         '--color-break-long': '255, 255, 255', /* Branco */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     bahia_dark: {
         name: 'BA Escuro',
@@ -102,6 +110,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '255, 255, 255', /* Branco */
         '--color-break-long': '0, 51, 102', /* Azul */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     brasil_dark: {
         name: 'BR Escuro',
@@ -122,6 +132,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '255, 221, 0', /* Amarelo da bandeira */
         '--color-break-long': '0, 39, 118', /* Azul da bandeira */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     brasil_light: {
         name: 'BR Claro',
@@ -142,6 +154,8 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '0, 155, 58', /* Verde da bandeira */
         '--color-break-long': '0, 39, 118', /* Azul da bandeira */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     ceara_dark: {
         name: 'CE Escuro',
@@ -162,6 +176,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '0, 128, 0', /* Verde */
         '--color-break-long': '255, 255, 0', /* Amarelo */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     distritofederal_dark: {
         name: 'DF Escuro',
@@ -182,6 +198,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '255, 255, 0', /* Amarelo */
         '--color-break-long': '255, 255, 255', /* Branco */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     espiritosanto_light: {
         name: 'ES Claro',
@@ -202,6 +220,8 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '255, 255, 255', /* Branco */
         '--color-break-long': '0, 0, 255', /* Azul */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     goias_light: {
         name: 'GO Claro',
@@ -222,6 +242,8 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '0, 128, 0', /* Verde */
         '--color-break-long': '255, 255, 255', /* Branco */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     maranhao_dark: {
         name: 'MA Escuro',
@@ -242,6 +264,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '255, 255, 255', /* Branco */
         '--color-break-long': '0, 0, 139', /* Azul Marinho */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     matogrosso_dark: {
         name: 'MT Escuro',
@@ -262,6 +286,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '0, 128, 0', /* Verde */
         '--color-break-long': '0, 0, 139', /* Azul Marinho */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     matogrossodosul_light: {
         name: 'MS Claro',
@@ -282,6 +308,8 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '0, 128, 0', /* Verde */
         '--color-break-long': '255, 255, 255', /* Branco */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     minasgerais_light: {
         name: 'MG Claro',
@@ -302,6 +330,8 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '10, 185, 129', /* Verde */
         '--color-break-long': '139, 92, 246', /* Roxo */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     para_dark: {
         name: 'PA Escuro',
@@ -322,6 +352,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '255, 255, 255', /* Branco */
         '--color-break-long': '0, 0, 139', /* Azul Marinho */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     paraiba_dark: {
         name: 'PB Escuro',
@@ -342,6 +374,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '0, 0, 0', /* Preto */
         '--color-break-long': '255, 255, 255', /* Branco */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     parana_dark: {
         name: 'PR Escuro',
@@ -362,6 +396,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '255, 255, 255', /* Branco */
         '--color-break-long': '0, 128, 0', /* Verde */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     pernambuco_light: {
         name: 'PE Claro',
@@ -382,6 +418,8 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '255, 0, 0', /* Vermelho */
         '--color-break-long': '0, 0, 205', /* Azul */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     piaui_light: {
         name: 'PI Claro',
@@ -402,6 +440,8 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '0, 128, 0', /* Verde */
         '--color-break-long': '0, 0, 255', /* Azul */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     riodejaneiro_light: {
         name: 'RJ Claro',
@@ -422,6 +462,8 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '255, 221, 0', /* Amarelo (sol) */
         '--color-break-long': '200, 16, 46', /* Vermelho (brasão) */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     riograndedonorte_light: {
         name: 'RN Claro',
@@ -442,6 +484,8 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '0, 128, 0', /* Verde */
         '--color-break-long': '255, 0, 0', /* Vermelho */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     riograndedosul_dark: {
         name: 'RS Escuro',
@@ -462,6 +506,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '0, 128, 0', /* Verde */
         '--color-break-long': '255, 255, 0', /* Amarelo */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     rondonia_dark: {
         name: 'RO Escuro',
@@ -482,6 +528,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '255, 255, 0', /* Amarelo */
         '--color-break-long': '0, 0, 139', /* Azul Marinho */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     roraima_light: {
         name: 'RR Claro',
@@ -502,6 +550,8 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '0, 0, 255', /* Azul */
         '--color-break-long': '255, 0, 0', /* Vermelho */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     santacatarina_light: {
         name: 'SC Claro',
@@ -522,6 +572,8 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '255, 255, 255', /* Branco */
         '--color-break-long': '0, 0, 139', /* Azul Marinho */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     saopaulo_dark: {
         name: 'SP Escuro',
@@ -542,6 +594,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '255, 255, 255', /* Branco */
         '--color-break-long': '0, 0, 0', /* Preto */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     sergipe_dark: {
         name: 'SE Escuro',
@@ -562,6 +616,8 @@ export const themes = {
         '--color-border-subtle-rgb': '255, 255, 255',
         '--color-break-short': '255, 255, 0', /* Amarelo */
         '--color-break-long': '0, 0, 255', /* Azul */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     tocantins_light: {
         name: 'TO Claro',
@@ -582,9 +638,58 @@ export const themes = {
         '--color-border-subtle-rgb': '0, 0, 0',
         '--color-break-short': '0, 0, 139', /* Azul Marinho */
         '--color-break-long': '255, 255, 255', /* Branco */
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
-// --- TEMAS DA LOJA ---
 
+    // --- COLEÇÃO GLASS ---
+    glass_dark: {
+        name: 'Glass Escuro',
+        '--color-primary-rgb': '0, 191, 255',       /* Um azul vibrante */
+        '--color-primary-focus-rgb': '0, 160, 220',
+        '--color-primary-darker-rgb': '0, 130, 180',
+        '--color-primary-light-rgb': '80, 210, 255',
+        '--color-bg-main': 'linear-gradient(135deg, #1D2B64 0%, #F8CDDA 100%)',
+        '--color-bg-shell': 'rgba(25, 25, 40, 0.65)',
+        '--color-bg-panel': 'rgba(17, 24, 39, 0.7)',
+        '--color-bg-input': 'rgba(55, 65, 81, 0.7)',
+        '--color-bg-input-light': 'rgba(75, 85, 99, 0.7)',
+        '--color-text-base': '#F3F4F6',
+        '--color-text-header': '#FFFFFF',
+        '--color-text-muted': '#A0AEC0',
+        '--color-text-placeholder': '#9CA3AF',
+        '--color-text-timer': '#FFFFFF',
+        '--color-border-subtle-rgb': '255, 255, 255',
+        '--color-break-short': '255, 221, 0',
+        '--color-break-long': '255, 0, 0',
+        '--border-glass': '1px solid rgba(255, 255, 255, 0.15)',
+        '--backdrop-filter-glass': 'blur(20px)',
+    },
+
+    glass_light: {
+        name: 'Glass Claro',
+        '--color-primary-rgb': '200, 16, 120',      /* Um rosa/magenta */
+        '--color-primary-focus-rgb': '180, 14, 100',
+        '--color-primary-darker-rgb': '150, 10, 80',
+        '--color-primary-light-rgb': '220, 50, 150',
+        '--color-bg-main': 'linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%)',
+        '--color-bg-shell': 'rgba(255, 255, 255, 0.45)',
+        '--color-bg-panel': 'rgba(248, 248, 255, 0.6)',
+        '--color-bg-input': 'rgba(255, 255, 255, 0.6)',
+        '--color-bg-input-light': 'rgba(229, 231, 235, 0.6)',
+        '--color-text-base': '#374151',
+        '--color-text-header': '#111827',
+        '--color-text-muted': '#4A5568',
+        '--color-text-placeholder': '#6B7280',
+        '--color-text-timer': '#111827',
+        '--color-border-subtle-rgb': '0, 0, 0',
+        '--color-break-short': '255, 0, 0',
+        '--color-break-long': '0, 0, 139',
+        '--border-glass': '1px solid rgba(255, 255, 255, 0.8)',
+        '--backdrop-filter-glass': 'blur(16px)',
+    },
+
+    // --- TEMAS DA LOJA ---
     // Coleção Paisagens Brasileiras
     natureza_floresta: {
         name: 'Floresta',
@@ -596,7 +701,8 @@ export const themes = {
         '--color-text-header': '#FFFFFF',
         '--color-break-short': '255, 215, 0',
         '--color-break-long': '139, 69, 19',
-        // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     natureza_cerrado: {
         name: 'Cerrado',
@@ -607,7 +713,8 @@ export const themes = {
         '--color-text-header': '#4E342E',
         '--color-break-short': '76, 175, 80',
         '--color-break-long': '121, 85, 72',
-        // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     natureza_praias: {
         name: 'Praias',
@@ -618,7 +725,8 @@ export const themes = {
         '--color-text-header': '#004D40',
         '--color-break-short': '255, 238, 88',
         '--color-break-long': '255, 167, 38',
-        // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     natureza_pantanal: {
         name: 'Pantanal',
@@ -629,7 +737,8 @@ export const themes = {
         '--color-text-header': '#FFFFFF',
         '--color-break-short': '255, 241, 118',
         '--color-break-long': '121, 85, 72',
-        // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
 
     // Coleção Abstratos & Minimalistas
@@ -642,7 +751,8 @@ export const themes = {
         '--color-text-header': '#37474F',
         '--color-break-short': '129, 212, 250',
         '--color-break-long': '165, 214, 167',
-         // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     abstrato_energia: {
         name: 'Energia',
@@ -653,7 +763,8 @@ export const themes = {
         '--color-text-header': '#FFFFFF',
         '--color-break-short': '100, 221, 23',
         '--color-break-long': '255, 171, 0',
-         // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     abstrato_estrelas: {
         name: 'Estrelas',
@@ -664,7 +775,8 @@ export const themes = {
         '--color-text-header': '#FFFFFF',
         '--color-break-short': '173, 216, 230',
         '--color-break-long': '255, 250, 205',
-         // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     abstrato_aquarela: {
         name: 'Aquarela',
@@ -675,7 +787,8 @@ export const themes = {
         '--color-text-header': '#4A148C',
         '--color-break-short': '79, 195, 247',
         '--color-break-long': '255, 204, 128',
-        // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
 
     // Coleção Tecnologia & Ficção Científica
@@ -688,7 +801,8 @@ export const themes = {
         '--color-text-header': '#FFFFFF',
         '--color-break-short': '200, 200, 200',
         '--color-break-long': '100, 100, 100',
-        // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     tech_vaporwave: {
         name: 'Vaporwave',
@@ -699,7 +813,8 @@ export const themes = {
         '--color-text-header': '#FFFFFF',
         '--color-break-short': '0, 255, 255',
         '--color-break-long': '255, 255, 0',
-        // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     tech_hightech: {
         name: 'High-Tech',
@@ -710,7 +825,8 @@ export const themes = {
         '--color-text-header': '#212529',
         '--color-break-short': '40, 167, 69',
         '--color-break-long': '255, 193, 7',
-         // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     tech_cyberpunk: {
         name: 'Cyberpunk',
@@ -721,7 +837,8 @@ export const themes = {
         '--color-text-header': '#FFFFFF',
         '--color-break-short': '0, 255, 255',
         '--color-break-long': '255, 255, 0',
-        // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
 
     // --- TEMAS SAZONAIS ---
@@ -734,7 +851,8 @@ export const themes = {
         '--color-text-header': '#000000',
         '--color-break-short': '3, 169, 244',
         '--color-break-long': '76, 175, 80',
-         // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     seasonal_festa_junina: {
         name: 'Festa Junina',
@@ -745,7 +863,8 @@ export const themes = {
         '--color-text-header': '#A0522D',
         '--color-break-short': '220, 20, 60',
         '--color-break-long': '34, 139, 34',
-         // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     seasonal_halloween: {
         name: 'Halloween',
@@ -756,7 +875,8 @@ export const themes = {
         '--color-text-header': '#FFFFFF',
         '--color-break-short': '103, 58, 183',
         '--color-break-long': '76, 175, 80',
-        // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
     seasonal_natal: {
         name: 'Natal',
@@ -767,6 +887,7 @@ export const themes = {
         '--color-text-header': '#FFFFFF',
         '--color-break-short': '255, 215, 0',
         '--color-break-long': '255, 255, 255',
-        // ... (outras propriedades)
+        '--border-glass': '1px solid transparent',
+        '--backdrop-filter-glass': 'none',
     },
 };
